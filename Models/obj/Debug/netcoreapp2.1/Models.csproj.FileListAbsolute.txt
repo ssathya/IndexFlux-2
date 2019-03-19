@@ -6,3 +6,4 @@ C:\Users\sridh\OneDrive\Documents\Visual Studio 2019\Projects\DataProvider\Model
 C:\Users\sridh\OneDrive\Documents\Visual Studio 2019\Projects\DataProvider\Models\obj\Debug\netcoreapp2.1\Models.AssemblyInfo.cs
 C:\Users\sridh\OneDrive\Documents\Visual Studio 2019\Projects\DataProvider\Models\obj\Debug\netcoreapp2.1\Models.dll
 C:\Users\sridh\OneDrive\Documents\Visual Studio 2019\Projects\DataProvider\Models\obj\Debug\netcoreapp2.1\Models.pdb
+C:\Users\sridh\OneDrive\Documents\Visual Studio 2019\Projects\DataProvider\Models\obj\Debug\netcoreapp2.1\Models.csprojAssemblyReference.cache

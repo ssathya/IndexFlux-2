@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "HandleSimFinTests": {
+      "commandName": "Project",
+      "environmentVariables": {
+        " SimFinKey": "nRzxBRIv37Ywg7c1LTsyqloX6gMGzSiM"
+      }
+    }
+  }
+}
