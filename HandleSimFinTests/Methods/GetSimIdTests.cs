@@ -53,5 +53,19 @@ namespace HandleSimFinTests.Methods
 			// Assert
 			Assert.Equal("89126", result);
 		}
+		[Fact]
+		public async Task GetSimIdByCompanyName_StateUnderTest_ExpectedBehavior()
+		{
+			// Arrange
+			var unitUnderTest = this.CreateGetSimId();
+			string companyName = "Citigroup";
+
+			// Act
+			var result = await unitUnderTest.GetSimIdByCompanyName(
+				companyName);
+
+			// Assert
+			Assert.Equal("89126", result);
+		}
 	}
 }

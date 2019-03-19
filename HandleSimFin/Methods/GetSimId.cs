@@ -14,15 +14,18 @@ namespace HandleSimFin.Methods
 
 		#region Private Fields
 
+		private const string urlForCompanyNameToId = @"https://simfin.com/api/v1/info/find-id/name-search/{companyName}?api-key={API-KEY}";
 		private const string urlForTickerToId = @"https://simfin.com/api/v1/info/find-id/ticker/{tickerStr}?api-key={API-KEY}";
 
 		#endregion Private Fields
+
 
 		#region Public Properties
 
 		public ILogger<GetSimId> _logger { get; }
 
 		#endregion Public Properties
+
 
 		#region Public Constructors
 
@@ -36,30 +39,45 @@ namespace HandleSimFin.Methods
 
 		#region Public Methods
 
+		public async Task<string> GetSimIdByCompanyName(string companyName)
+		{			
+			var urlToUse = urlForCompanyNameToId.Replace(@"{companyName}", companyName.Trim());			
+			CompanyDetail firstDetail = await CallSimFinForSimId(urlToUse);
+			return firstDetail != null ? firstDetail.SimId : "";
+		}
+
 		public async Task<string> GetSimIdByTicker(string ticker)
+		{
+			
+			var urlToUse = urlForTickerToId.Replace(@"{tickerStr}", ticker.Trim());
+			CompanyDetail firstDetail = await CallSimFinForSimId(urlToUse);
+			return firstDetail != null ? firstDetail.SimId : "";
+		}
+
+		#endregion Public Methods
+
+
+		#region Private Methods
+
+		private async Task<CompanyDetail> CallSimFinForSimId(string urlToUse)
 		{
 			string apiKey = GetApiKey();
 			if (string.IsNullOrWhiteSpace(apiKey))
 			{
 				_logger.LogError("Did not find API key; calls will fail");
-				return "";
+				return null;
 			}
+			urlToUse = urlToUse.Replace(@"{API-KEY}", apiKey);
+			string data = "[]";
 			try
 			{
-				var urlToUse = urlForTickerToId.Replace(@"{tickerStr}", ticker.Trim());
-				urlToUse = urlToUse.Replace(@"{API-KEY}", apiKey);
-				string data = "{}";
 				using (var wc = new WebClient())
 				{
 					data = await wc.DownloadStringTaskAsync(urlToUse);
 				}
 				//NameTickerSimId
 				var allDetails = JsonConvert.DeserializeObject<IEnumerable<CompanyDetail>>(data);
-				var firstDetail = allDetails.FirstOrDefault();
-				if (firstDetail != null)
-				{
-					return firstDetail.SimId;
-				}
+				return allDetails.FirstOrDefault();
 			}
 			catch (Exception ex)
 			{
@@ -68,14 +86,9 @@ namespace HandleSimFin.Methods
 				{
 					_logger.LogError(ex.InnerException.Message);
 				}
+				return null;
 			}
-			return "";
 		}
-
-		#endregion Public Methods
-
-
-		#region Private Methods
 
 		private string GetApiKey()
 		{
