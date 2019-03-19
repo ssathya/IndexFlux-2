@@ -3,3 +3,5 @@
 ################################################################################
 
 /.vs/DataProvider/v16/Server/sqlite3
+/HandleSimFinTests/Properties/launchSettings.json
+/HandleSimFinTests/appsettings.json

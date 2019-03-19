@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "DataProvider": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "SimFinKey": "nRzxBRIv37Ywg7c1LTsyqloX6gMGzSiM"
+      }
+    }
+  }
+}

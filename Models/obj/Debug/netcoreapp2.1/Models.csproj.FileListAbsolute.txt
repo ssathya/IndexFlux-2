@@ -1,0 +1,8 @@
+C:\Users\sridh\OneDrive\Documents\Visual Studio 2019\Projects\DataProvider\Models\bin\Debug\netcoreapp2.1\Models.deps.json
+C:\Users\sridh\OneDrive\Documents\Visual Studio 2019\Projects\DataProvider\Models\bin\Debug\netcoreapp2.1\Models.dll
+C:\Users\sridh\OneDrive\Documents\Visual Studio 2019\Projects\DataProvider\Models\bin\Debug\netcoreapp2.1\Models.pdb
+C:\Users\sridh\OneDrive\Documents\Visual Studio 2019\Projects\DataProvider\Models\obj\Debug\netcoreapp2.1\Models.csproj.CoreCompileInputs.cache
+C:\Users\sridh\OneDrive\Documents\Visual Studio 2019\Projects\DataProvider\Models\obj\Debug\netcoreapp2.1\Models.AssemblyInfoInputs.cache
+C:\Users\sridh\OneDrive\Documents\Visual Studio 2019\Projects\DataProvider\Models\obj\Debug\netcoreapp2.1\Models.AssemblyInfo.cs
+C:\Users\sridh\OneDrive\Documents\Visual Studio 2019\Projects\DataProvider\Models\obj\Debug\netcoreapp2.1\Models.dll
+C:\Users\sridh\OneDrive\Documents\Visual Studio 2019\Projects\DataProvider\Models\obj\Debug\netcoreapp2.1\Models.pdb

@@ -1,0 +1,199 @@
+{
+  "format": 1,
+  "restore": {
+    "C:\\Users\\sridh\\OneDrive\\Documents\\Visual Studio 2019\\Projects\\DataProvider\\HandleSimFinTests\\HandleSimFinTests.csproj": {}
+  },
+  "projects": {
+    "C:\\Users\\sridh\\OneDrive\\Documents\\Visual Studio 2019\\Projects\\DataProvider\\HandleSimFinTests\\HandleSimFinTests.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "C:\\Users\\sridh\\OneDrive\\Documents\\Visual Studio 2019\\Projects\\DataProvider\\HandleSimFinTests\\HandleSimFinTests.csproj",
+        "projectName": "HandleSimFinTests",
+        "projectPath": "C:\\Users\\sridh\\OneDrive\\Documents\\Visual Studio 2019\\Projects\\DataProvider\\HandleSimFinTests\\HandleSimFinTests.csproj",
+        "packagesPath": "C:\\Users\\sridh\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\sridh\\OneDrive\\Documents\\Visual Studio 2019\\Projects\\DataProvider\\HandleSimFinTests\\obj\\",
+        "projectStyle": "PackageReference",
+        "fallbackFolders": [
+          "C:\\Program Files\\dotnet\\sdk\\NuGetFallbackFolder"
+        ],
+        "configFilePaths": [
+          "C:\\Users\\sridh\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+        ],
+        "originalTargetFrameworks": [
+          "netcoreapp2.1"
+        ],
+        "sources": {
+          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "netcoreapp2.1": {
+            "projectReferences": {
+              "C:\\Users\\sridh\\OneDrive\\Documents\\Visual Studio 2019\\Projects\\DataProvider\\HandleSimFin\\HandleSimFin.csproj": {
+                "projectPath": "C:\\Users\\sridh\\OneDrive\\Documents\\Visual Studio 2019\\Projects\\DataProvider\\HandleSimFin\\HandleSimFin.csproj"
+              }
+            }
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        }
+      },
+      "frameworks": {
+        "netcoreapp2.1": {
+          "dependencies": {
+            "Microsoft.Extensions.Logging.Abstractions": {
+              "target": "Package",
+              "version": "[2.2.0, )"
+            },
+            "Microsoft.NET.Test.Sdk": {
+              "target": "Package",
+              "version": "[15.9.0, )"
+            },
+            "Microsoft.NETCore.App": {
+              "target": "Package",
+              "version": "[2.1.0, )",
+              "autoReferenced": true
+            },
+            "Moq": {
+              "target": "Package",
+              "version": "[4.10.1, )"
+            },
+            "xunit": {
+              "target": "Package",
+              "version": "[2.4.0, )"
+            },
+            "xunit.runner.visualstudio": {
+              "target": "Package",
+              "version": "[2.4.0, )"
+            }
+          },
+          "imports": [
+            "net461"
+          ],
+          "assetTargetFallback": true,
+          "warn": true
+        }
+      }
+    },
+    "C:\\Users\\sridh\\OneDrive\\Documents\\Visual Studio 2019\\Projects\\DataProvider\\HandleSimFin\\HandleSimFin.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "C:\\Users\\sridh\\OneDrive\\Documents\\Visual Studio 2019\\Projects\\DataProvider\\HandleSimFin\\HandleSimFin.csproj",
+        "projectName": "HandleSimFin",
+        "projectPath": "C:\\Users\\sridh\\OneDrive\\Documents\\Visual Studio 2019\\Projects\\DataProvider\\HandleSimFin\\HandleSimFin.csproj",
+        "packagesPath": "C:\\Users\\sridh\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\sridh\\OneDrive\\Documents\\Visual Studio 2019\\Projects\\DataProvider\\HandleSimFin\\obj\\",
+        "projectStyle": "PackageReference",
+        "fallbackFolders": [
+          "C:\\Program Files\\dotnet\\sdk\\NuGetFallbackFolder"
+        ],
+        "configFilePaths": [
+          "C:\\Users\\sridh\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+        ],
+        "originalTargetFrameworks": [
+          "netcoreapp2.1"
+        ],
+        "sources": {
+          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "netcoreapp2.1": {
+            "projectReferences": {
+              "C:\\Users\\sridh\\OneDrive\\Documents\\Visual Studio 2019\\Projects\\DataProvider\\Models\\Models.csproj": {
+                "projectPath": "C:\\Users\\sridh\\OneDrive\\Documents\\Visual Studio 2019\\Projects\\DataProvider\\Models\\Models.csproj"
+              }
+            }
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        }
+      },
+      "frameworks": {
+        "netcoreapp2.1": {
+          "dependencies": {
+            "Microsoft.Extensions.Logging.Abstractions": {
+              "target": "Package",
+              "version": "[2.2.0, )"
+            },
+            "Microsoft.NETCore.App": {
+              "suppressParent": "All",
+              "target": "Package",
+              "version": "[2.1.0, )",
+              "autoReferenced": true
+            },
+            "Newtonsoft.Json": {
+              "target": "Package",
+              "version": "[12.0.1, )"
+            }
+          },
+          "imports": [
+            "net461"
+          ],
+          "assetTargetFallback": true,
+          "warn": true
+        }
+      }
+    },
+    "C:\\Users\\sridh\\OneDrive\\Documents\\Visual Studio 2019\\Projects\\DataProvider\\Models\\Models.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "C:\\Users\\sridh\\OneDrive\\Documents\\Visual Studio 2019\\Projects\\DataProvider\\Models\\Models.csproj",
+        "projectName": "Models",
+        "projectPath": "C:\\Users\\sridh\\OneDrive\\Documents\\Visual Studio 2019\\Projects\\DataProvider\\Models\\Models.csproj",
+        "packagesPath": "C:\\Users\\sridh\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\sridh\\OneDrive\\Documents\\Visual Studio 2019\\Projects\\DataProvider\\Models\\obj\\",
+        "projectStyle": "PackageReference",
+        "fallbackFolders": [
+          "C:\\Program Files\\dotnet\\sdk\\NuGetFallbackFolder"
+        ],
+        "configFilePaths": [
+          "C:\\Users\\sridh\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+        ],
+        "originalTargetFrameworks": [
+          "netcoreapp2.1"
+        ],
+        "sources": {
+          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "netcoreapp2.1": {
+            "projectReferences": {}
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        }
+      },
+      "frameworks": {
+        "netcoreapp2.1": {
+          "dependencies": {
+            "Microsoft.NETCore.App": {
+              "suppressParent": "All",
+              "target": "Package",
+              "version": "[2.1.0, )",
+              "autoReferenced": true
+            }
+          },
+          "imports": [
+            "net461"
+          ],
+          "assetTargetFallback": true,
+          "warn": true
+        }
+      }
+    }
+  }
+}

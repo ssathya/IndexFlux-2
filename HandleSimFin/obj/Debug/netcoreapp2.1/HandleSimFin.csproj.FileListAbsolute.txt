@@ -1,0 +1,12 @@
+C:\Users\sridh\OneDrive\Documents\Visual Studio 2019\Projects\DataProvider\HandleSimFin\bin\Debug\netcoreapp2.1\HandleSimFin.deps.json
+C:\Users\sridh\OneDrive\Documents\Visual Studio 2019\Projects\DataProvider\HandleSimFin\bin\Debug\netcoreapp2.1\HandleSimFin.dll
+C:\Users\sridh\OneDrive\Documents\Visual Studio 2019\Projects\DataProvider\HandleSimFin\bin\Debug\netcoreapp2.1\HandleSimFin.pdb
+C:\Users\sridh\OneDrive\Documents\Visual Studio 2019\Projects\DataProvider\HandleSimFin\bin\Debug\netcoreapp2.1\Models.dll
+C:\Users\sridh\OneDrive\Documents\Visual Studio 2019\Projects\DataProvider\HandleSimFin\bin\Debug\netcoreapp2.1\Models.pdb
+C:\Users\sridh\OneDrive\Documents\Visual Studio 2019\Projects\DataProvider\HandleSimFin\obj\Debug\netcoreapp2.1\HandleSimFin.csprojAssemblyReference.cache
+C:\Users\sridh\OneDrive\Documents\Visual Studio 2019\Projects\DataProvider\HandleSimFin\obj\Debug\netcoreapp2.1\HandleSimFin.csproj.CoreCompileInputs.cache
+C:\Users\sridh\OneDrive\Documents\Visual Studio 2019\Projects\DataProvider\HandleSimFin\obj\Debug\netcoreapp2.1\HandleSimFin.AssemblyInfoInputs.cache
+C:\Users\sridh\OneDrive\Documents\Visual Studio 2019\Projects\DataProvider\HandleSimFin\obj\Debug\netcoreapp2.1\HandleSimFin.AssemblyInfo.cs
+C:\Users\sridh\OneDrive\Documents\Visual Studio 2019\Projects\DataProvider\HandleSimFin\obj\Debug\netcoreapp2.1\HandleSimFin.csproj.CopyComplete
+C:\Users\sridh\OneDrive\Documents\Visual Studio 2019\Projects\DataProvider\HandleSimFin\obj\Debug\netcoreapp2.1\HandleSimFin.dll
+C:\Users\sridh\OneDrive\Documents\Visual Studio 2019\Projects\DataProvider\HandleSimFin\obj\Debug\netcoreapp2.1\HandleSimFin.pdb
