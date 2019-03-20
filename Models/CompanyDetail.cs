@@ -6,10 +6,7 @@ using System.Threading.Tasks;
 
 namespace Models
 {
-	public class NameTickerSimId
-	{
-		public CompanyDetail[] CompanyDetails { get; set; }
-	}
+
 
 	public class CompanyDetail
 	{

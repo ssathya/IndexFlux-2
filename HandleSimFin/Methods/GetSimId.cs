@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using HandleSimFin.Utils;
+using Microsoft.Extensions.Logging;
 using Models;
 using Newtonsoft.Json;
 using System;
@@ -61,7 +62,7 @@ namespace HandleSimFin.Methods
 
 		private async Task<CompanyDetail> CallSimFinForSimId(string urlToUse)
 		{
-			string apiKey = GetApiKey();
+			string apiKey = HandleSimFinUtils<GetSimId>.GetApiKey(_logger);
 			if (string.IsNullOrWhiteSpace(apiKey))
 			{
 				_logger.LogError("Did not find API key; calls will fail");
@@ -90,27 +91,7 @@ namespace HandleSimFin.Methods
 			}
 		}
 
-		private string GetApiKey()
-		{
-			var apiKey = Environment.GetEnvironmentVariable("SimFinKey", EnvironmentVariableTarget.Process);
-			if (string.IsNullOrWhiteSpace(apiKey))
-			{
-				_logger.LogDebug("Did not find API key in process");
-				apiKey = Environment.GetEnvironmentVariable("SimFinKey", EnvironmentVariableTarget.Machine);
-			}
-			if (string.IsNullOrWhiteSpace(apiKey))
-			{
-				_logger.LogDebug("Did not find API key in Machine");
-				apiKey = Environment.GetEnvironmentVariable("SimFinKey", EnvironmentVariableTarget.User);
-			}
-			if (string.IsNullOrWhiteSpace(apiKey))
-			{
-				_logger.LogDebug("Did not find API key in Machine");
-				apiKey = Environment.GetEnvironmentVariable("SimFinKey");
-			}
-
-			return apiKey;
-		}
+		
 
 		#endregion Private Methods
 	}
