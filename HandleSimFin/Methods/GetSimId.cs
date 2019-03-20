@@ -23,14 +23,14 @@ namespace HandleSimFin.Methods
 
 		#region Public Properties
 
-		public ILogger<GetSimId> _logger { get; }
+		public ILogger _logger { get; }
 
 		#endregion Public Properties
 
 
 		#region Public Constructors
 
-		public GetSimId(ILogger<GetSimId> log)
+		public GetSimId(ILogger log)
 		{
 			_logger = log;
 		}
@@ -62,7 +62,7 @@ namespace HandleSimFin.Methods
 
 		private async Task<CompanyDetail> CallSimFinForSimId(string urlToUse)
 		{
-			string apiKey = HandleSimFinUtils<GetSimId>.GetApiKey(_logger);
+			string apiKey = HandleSimFinUtils.GetApiKey(_logger);
 			if (string.IsNullOrWhiteSpace(apiKey))
 			{
 				_logger.LogError("Did not find API key; calls will fail");

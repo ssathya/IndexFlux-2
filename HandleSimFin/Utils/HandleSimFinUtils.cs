@@ -7,9 +7,9 @@ using System.Threading.Tasks;
 
 namespace HandleSimFin.Utils
 {
-    internal static class HandleSimFinUtils<T> where T:class
+    internal static class HandleSimFinUtils 
     {
-		internal static string GetApiKey(ILogger<T> _logger)
+		internal static string GetApiKey(ILogger _logger)
 		{
 			var apiKey = Environment.GetEnvironmentVariable("SimFinKey", EnvironmentVariableTarget.Process);
 			if (string.IsNullOrWhiteSpace(apiKey))

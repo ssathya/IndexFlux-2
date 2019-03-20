@@ -13,13 +13,13 @@ namespace HandleSimFinTests.Methods
 	{
 		private MockRepository mockRepository;
 
-		private Mock<ILogger<GetSimId>> mockLogger;
+		private Mock<ILogger> mockLogger;
 
 		public GetSimIdTests()
 		{
 			this.mockRepository = new MockRepository(MockBehavior.Strict);
 
-			this.mockLogger = new Mock<ILogger<GetSimId>>();
+			this.mockLogger = new Mock<ILogger>();
 			dynamic res = JsonConvert.DeserializeObject(File.ReadAllText("appsettings.json"));			
 			Environment.SetEnvironmentVariable("SimFinKey", (string)res.SimFinKey, EnvironmentVariableTarget.Process);			
 
@@ -32,10 +32,6 @@ namespace HandleSimFinTests.Methods
 
 		private GetSimId CreateGetSimId()
 		{
-			//var mock = new Mock<ILogger<GetSimId>>();
-			//var logger = mock.Object;
-			//return new GetSimId(
-			//	this.mockLogger.Object);
 			return new GetSimId(mockLogger.Object);
 		}
 
