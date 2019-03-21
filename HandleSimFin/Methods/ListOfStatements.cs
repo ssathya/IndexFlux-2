@@ -78,13 +78,7 @@ namespace HandleSimFin.Methods
 				Cf = statement.Cf.Where(cf => cf.Period.Equals("TTM") || cf.Period.Contains("FY")).ToList(),
 				Pl = statement.Pl.Where(pl => pl.Period.Equals("TTM") || pl.Period.Contains("FY")).ToList()
 			};
-			foreach (var bs in returnValue.Bs)
-			{
-				if (bs.Period.Equals("Q4"))
-				{
-					bs.Period = "FY";
-				}
-			}
+			returnValue.CompanyId = statement.CompanyId;
 			return returnValue;
 		}
 		#endregion Public Methods
@@ -110,6 +104,7 @@ namespace HandleSimFin.Methods
 					data = await wc.DownloadStringTaskAsync(urlToUse);
 				}
 				statementList = JsonConvert.DeserializeObject<StatementList>(data);
+				statementList.CompanyId = companyId;
 				return statementList;
 			}
 			catch (Exception ex)

@@ -136,8 +136,9 @@ namespace HandleSimFinTests.Methods
 			{
 				result = unitUnderTest.ExtractYearEndReports(result);
 			}
+
 			var bs = result.Bs.FindAll(b => b.Period.Contains("TTM-"));
-			var bs1 = result.Bs.FindAll(b => b.Period.Contains("FY"));
+			var bs1 = result.Pl.FindAll(b => b.Period.Contains("FY"));
 			//Assert
 			Assert.True(bs.Count == 0);
 			Assert.False(bs1.Count == 0);
