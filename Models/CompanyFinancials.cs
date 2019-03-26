@@ -8,35 +8,35 @@ namespace Models
 		CashFlow,
 		ProfitLoss
 	};
+
 	public class CalculationScheme
 	{
-
 		#region Public Properties
 
 		public int Fyear { get; set; }
 		public string Period { get; set; }
 		public int Sign { get; set; }
-		public int StatementId { get; set; }		
+		public int StatementId { get; set; }
+
 		#endregion Public Properties
 	}
 
 	public class CompanyFinancials
 	{
-
 		#region Public Properties
 
 		public bool Calculated { get; set; }
 		public List<CalculationScheme> CalculationSchemes { get; set; }
-		public string IndustryTemplate { get; set; }
-		public List<Value> Values { get; set; }
-		public int FYear { get; set; }
-		public StatementType Statement { get; set; }
 		public string CompanyId { get; set; }
+		public int FYear { get; set; }
+		public string IndustryTemplate { get; set; }
+		public StatementType Statement { get; set; }
+		public List<Value> Values { get; set; }
 		#endregion Public Properties
 	}
+
 	public class Value
 	{
-
 		#region Public Properties
 
 		public bool CheckPossible { get; set; }
