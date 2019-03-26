@@ -42,7 +42,7 @@ namespace HandleSimFinTests.Methods
 		{
 			// Arrange
 			var unitUnderTest = this.CreateDownloadReportableItems();
-			StatementList statementList = JsonConvert.DeserializeObject< StatementList>(File.ReadAllText(@"c:\users\sridh\Downloads\result.txt"));
+			StatementList statementList = JsonConvert.DeserializeObject< StatementList>(File.ReadAllText(@"C:\Users\sridh\OneDrive\Documents\Visual Studio 2019\Projects\DataProvider\Data\result.json"));
 
 			// Act
 			var result = await unitUnderTest.DownloadFinancialsAsync(
@@ -56,6 +56,8 @@ namespace HandleSimFinTests.Methods
 			Assert.True(countOfBs != 0);
 			Assert.True(countOfPl != 0);
 			Assert.True(countOfCf != 0);
+			var txtToWrite = JsonConvert.SerializeObject(result, Formatting.Indented);
+			File.WriteAllText(@"C:\Users\sridh\OneDrive\Documents\Visual Studio 2019\Projects\DataProvider\Data\FinData.json", txtToWrite);
 		}
 	}
 }

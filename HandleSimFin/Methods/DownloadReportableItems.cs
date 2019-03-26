@@ -32,7 +32,7 @@ namespace HandleSimFin.Methods
 
 			//get balance sheets
 			var statementType = "bs";			
-			var reportingList = statementList.Bs.OrderByDescending(b => b.Fyear).Take(4);			
+			var reportingList = statementList.Bs.OrderByDescending(b => b.Fyear).Take(5);			
 			foreach (var bs in reportingList)
 			{
 				var cfToAdd = await ObtainReportedNumbers(companyId, apiKey, statementType, bs);				
@@ -42,7 +42,7 @@ namespace HandleSimFin.Methods
 
 			// get profit and loss
 			statementType = "pl";
-			reportingList = statementList.Pl.OrderByDescending(b => b.Fyear).Take(4);
+			reportingList = statementList.Pl.OrderByDescending(b => b.Fyear).Take(5);
 			foreach (var pl in reportingList)
 			{
 				var cfToAdd = await ObtainReportedNumbers(companyId, apiKey, statementType, pl);
@@ -52,7 +52,7 @@ namespace HandleSimFin.Methods
 
 			//get cash flow
 			statementType = "cf";
-			reportingList = statementList.Cf.OrderByDescending(b => b.Fyear).Take(4);
+			reportingList = statementList.Cf.OrderByDescending(b => b.Fyear).Take(5);
 			foreach (var cf in reportingList)
 			{
 				var cfToAdd = await ObtainReportedNumbers(companyId, apiKey, statementType, cf);

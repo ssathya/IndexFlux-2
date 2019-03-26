@@ -1,0 +1,169 @@
+{
+  "Pl": [
+    {
+      "Period": "TTM",
+      "Fyear": 2018,
+      "Calculated": true
+    },
+    {
+      "Period": "FY",
+      "Fyear": 2017,
+      "Calculated": false
+    },
+    {
+      "Period": "FY",
+      "Fyear": 2016,
+      "Calculated": false
+    },
+    {
+      "Period": "FY",
+      "Fyear": 2015,
+      "Calculated": false
+    },
+    {
+      "Period": "FY",
+      "Fyear": 2014,
+      "Calculated": false
+    },
+    {
+      "Period": "FY",
+      "Fyear": 2013,
+      "Calculated": false
+    },
+    {
+      "Period": "FY",
+      "Fyear": 2012,
+      "Calculated": false
+    },
+    {
+      "Period": "FY",
+      "Fyear": 2011,
+      "Calculated": false
+    },
+    {
+      "Period": "FY",
+      "Fyear": 2010,
+      "Calculated": false
+    },
+    {
+      "Period": "FY",
+      "Fyear": 2009,
+      "Calculated": false
+    },
+    {
+      "Period": "FY",
+      "Fyear": 2008,
+      "Calculated": false
+    }
+  ],
+  "Bs": [
+    {
+      "Period": "TTM",
+      "Fyear": 2018,
+      "Calculated": true
+    },
+    {
+      "Period": "Q4",
+      "Fyear": 2017,
+      "Calculated": false
+    },
+    {
+      "Period": "Q4",
+      "Fyear": 2016,
+      "Calculated": false
+    },
+    {
+      "Period": "Q4",
+      "Fyear": 2015,
+      "Calculated": false
+    },
+    {
+      "Period": "Q4",
+      "Fyear": 2014,
+      "Calculated": false
+    },
+    {
+      "Period": "Q4",
+      "Fyear": 2013,
+      "Calculated": false
+    },
+    {
+      "Period": "Q4",
+      "Fyear": 2012,
+      "Calculated": false
+    },
+    {
+      "Period": "Q4",
+      "Fyear": 2011,
+      "Calculated": false
+    },
+    {
+      "Period": "Q4",
+      "Fyear": 2010,
+      "Calculated": false
+    },
+    {
+      "Period": "Q4",
+      "Fyear": 2009,
+      "Calculated": false
+    }
+  ],
+  "Cf": [
+    {
+      "Period": "TTM",
+      "Fyear": 2018,
+      "Calculated": true
+    },
+    {
+      "Period": "FY",
+      "Fyear": 2017,
+      "Calculated": false
+    },
+    {
+      "Period": "FY",
+      "Fyear": 2016,
+      "Calculated": false
+    },
+    {
+      "Period": "FY",
+      "Fyear": 2015,
+      "Calculated": false
+    },
+    {
+      "Period": "FY",
+      "Fyear": 2014,
+      "Calculated": false
+    },
+    {
+      "Period": "FY",
+      "Fyear": 2013,
+      "Calculated": false
+    },
+    {
+      "Period": "FY",
+      "Fyear": 2012,
+      "Calculated": false
+    },
+    {
+      "Period": "FY",
+      "Fyear": 2011,
+      "Calculated": false
+    },
+    {
+      "Period": "FY",
+      "Fyear": 2010,
+      "Calculated": false
+    },
+    {
+      "Period": "FY",
+      "Fyear": 2009,
+      "Calculated": false
+    },
+    {
+      "Period": "FY",
+      "Fyear": 2008,
+      "Calculated": false
+    }
+  ],
+  "CompanyId": "71192"
+}
