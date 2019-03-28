@@ -50,8 +50,15 @@ namespace ExcelReadWrite.Tools
 				return false;
 			}
 			var balanceSheets = companyFinancials.Where(cf => cf.Statement == StatementType.BalanceSheet).ToList();
+			await UpdateIndustryTemplate(balanceSheets.First().IndustryTemplate, outFile, SimId);
 			await WriteBalanceSheetDataAsync(balanceSheets, outFile);
 			return true;
+		}
+
+		private async Task UpdateIndustryTemplate(string industryTemplate, string outFile, string simId)
+		{
+			var wloc = new WriteListOfCompanies(_logger);
+			await wloc.UpdateIndustryTemplateAsync(simId, industryTemplate, outFile);
 		}
 
 		#endregion Public Methods

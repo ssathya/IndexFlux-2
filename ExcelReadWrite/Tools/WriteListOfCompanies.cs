@@ -1,8 +1,11 @@
 ﻿using HandleSimFin.Methods;
+using Humanizer;
 using Microsoft.Extensions.Logging;
 using Models;
 using OfficeOpenXml;
+using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -75,11 +78,44 @@ namespace ExcelReadWrite.Tools
 			return CompanyDetails;
 		}
 
+		internal async Task<bool> UpdateIndustryTemplateAsync(string simId, string industryTemplate, string outFile)
+		{
+			using (var package = new ExcelPackage())
+			{
+				using (var outStream = new FileStream(outFile, FileMode.OpenOrCreate))
+				{
+					package.Load(outStream);
+				}
+				var workSheet = package.Workbook.Worksheets.SingleOrDefault(x => x.Name == workSheetName);
+				var matchCells = (from cell in workSheet.Cells["a:a"]
+								  where cell.Value?.ToString() == simId
+						  select cell).ToList();
+				 if (matchCells == null || matchCells.Count() == 0)
+				{
+					return false;
+				}
+				 var matchCell = matchCells.First().Address;				
+				matchCell = matchCell.Replace('A', 'D');
+				workSheet.Cells[matchCell].Value = industryTemplate;
+				matchCell = matchCell.Replace('D', 'E');
+				workSheet.Cells[matchCell].Value = DateTime.Now;
+				workSheet.Cells[matchCell].Style.Numberformat.Format = 
+					DateTimeFormatInfo.CurrentInfo.ShortDatePattern;
+				var fullData = package.GetAsByteArray();
+				await File.WriteAllBytesAsync(outFile, fullData);
+				return true;
+			}								
+		}
+
 		public async Task WriteAllCompanines(string destinationFile)
 		{
 			var dataSource = new DownloadListedFirms(_logger);
 			var allCompanies = await ObtainAndCleanExternalData(dataSource);
-
+			
+			foreach (var company in allCompanies)
+			{
+				company.Name = company.Name.Transform(To.LowerCase, To.TitleCase);
+			}
 			
 
 			using (var package = new ExcelPackage())

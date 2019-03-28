@@ -43,9 +43,13 @@ namespace ExcelReadWrite
 			logger = CreateLogger<WriteFinancials>();
 			var wf = new WriteFinancials(logger);
 			int count = 0;
-			var miniCompDetail = companyDetails.Where(cd => cd.Ticker == "C").ToList();
-			miniCompDetail.Add(companyDetails.Where(cd => cd.Ticker == "BBY").FirstOrDefault());
-			miniCompDetail.Add(companyDetails.Where(cd => cd.Ticker == "HRTG").FirstOrDefault());
+			var banks = new string[] { "C", "BBT", "PNC", "GS", "JPM" };			
+			var retailers = new string[] { "CVS", "RAD", "BBY", "BBBY", "AMZN" };
+			var insurance = new string[] { "AET", "HUM", "UNH", "MET" };
+			var miniCompDetail = companyDetails.Where(cd => banks.Contains(cd.Ticker)).ToList();			
+			miniCompDetail.AddRange(companyDetails.Where(cd => retailers.Contains(cd.Ticker)).ToList());
+			miniCompDetail.AddRange(companyDetails.Where(cd => insurance.Contains(cd.Ticker)).ToList());
+			
 			foreach (var companyDetail in miniCompDetail)
 			{				
 				var simId = companyDetail.SimId;
