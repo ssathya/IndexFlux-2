@@ -41,6 +41,10 @@ namespace ExcelReadWrite.Tools
 
 		public async Task<List<CompanyDetail>> GetAllCompanines()
 		{
+			if (CompanyDetails != null && CompanyDetails.Count != 0)
+			{
+				return CompanyDetails;
+			}
 			var dataSource = new DownloadListedFirms(_logger);
 			var allCompanies = await ObtainAndCleanExternalData(dataSource);
 
@@ -48,6 +52,7 @@ namespace ExcelReadWrite.Tools
 			{
 				company.Name = company.Name.Transform(To.LowerCase, To.TitleCase);
 			}
+			CompanyDetails = allCompanies;
 			return allCompanies;
 		}
 
@@ -75,27 +80,23 @@ namespace ExcelReadWrite.Tools
 				try
 				{
 					for (int i = 2; i <= rows; i++)
-					{						
+					{
+						var val1 = workSheet.Cells[$"A{i}"].Text;
 						var cd = new CompanyDetail
 						{
-							SimId = workSheet.Cells[$"A{i}"].Value.ToString(),
-							Ticker = workSheet.Cells[$"B{i}"].Value.ToString(),
-							Name = workSheet.Cells[$"C{i}"].Value.ToString(),
-							IndustryTemplate = workSheet.Cells[$"D{i}"].Value.ToString(),
+							SimId = workSheet.Cells[$"A{i}"].Text.Trim(),
+							Ticker = workSheet.Cells[$"B{i}"].Text.Trim(),
+							Name = workSheet.Cells[$"C{i}"].Text.Trim(),
+							IndustryTemplate = workSheet.Cells[$"D{i}"].Text.Trim()
 						};
-						var strDate = workSheet.Cells[$"E{i}"].Value.ToString();
+						var strDate = workSheet.Cells[$"E{i}"].Text.Trim();
 						if (!string.IsNullOrWhiteSpace(strDate))
 						{
-							var result = int.TryParse(strDate, out int excelDate);
+							
+							var result = DateTime.TryParse(strDate, out DateTime resultValue);
 							if (result == true)
 							{
-								var dateOfReference = new DateTime(1900, 1, 1);
-								if (excelDate > 60d)
-									excelDate = excelDate - 2;
-								else
-									excelDate = excelDate - 1;
-								dateOfReference.AddDays(excelDate);
-								cd.LastUpdate = dateOfReference;
+								cd.LastUpdate = resultValue;
 							}
 						}
 						CompanyDetails.Add(cd);
