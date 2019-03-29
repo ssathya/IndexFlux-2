@@ -19,11 +19,13 @@ namespace ExcelReadWrite.Tools
 
 		private const string BankBsWorkSheetName = "Bank-Balance-Sheets";
 		private const string BankCfWorkSheetName = "Bank-Cash-Flow";
+		private const string BankPlWorkSheetName = "Bank-Profit-Loss";
 		private const string GeneralBsWorkSheetName = "General-Balance-Sheets";
 		private const string GeneralCfWorkSheetName = "General-Cash-Flow";
+		private const string GeneralPlWorkSheetName = "General-Profit-Loss";
 		private const string InsuranceBsWorkSheetName = "Insurance-Balance-Sheets";
 		private const string InsuranceCfWorkSheetName = "Insurance-Cash-Flow";
-		private const string plWorkSheetName = "Profit-Loss";
+		private const string InsurancePlWorkSheetName = "Insurance-Profit-Loss";
 		private readonly ILogger _logger;
 
 		#endregion Private Fields
@@ -59,6 +61,7 @@ namespace ExcelReadWrite.Tools
 			}
 			var balanceSheets = companyFinancials.Where(cf => cf.Statement == StatementType.BalanceSheet).ToList();
 			var cashFlows = companyFinancials.Where(cf => cf.Statement == StatementType.CashFlow).ToList();
+			var profitAndLosss = companyFinancials.Where(cf => cf.Statement == StatementType.ProfitLoss).ToList();
 
 			msg = "Time to update excel";
 			stopWatch.Reset();
@@ -67,6 +70,8 @@ namespace ExcelReadWrite.Tools
 
 			await WriteBalanceSheetDataAsync(balanceSheets, outFile);
 			await WriteCashFlowDataAsync(cashFlows, outFile);
+			await WriteProfitAndLossAsync(profitAndLosss, outFile);
+			Task.WaitAll();
 			stopWatch.Stop();
 			DisplayTimeTaken(stopWatch, msg);
 			return true;
@@ -377,6 +382,7 @@ namespace ExcelReadWrite.Tools
 				ts.Milliseconds / 10);
 			Console.WriteLine($"\n{msg} {elapsedTime}");
 		}
+
 		private BankCashFlow BuildBankCashFlow(CompanyFinancials cashFlow)
 		{
 			var bcf = new BankCashFlow
@@ -454,6 +460,69 @@ namespace ExcelReadWrite.Tools
 			return bcf;
 		}
 
+		private BankProfitAndLoss BuildBankProfitLoss(CompanyFinancials profitAndLoss)
+		{
+			var bpl = new BankProfitAndLoss
+			{
+				Calculated = profitAndLoss.Calculated,
+				CompanyId = profitAndLoss.CompanyId,
+				FYear = profitAndLoss.FYear,
+				IndustryTemplate = profitAndLoss.IndustryTemplate,
+				Statement = profitAndLoss.Statement
+			};
+			bpl.NetRevenue_1 = profitAndLoss.Values.Find(a => a.StandardisedName == "Net Revenue" && a.Tid == 1).ValueAssigned;
+			bpl.Netinterestincome_2 = profitAndLoss.Values.Find(a => a.StandardisedName == "Net interest income" && a.Tid == 2).ValueAssigned;
+			bpl.TotalInterestIncome_3 = profitAndLoss.Values.Find(a => a.StandardisedName == "Total Interest Income" && a.Tid == 3).ValueAssigned;
+			bpl.TotalInterestExpense_6 = profitAndLoss.Values.Find(a => a.StandardisedName == "Total Interest Expense" && a.Tid == 6).ValueAssigned;
+			bpl.TotalNonInterestIncome_7 = profitAndLoss.Values.Find(a => a.StandardisedName == "Total Non-Interest Income" && a.Tid == 7).ValueAssigned;
+			bpl.TradingAccountProfits_Losses_8 = profitAndLoss.Values.Find(a => a.StandardisedName == "Trading Account Profits/Losses" && a.Tid == 8).ValueAssigned;
+			bpl.InvestmentIncome_Loss__10 = profitAndLoss.Values.Find(a => a.StandardisedName == "Investment Income (Loss)" && a.Tid == 10).ValueAssigned;
+			bpl.SaleofLoanIncome_Loss__11 = profitAndLoss.Values.Find(a => a.StandardisedName == "Sale of Loan Income (Loss)" && a.Tid == 11).ValueAssigned;
+			bpl.CommissionsFeesEarned_12 = profitAndLoss.Values.Find(a => a.StandardisedName == "Commissions & Fees Earned" && a.Tid == 12).ValueAssigned;
+			bpl.NetOTTIlossesrecognisedinearnings_52 = profitAndLoss.Values.Find(a => a.StandardisedName == "Net OTTI losses recognised in earnings" && a.Tid == 52).ValueAssigned;
+			bpl.OtherNonInterestIncome_13 = profitAndLoss.Values.Find(a => a.StandardisedName == "Other Non-Interest Income" && a.Tid == 13).ValueAssigned;
+			bpl.ProvisionforLoanLosses_14 = profitAndLoss.Values.Find(a => a.StandardisedName == "Provision for Loan Losses" && a.Tid == 14).ValueAssigned;
+			bpl.NetRevenueafterProvisions_15 = profitAndLoss.Values.Find(a => a.StandardisedName == "Net Revenue after Provisions" && a.Tid == 15).ValueAssigned;
+			bpl.TotalNonInterestExpense_16 = profitAndLoss.Values.Find(a => a.StandardisedName == "Total Non-Interest Expense" && a.Tid == 16).ValueAssigned;
+			bpl.CommissionsFeesPaid_17 = profitAndLoss.Values.Find(a => a.StandardisedName == "Commissions & Fees Paid" && a.Tid == 17).ValueAssigned;
+			bpl.OtherOperatingExpense_18 = profitAndLoss.Values.Find(a => a.StandardisedName == "Other Operating Expense" && a.Tid == 18).ValueAssigned;
+			bpl.OperatingIncome_Loss__19 = profitAndLoss.Values.Find(a => a.StandardisedName == "Operating Income (Loss)" && a.Tid == 19).ValueAssigned;
+			bpl.NonOperatingIncome_Loss__20 = profitAndLoss.Values.Find(a => a.StandardisedName == "Non-Operating Income (Loss)" && a.Tid == 20).ValueAssigned;
+			bpl.Income_Loss_fromAffiliates_21 = profitAndLoss.Values.Find(a => a.StandardisedName == "Income (Loss) from Affiliates" && a.Tid == 21).ValueAssigned;
+			bpl.OtherNonOperatingIncome_Loss__22 = profitAndLoss.Values.Find(a => a.StandardisedName == "Other Non-Operating Income (Loss)" && a.Tid == 22).ValueAssigned;
+			bpl.PretaxIncome_Loss_Adjusted_23 = profitAndLoss.Values.Find(a => a.StandardisedName == "Pretax Income (Loss), Adjusted" && a.Tid == 23).ValueAssigned;
+			bpl.AbnormalGains_Losses__24 = profitAndLoss.Values.Find(a => a.StandardisedName == "Abnormal Gains (Losses)" && a.Tid == 24).ValueAssigned;
+			bpl.DebtValuationAdjustment_25 = profitAndLoss.Values.Find(a => a.StandardisedName == "Debt Valuation Adjustment" && a.Tid == 25).ValueAssigned;
+			bpl.CreditValuationAdjustment_26 = profitAndLoss.Values.Find(a => a.StandardisedName == "Credit Valuation Adjustment" && a.Tid == 26).ValueAssigned;
+			bpl.Merger_AcquisitionExpense_27 = profitAndLoss.Values.Find(a => a.StandardisedName == "Merger / Acquisition Expense" && a.Tid == 27).ValueAssigned;
+			bpl.DisposalofAssets_28 = profitAndLoss.Values.Find(a => a.StandardisedName == "Disposal of Assets" && a.Tid == 28).ValueAssigned;
+			bpl.EarlyextinguishmentofDebt_29 = profitAndLoss.Values.Find(a => a.StandardisedName == "Early extinguishment of Debt" && a.Tid == 29).ValueAssigned;
+			bpl.AssetWriteDown_30 = profitAndLoss.Values.Find(a => a.StandardisedName == "Asset Write-Down" && a.Tid == 30).ValueAssigned;
+			bpl.ImpairmentofGoodwillIntangibles_31 = profitAndLoss.Values.Find(a => a.StandardisedName == "Impairment of Goodwill & Intangibles" && a.Tid == 31).ValueAssigned;
+			bpl.SaleofBusiness_32 = profitAndLoss.Values.Find(a => a.StandardisedName == "Sale of Business" && a.Tid == 32).ValueAssigned;
+			bpl.LegalSettlement_33 = profitAndLoss.Values.Find(a => a.StandardisedName == "Legal Settlement" && a.Tid == 33).ValueAssigned;
+			bpl.RestructuringCharges_34 = profitAndLoss.Values.Find(a => a.StandardisedName == "Restructuring Charges" && a.Tid == 34).ValueAssigned;
+			bpl.OtherAbnormalItems_35 = profitAndLoss.Values.Find(a => a.StandardisedName == "Other Abnormal Items" && a.Tid == 35).ValueAssigned;
+			bpl.PretaxIncome_Loss__36 = profitAndLoss.Values.Find(a => a.StandardisedName == "Pretax Income (Loss)" && a.Tid == 36).ValueAssigned;
+			bpl.IncomeTax_Expense_Benefitnet_37 = profitAndLoss.Values.Find(a => a.StandardisedName == "Income Tax (Expense) Benefit, net" && a.Tid == 37).ValueAssigned;
+			bpl.CurrentIncomeTax_38 = profitAndLoss.Values.Find(a => a.StandardisedName == "Current Income Tax" && a.Tid == 38).ValueAssigned;
+			bpl.DeferredIncomeTax_39 = profitAndLoss.Values.Find(a => a.StandardisedName == "Deferred Income Tax" && a.Tid == 39).ValueAssigned;
+			bpl.TaxAllowance_Credit_40 = profitAndLoss.Values.Find(a => a.StandardisedName == "Tax Allowance/Credit" && a.Tid == 40).ValueAssigned;
+			bpl.Income_Loss_fromAffiliatesnetoftaxes_41 = profitAndLoss.Values.Find(a => a.StandardisedName == "Income (Loss) from Affiliates, net of taxes" && a.Tid == 41).ValueAssigned;
+			bpl.Income_Loss_fromContinuingOperations_42 = profitAndLoss.Values.Find(a => a.StandardisedName == "Income (Loss) from Continuing Operations" && a.Tid == 42).ValueAssigned;
+			bpl.NetExtraordinaryGains_Losses__43 = profitAndLoss.Values.Find(a => a.StandardisedName == "Net Extraordinary Gains (Losses)" && a.Tid == 43).ValueAssigned;
+			bpl.DiscontinuedOperations_44 = profitAndLoss.Values.Find(a => a.StandardisedName == "Discontinued Operations" && a.Tid == 44).ValueAssigned;
+			bpl.XOAccountingChargesOther_45 = profitAndLoss.Values.Find(a => a.StandardisedName == "XO & Accounting Charges & Other" && a.Tid == 45).ValueAssigned;
+			bpl.Income_Loss_IncludingMinorityInterest_46 = profitAndLoss.Values.Find(a => a.StandardisedName == "Income (Loss) Including Minority Interest" && a.Tid == 46).ValueAssigned;
+			bpl.MinorityInterest_47 = profitAndLoss.Values.Find(a => a.StandardisedName == "Minority Interest" && a.Tid == 47).ValueAssigned;
+			bpl.NetIncome_48 = profitAndLoss.Values.Find(a => a.StandardisedName == "Net Income" && a.Tid == 48).ValueAssigned;
+			bpl.PreferredDividends_49 = profitAndLoss.Values.Find(a => a.StandardisedName == "Preferred Dividends" && a.Tid == 49).ValueAssigned;
+			bpl.OtherAdjustments_50 = profitAndLoss.Values.Find(a => a.StandardisedName == "Other Adjustments" && a.Tid == 50).ValueAssigned;
+			bpl.NetIncomeAvailabletoCommonShareholders_51 = profitAndLoss.Values.Find(a => a.StandardisedName == "Net Income Available to Common Shareholders" && a.Tid == 51).ValueAssigned;
+
+			return bpl;
+		}
+
 		private GeneralCashFlow BuildGeneralCashFlow(CompanyFinancials cashFlow)
 		{
 			var gcf = new GeneralCashFlow
@@ -518,6 +587,142 @@ namespace ExcelReadWrite.Tools
 			gcf.NetChangesinCash_46 = cashFlow.Values.Find(a => a.StandardisedName == "Net Changes in Cash" && a.Tid == 46).ValueAssigned;
 
 			return gcf;
+		}
+
+		private InsuranceProfitAndLoss BuildInsurancePrfitAndLoss(CompanyFinancials profitAndLoss)
+		{
+			var ipl = new InsuranceProfitAndLoss
+			{
+				Calculated = profitAndLoss.Calculated,
+				CompanyId = profitAndLoss.CompanyId,
+				FYear = profitAndLoss.FYear,
+				IndustryTemplate = profitAndLoss.IndustryTemplate,
+				Statement = profitAndLoss.Statement
+			};
+			ipl.NetRevenue_1 = profitAndLoss.Values.Find(a => a.StandardisedName == "Net Revenue" && a.Tid == 1).ValueAssigned;
+			ipl.NetPremiumsEarned_2 = profitAndLoss.Values.Find(a => a.StandardisedName == "Net Premiums Earned" && a.Tid == 2).ValueAssigned;
+			ipl.InvestmentIncome_Loss__6 = profitAndLoss.Values.Find(a => a.StandardisedName == "Investment Income (Loss)" && a.Tid == 6).ValueAssigned;
+			ipl.IncomefromRealEstate_7 = profitAndLoss.Values.Find(a => a.StandardisedName == "Income from Real Estate" && a.Tid == 7).ValueAssigned;
+			ipl.OtherOperatingIncome_8 = profitAndLoss.Values.Find(a => a.StandardisedName == "Other Operating Income" && a.Tid == 8).ValueAssigned;
+			ipl.PolicyChargesFees_9 = profitAndLoss.Values.Find(a => a.StandardisedName == "Policy Charges & Fees" && a.Tid == 9).ValueAssigned;
+			ipl.TotalRealizedInvestmentGains_62 = profitAndLoss.Values.Find(a => a.StandardisedName == "Total Realized Investment Gains" && a.Tid == 62).ValueAssigned;
+			ipl.TotalOTTIRealized_63 = profitAndLoss.Values.Find(a => a.StandardisedName == "Total OTTI Realized" && a.Tid == 63).ValueAssigned;
+			ipl.OtherRealizedInvestmentGains_64 = profitAndLoss.Values.Find(a => a.StandardisedName == "Other Realized Investment Gains" && a.Tid == 64).ValueAssigned;
+			ipl.OtherIncome_10 = profitAndLoss.Values.Find(a => a.StandardisedName == "Other Income" && a.Tid == 10).ValueAssigned;
+			ipl.ClaimsLosses_11 = profitAndLoss.Values.Find(a => a.StandardisedName == "Claims & Losses" && a.Tid == 11).ValueAssigned;
+			ipl.ClaimsLosses_12 = profitAndLoss.Values.Find(a => a.StandardisedName == "Claims & Losses" && a.Tid == 12).ValueAssigned;
+			ipl.LongTermCharges_14 = profitAndLoss.Values.Find(a => a.StandardisedName == "Long Term Charges" && a.Tid == 14).ValueAssigned;
+			ipl.OtherClaimsLosses_15 = profitAndLoss.Values.Find(a => a.StandardisedName == "Other Claims & Losses" && a.Tid == 15).ValueAssigned;
+			ipl.UnderwritingExpenseAcquisitionCost_16 = profitAndLoss.Values.Find(a => a.StandardisedName == "Underwriting Expense & Acquisition Cost" && a.Tid == 16).ValueAssigned;
+			ipl.OtherOperatingExpense_26 = profitAndLoss.Values.Find(a => a.StandardisedName == "Other Operating Expense" && a.Tid == 26).ValueAssigned;
+			ipl.OperatingIncome_Loss__27 = profitAndLoss.Values.Find(a => a.StandardisedName == "Operating Income (Loss)" && a.Tid == 27).ValueAssigned;
+			ipl.NonOperatingIncome_Loss__28 = profitAndLoss.Values.Find(a => a.StandardisedName == "Non-Operating Income (Loss)" && a.Tid == 28).ValueAssigned;
+			ipl.Income_Loss_fromAffiliates_29 = profitAndLoss.Values.Find(a => a.StandardisedName == "Income (Loss) from Affiliates" && a.Tid == 29).ValueAssigned;
+			ipl.InterestExpense_30 = profitAndLoss.Values.Find(a => a.StandardisedName == "Interest Expense" && a.Tid == 30).ValueAssigned;
+			ipl.OtherNonOperatingIncome_Loss__31 = profitAndLoss.Values.Find(a => a.StandardisedName == "Other Non-Operating Income (Loss)" && a.Tid == 31).ValueAssigned;
+			ipl.PretaxIncome_Loss_Adjusted_32 = profitAndLoss.Values.Find(a => a.StandardisedName == "Pretax Income (Loss), Adjusted" && a.Tid == 32).ValueAssigned;
+			ipl.AbnormalGains_Losses__33 = profitAndLoss.Values.Find(a => a.StandardisedName == "Abnormal Gains (Losses)" && a.Tid == 33).ValueAssigned;
+			ipl.Merger_AcquisitionExpense_34 = profitAndLoss.Values.Find(a => a.StandardisedName == "Merger / Acquisition Expense" && a.Tid == 34).ValueAssigned;
+			ipl.AbnormalDerivatives_35 = profitAndLoss.Values.Find(a => a.StandardisedName == "Abnormal Derivatives" && a.Tid == 35).ValueAssigned;
+			ipl.DisposalofAssets_36 = profitAndLoss.Values.Find(a => a.StandardisedName == "Disposal of Assets" && a.Tid == 36).ValueAssigned;
+			ipl.EarlyextinguishmentofDebt_37 = profitAndLoss.Values.Find(a => a.StandardisedName == "Early extinguishment of Debt" && a.Tid == 37).ValueAssigned;
+			ipl.AssetWriteDown_38 = profitAndLoss.Values.Find(a => a.StandardisedName == "Asset Write-Down" && a.Tid == 38).ValueAssigned;
+			ipl.ImpairmentofGoodwillIntangibles_39 = profitAndLoss.Values.Find(a => a.StandardisedName == "Impairment of Goodwill & Intangibles" && a.Tid == 39).ValueAssigned;
+			ipl.SaleofBusiness_40 = profitAndLoss.Values.Find(a => a.StandardisedName == "Sale of Business" && a.Tid == 40).ValueAssigned;
+			ipl.LegalSettlement_41 = profitAndLoss.Values.Find(a => a.StandardisedName == "Legal Settlement" && a.Tid == 41).ValueAssigned;
+			ipl.RestructuringCharges_42 = profitAndLoss.Values.Find(a => a.StandardisedName == "Restructuring Charges" && a.Tid == 42).ValueAssigned;
+			ipl.NetInvestmentLosses_43 = profitAndLoss.Values.Find(a => a.StandardisedName == "Net Investment Losses" && a.Tid == 43).ValueAssigned;
+			ipl.ForeignExchange_44 = profitAndLoss.Values.Find(a => a.StandardisedName == "Foreign Exchange" && a.Tid == 44).ValueAssigned;
+			ipl.OtherAbnormalItems_45 = profitAndLoss.Values.Find(a => a.StandardisedName == "Other Abnormal Items" && a.Tid == 45).ValueAssigned;
+			ipl.PretaxIncome_Loss__46 = profitAndLoss.Values.Find(a => a.StandardisedName == "Pretax Income (Loss)" && a.Tid == 46).ValueAssigned;
+			ipl.IncomeTax_Expense_Benefitnet_47 = profitAndLoss.Values.Find(a => a.StandardisedName == "Income Tax (Expense) Benefit, net" && a.Tid == 47).ValueAssigned;
+			ipl.CurrentIncomeTax_48 = profitAndLoss.Values.Find(a => a.StandardisedName == "Current Income Tax" && a.Tid == 48).ValueAssigned;
+			ipl.DeferredIncomeTax_49 = profitAndLoss.Values.Find(a => a.StandardisedName == "Deferred Income Tax" && a.Tid == 49).ValueAssigned;
+			ipl.TaxAllowance_Credit_50 = profitAndLoss.Values.Find(a => a.StandardisedName == "Tax Allowance/Credit" && a.Tid == 50).ValueAssigned;
+			ipl.Income_Loss_fromAffiliatesnetoftaxes_51 = profitAndLoss.Values.Find(a => a.StandardisedName == "Income (Loss) from Affiliates, net of taxes" && a.Tid == 51).ValueAssigned;
+			ipl.Income_Loss_fromContinuingOperations_52 = profitAndLoss.Values.Find(a => a.StandardisedName == "Income (Loss) from Continuing Operations" && a.Tid == 52).ValueAssigned;
+			ipl.NetExtraordinaryGains_Losses__53 = profitAndLoss.Values.Find(a => a.StandardisedName == "Net Extraordinary Gains (Losses)" && a.Tid == 53).ValueAssigned;
+			ipl.DiscontinuedOperations_54 = profitAndLoss.Values.Find(a => a.StandardisedName == "Discontinued Operations" && a.Tid == 54).ValueAssigned;
+			ipl.XOAccountingChargesOther_55 = profitAndLoss.Values.Find(a => a.StandardisedName == "XO & Accounting Charges & Other" && a.Tid == 55).ValueAssigned;
+			ipl.Income_Loss_IncludingMinorityInterest_56 = profitAndLoss.Values.Find(a => a.StandardisedName == "Income (Loss) Including Minority Interest" && a.Tid == 56).ValueAssigned;
+			ipl.MinorityInterest_57 = profitAndLoss.Values.Find(a => a.StandardisedName == "Minority Interest" && a.Tid == 57).ValueAssigned;
+			ipl.NetIncome_58 = profitAndLoss.Values.Find(a => a.StandardisedName == "Net Income" && a.Tid == 58).ValueAssigned;
+			ipl.PreferredDividends_59 = profitAndLoss.Values.Find(a => a.StandardisedName == "Preferred Dividends" && a.Tid == 59).ValueAssigned;
+			ipl.OtherAdjustments_60 = profitAndLoss.Values.Find(a => a.StandardisedName == "Other Adjustments" && a.Tid == 60).ValueAssigned;
+			ipl.NetIncomeAvailabletoCommonShareholders_61 = profitAndLoss.Values.Find(a => a.StandardisedName == "Net Income Available to Common Shareholders" && a.Tid == 61).ValueAssigned;
+
+			return ipl;
+		}
+
+		private GeneralProfitAndLoss BuldGeneralProfitAndLoss(CompanyFinancials profitAndLoss)
+		{
+			var gpl = new GeneralProfitAndLoss
+			{
+				Calculated = profitAndLoss.Calculated,
+				CompanyId = profitAndLoss.CompanyId,
+				FYear = profitAndLoss.FYear,
+				IndustryTemplate = profitAndLoss.IndustryTemplate,
+				Statement = profitAndLoss.Statement
+			};
+			gpl.Revenue_1 = profitAndLoss.Values.Find(a => a.StandardisedName == "Revenue" && a.Tid == 1).ValueAssigned;
+			gpl.SalesServicesRevenue_3 = profitAndLoss.Values.Find(a => a.StandardisedName == "Sales & Services Revenue" && a.Tid == 3).ValueAssigned;
+			gpl.FinancingRevenue_5 = profitAndLoss.Values.Find(a => a.StandardisedName == "Financing Revenue" && a.Tid == 5).ValueAssigned;
+			gpl.OtherRevenue_6 = profitAndLoss.Values.Find(a => a.StandardisedName == "Other Revenue" && a.Tid == 6).ValueAssigned;
+			gpl.Costofrevenue_2 = profitAndLoss.Values.Find(a => a.StandardisedName == "Cost of revenue" && a.Tid == 2).ValueAssigned;
+			gpl.CostofGoodsServices_7 = profitAndLoss.Values.Find(a => a.StandardisedName == "Cost of Goods & Services" && a.Tid == 7).ValueAssigned;
+			gpl.CostofFinancingRevenue_8 = profitAndLoss.Values.Find(a => a.StandardisedName == "Cost of Financing Revenue" && a.Tid == 8).ValueAssigned;
+			gpl.CostofOtherRevenue_9 = profitAndLoss.Values.Find(a => a.StandardisedName == "Cost of Other Revenue" && a.Tid == 9).ValueAssigned;
+			gpl.GrossProfit_4 = profitAndLoss.Values.Find(a => a.StandardisedName == "Gross Profit" && a.Tid == 4).ValueAssigned;
+			gpl.OtherOperatingIncome_10 = profitAndLoss.Values.Find(a => a.StandardisedName == "Other Operating Income" && a.Tid == 10).ValueAssigned;
+			gpl.OperatingExpenses_11 = profitAndLoss.Values.Find(a => a.StandardisedName == "Operating Expenses" && a.Tid == 11).ValueAssigned;
+			gpl.SellingGeneralAdministrative_12 = profitAndLoss.Values.Find(a => a.StandardisedName == "Selling, General & Administrative" && a.Tid == 12).ValueAssigned;
+			gpl.SellingMarketing_13 = profitAndLoss.Values.Find(a => a.StandardisedName == "Selling & Marketing" && a.Tid == 13).ValueAssigned;
+			gpl.GeneralAdministrative_14 = profitAndLoss.Values.Find(a => a.StandardisedName == "General & Administrative" && a.Tid == 14).ValueAssigned;
+			gpl.ResearchDevelopment_15 = profitAndLoss.Values.Find(a => a.StandardisedName == "Research & Development" && a.Tid == 15).ValueAssigned;
+			gpl.DepreciationAmortization_16 = profitAndLoss.Values.Find(a => a.StandardisedName == "Depreciation & Amortization" && a.Tid == 16).ValueAssigned;
+			gpl.ProvisionForDoubtfulAccounts_17 = profitAndLoss.Values.Find(a => a.StandardisedName == "Provision For Doubtful Accounts" && a.Tid == 17).ValueAssigned;
+			gpl.OtherOperatingExpense_18 = profitAndLoss.Values.Find(a => a.StandardisedName == "Other Operating Expense" && a.Tid == 18).ValueAssigned;
+			gpl.OperatingIncome_Loss__19 = profitAndLoss.Values.Find(a => a.StandardisedName == "Operating Income (Loss)" && a.Tid == 19).ValueAssigned;
+			gpl.NonOperatingIncome_Loss__20 = profitAndLoss.Values.Find(a => a.StandardisedName == "Non-Operating Income (Loss)" && a.Tid == 20).ValueAssigned;
+			gpl.InterestExpensenet_21 = profitAndLoss.Values.Find(a => a.StandardisedName == "Interest Expense, net" && a.Tid == 21).ValueAssigned;
+			gpl.InterestExpense_22 = profitAndLoss.Values.Find(a => a.StandardisedName == "Interest Expense" && a.Tid == 22).ValueAssigned;
+			gpl.InterestIncome_23 = profitAndLoss.Values.Find(a => a.StandardisedName == "Interest Income" && a.Tid == 23).ValueAssigned;
+			gpl.OtherInvestmentIncome_Loss__24 = profitAndLoss.Values.Find(a => a.StandardisedName == "Other Investment Income (Loss)" && a.Tid == 24).ValueAssigned;
+			gpl.ForeignExchangeGain_Loss__25 = profitAndLoss.Values.Find(a => a.StandardisedName == "Foreign Exchange Gain (Loss)" && a.Tid == 25).ValueAssigned;
+			gpl.Income_Loss_fromAffiliates_26 = profitAndLoss.Values.Find(a => a.StandardisedName == "Income (Loss) from Affiliates" && a.Tid == 26).ValueAssigned;
+			gpl.OtherNonOperatingIncome_Loss__27 = profitAndLoss.Values.Find(a => a.StandardisedName == "Other Non-Operating Income (Loss)" && a.Tid == 27).ValueAssigned;
+			gpl.PretaxIncome_Loss_Adjusted_28 = profitAndLoss.Values.Find(a => a.StandardisedName == "Pretax Income (Loss), Adjusted" && a.Tid == 28).ValueAssigned;
+			gpl.AbnormalGains_Losses__29 = profitAndLoss.Values.Find(a => a.StandardisedName == "Abnormal Gains (Losses)" && a.Tid == 29).ValueAssigned;
+			gpl.AcquiredInProcessRD_30 = profitAndLoss.Values.Find(a => a.StandardisedName == "Acquired In-Process R&D" && a.Tid == 30).ValueAssigned;
+			gpl.Merger_AcquisitionExpense_31 = profitAndLoss.Values.Find(a => a.StandardisedName == "Merger / Acquisition Expense" && a.Tid == 31).ValueAssigned;
+			gpl.AbnormalDerivatives_32 = profitAndLoss.Values.Find(a => a.StandardisedName == "Abnormal Derivatives" && a.Tid == 32).ValueAssigned;
+			gpl.DisposalofAssets_33 = profitAndLoss.Values.Find(a => a.StandardisedName == "Disposal of Assets" && a.Tid == 33).ValueAssigned;
+			gpl.EarlyextinguishmentofDebt_34 = profitAndLoss.Values.Find(a => a.StandardisedName == "Early extinguishment of Debt" && a.Tid == 34).ValueAssigned;
+			gpl.AssetWriteDown_35 = profitAndLoss.Values.Find(a => a.StandardisedName == "Asset Write-Down" && a.Tid == 35).ValueAssigned;
+			gpl.ImpairmentofGoodwillIntangibles_36 = profitAndLoss.Values.Find(a => a.StandardisedName == "Impairment of Goodwill & Intangibles" && a.Tid == 36).ValueAssigned;
+			gpl.SaleofBusiness_37 = profitAndLoss.Values.Find(a => a.StandardisedName == "Sale of Business" && a.Tid == 37).ValueAssigned;
+			gpl.LegalSettlement_38 = profitAndLoss.Values.Find(a => a.StandardisedName == "Legal Settlement" && a.Tid == 38).ValueAssigned;
+			gpl.RestructuringCharges_39 = profitAndLoss.Values.Find(a => a.StandardisedName == "Restructuring Charges" && a.Tid == 39).ValueAssigned;
+			gpl.SaleofandUnrealizedInvestments_40 = profitAndLoss.Values.Find(a => a.StandardisedName == "Sale of and Unrealized Investments" && a.Tid == 40).ValueAssigned;
+			gpl.InsuranceSettlement_41 = profitAndLoss.Values.Find(a => a.StandardisedName == "Insurance Settlement" && a.Tid == 41).ValueAssigned;
+			gpl.OtherAbnormalItems_42 = profitAndLoss.Values.Find(a => a.StandardisedName == "Other Abnormal Items" && a.Tid == 42).ValueAssigned;
+			gpl.PretaxIncome_Loss__43 = profitAndLoss.Values.Find(a => a.StandardisedName == "Pretax Income (Loss)" && a.Tid == 43).ValueAssigned;
+			gpl.IncomeTax_Expense_Benefitnet_44 = profitAndLoss.Values.Find(a => a.StandardisedName == "Income Tax (Expense) Benefit, net" && a.Tid == 44).ValueAssigned;
+			gpl.CurrentIncomeTax_45 = profitAndLoss.Values.Find(a => a.StandardisedName == "Current Income Tax" && a.Tid == 45).ValueAssigned;
+			gpl.DeferredIncomeTax_46 = profitAndLoss.Values.Find(a => a.StandardisedName == "Deferred Income Tax" && a.Tid == 46).ValueAssigned;
+			gpl.TaxAllowance_Credit_47 = profitAndLoss.Values.Find(a => a.StandardisedName == "Tax Allowance/Credit" && a.Tid == 47).ValueAssigned;
+			gpl.Income_Loss_fromAffiliatesnetoftaxes_48 = profitAndLoss.Values.Find(a => a.StandardisedName == "Income (Loss) from Affiliates, net of taxes" && a.Tid == 48).ValueAssigned;
+			gpl.Income_Loss_fromContinuingOperations_49 = profitAndLoss.Values.Find(a => a.StandardisedName == "Income (Loss) from Continuing Operations" && a.Tid == 49).ValueAssigned;
+			gpl.NetExtraordinaryGains_Losses__50 = profitAndLoss.Values.Find(a => a.StandardisedName == "Net Extraordinary Gains (Losses)" && a.Tid == 50).ValueAssigned;
+			gpl.DiscontinuedOperations_51 = profitAndLoss.Values.Find(a => a.StandardisedName == "Discontinued Operations" && a.Tid == 51).ValueAssigned;
+			gpl.XOAccountingChargesOther_52 = profitAndLoss.Values.Find(a => a.StandardisedName == "XO & Accounting Charges & Other" && a.Tid == 52).ValueAssigned;
+			gpl.Income_Loss_IncludingMinorityInterest_53 = profitAndLoss.Values.Find(a => a.StandardisedName == "Income (Loss) Including Minority Interest" && a.Tid == 53).ValueAssigned;
+			gpl.MinorityInterest_54 = profitAndLoss.Values.Find(a => a.StandardisedName == "Minority Interest" && a.Tid == 54).ValueAssigned;
+			gpl.NetIncome_55 = profitAndLoss.Values.Find(a => a.StandardisedName == "Net Income" && a.Tid == 55).ValueAssigned;
+			gpl.PreferredDividends_56 = profitAndLoss.Values.Find(a => a.StandardisedName == "Preferred Dividends" && a.Tid == 56).ValueAssigned;
+			gpl.OtherAdjustments_57 = profitAndLoss.Values.Find(a => a.StandardisedName == "Other Adjustments" && a.Tid == 57).ValueAssigned;
+			gpl.NetIncomeAvailabletoCommonShareholders_58 = profitAndLoss.Values.Find(a => a.StandardisedName == "Net Income Available to Common Shareholders" && a.Tid == 58).ValueAssigned;
+			return gpl;
 		}
 
 		private ExcelWorksheet CreateSheet(string outFile, ExcelPackage package, string sheetName)
@@ -585,6 +790,23 @@ namespace ExcelReadWrite.Tools
 			var fullData = package.GetAsByteArray();
 			await File.WriteAllBytesAsync(outFile, fullData);
 		}
+
+		private async Task PopulateBankPLAsync(List<CompanyFinancials> profitAndLosss, string outFile, ExcelPackage package)
+		{
+			ExcelWorksheet worksheet = CreateSheet(outFile, package, BankPlWorkSheetName);
+			var bpll = new List<BankProfitAndLoss>();
+			foreach (var profitAndLoss in profitAndLosss)
+			{
+				BankProfitAndLoss bpl = BuildBankProfitLoss(profitAndLoss);
+				bpll.Add(bpl);
+			}
+			var row = worksheet.Dimension == null ? 1 : worksheet.Dimension.End.Row;
+			worksheet.Cells[row, 1].LoadFromCollection(bpll, (row == 1));
+
+			var fullData = package.GetAsByteArray();
+			await File.WriteAllBytesAsync(outFile, fullData);
+		}
+
 		private async Task PopulateGeneralBSAsync(List<CompanyFinancials> balanceSheets, string outFile, ExcelPackage package)
 		{
 			ExcelWorksheet worksheet = CreateSheet(outFile, package, GeneralBsWorkSheetName);
@@ -615,8 +837,24 @@ namespace ExcelReadWrite.Tools
 
 			var fullData = package.GetAsByteArray();
 			await File.WriteAllBytesAsync(outFile, fullData);
-
 		}
+
+		private async Task PopulateGeneralPLAsync(List<CompanyFinancials> profitAndLosss, string outFile, ExcelPackage package)
+		{
+			ExcelWorksheet worksheet = CreateSheet(outFile, package, GeneralPlWorkSheetName);
+			var gpll = new List<GeneralProfitAndLoss>();
+			foreach (var profitAndLoss in profitAndLosss)
+			{
+				var gpl = BuldGeneralProfitAndLoss(profitAndLoss);
+				gpll.Add(gpl);
+			}
+			var row = worksheet.Dimension == null ? 1 : worksheet.Dimension.End.Row;
+			worksheet.Cells[row, 1].LoadFromCollection(gpll, (row == 1));
+
+			var fullData = package.GetAsByteArray();
+			await File.WriteAllBytesAsync(outFile, fullData);
+		}
+
 		private async Task PopulateInsuranceBSAsync(List<CompanyFinancials> balanceSheets, string outFile, ExcelPackage package)
 		{
 			ExcelWorksheet worksheet = CreateSheet(outFile, package, InsuranceBsWorkSheetName);
@@ -648,6 +886,23 @@ namespace ExcelReadWrite.Tools
 			var fullData = package.GetAsByteArray();
 			await File.WriteAllBytesAsync(outFile, fullData);
 		}
+
+		private async Task PopulateInsurancePLAsync(List<CompanyFinancials> profitAndLosss, string outFile, ExcelPackage package)
+		{
+			ExcelWorksheet worksheet = CreateSheet(outFile, package, InsurancePlWorkSheetName);
+			var iplls = new List<InsuranceProfitAndLoss>();
+			foreach (var profitAndLoss in profitAndLosss)
+			{
+				InsuranceProfitAndLoss ipl = BuildInsurancePrfitAndLoss(profitAndLoss);
+				iplls.Add(ipl);
+			}
+			var row = worksheet.Dimension == null ? 1 : worksheet.Dimension.End.Row;
+			worksheet.Cells[row, 1].LoadFromCollection(iplls, (row == 1));
+
+			var fullData = package.GetAsByteArray();
+			await File.WriteAllBytesAsync(outFile, fullData);
+		}
+
 		private async Task UpdateIndustryTemplate(string industryTemplate, string outFile, string simId)
 		{
 			var wloc = new WriteListOfCompanies(_logger);
@@ -703,6 +958,32 @@ namespace ExcelReadWrite.Tools
 				else
 				{
 					_logger.LogError($"Unknown Industry template {cashFlows.First().IndustryTemplate}");
+				}
+			}
+		}
+
+		private async Task WriteProfitAndLossAsync(List<CompanyFinancials> profitAndLosss, string outFile)
+		{
+			using (var package = new ExcelPackage())
+			{
+				if (profitAndLosss.First().IndustryTemplate.Equals("insurances"))
+				{
+					_logger.LogInformation("Processing Cash flow for Insurance");
+					await PopulateInsurancePLAsync(profitAndLosss, outFile, package);
+				}
+				else if (profitAndLosss.First().IndustryTemplate.Equals("general"))
+				{
+					_logger.LogInformation("Processing General");
+					await PopulateGeneralPLAsync(profitAndLosss, outFile, package);
+				}
+				else if (profitAndLosss.First().IndustryTemplate.Equals("banks"))
+				{
+					_logger.LogInformation("Processing Bank");
+					await PopulateBankPLAsync(profitAndLosss, outFile, package);
+				}
+				else
+				{
+					_logger.LogError($"Unknown Industry template {profitAndLosss.First().IndustryTemplate}");
 				}
 			}
 		}

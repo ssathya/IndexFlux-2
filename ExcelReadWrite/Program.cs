@@ -32,7 +32,8 @@ namespace ExcelReadWrite
 		{
 			var logger = CreateLogger<WriteListOfCompanies>();
 			var wlc = new WriteListOfCompanies(logger);
-			await wlc.WriteAllCompanines(outFile);
+			await wlc.GetAllCompanines();
+			// await wlc.WriteAllCompanines(outFile);
 
 			companyDetails = wlc.GetCompanyDetails(outFile);
 			if (companyDetails == null || companyDetails.Count == 0)
