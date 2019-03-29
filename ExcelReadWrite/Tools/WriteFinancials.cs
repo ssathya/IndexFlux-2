@@ -4,6 +4,7 @@ using Models;
 using OfficeOpenXml;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -13,12 +14,15 @@ namespace ExcelReadWrite.Tools
 	public class WriteFinancials
 	{
 
+
 		#region Private Fields
 
-		private const string cfWorkSheetName = "Cash-Flow";
-		private const string GeneralBsWorkSheetName = "General-Balance-Sheets";
-		private const string InsuranceBsWorkSheetName = "Insurance-Balance-Sheets";
 		private const string BankBsWorkSheetName = "Bank-Balance-Sheets";
+		private const string BankCfWorkSheetName = "Bank-Cash-Flow";
+		private const string GeneralBsWorkSheetName = "General-Balance-Sheets";
+		private const string GeneralCfWorkSheetName = "General-Cash-Flow";
+		private const string InsuranceBsWorkSheetName = "Insurance-Balance-Sheets";
+		private const string InsuranceCfWorkSheetName = "Insurance-Cash-Flow";
 		private const string plWorkSheetName = "Profit-Loss";
 		private readonly ILogger _logger;
 
@@ -43,28 +47,478 @@ namespace ExcelReadWrite.Tools
 			{
 				return false;
 			}
+			Stopwatch stopWatch = new Stopwatch();
+			stopWatch.Start();
 			var companyFinancials = await ObtainCompanyFinancilasAsync(SimId);
-
+			stopWatch.Stop();
+			var msg = "Time to fetch data";
+			DisplayTimeTaken(stopWatch, msg);
 			if (companyFinancials == null || companyFinancials.Count == 0)
 			{
 				return false;
 			}
 			var balanceSheets = companyFinancials.Where(cf => cf.Statement == StatementType.BalanceSheet).ToList();
-			await UpdateIndustryTemplate(balanceSheets.First().IndustryTemplate, outFile, SimId);
-			await WriteBalanceSheetDataAsync(balanceSheets, outFile);
-			return true;
-		}
+			var cashFlows = companyFinancials.Where(cf => cf.Statement == StatementType.CashFlow).ToList();
 
-		private async Task UpdateIndustryTemplate(string industryTemplate, string outFile, string simId)
-		{
-			var wloc = new WriteListOfCompanies(_logger);
-			await wloc.UpdateIndustryTemplateAsync(simId, industryTemplate, outFile);
+			msg = "Time to update excel";
+			stopWatch.Reset();
+			stopWatch.Start();
+			await UpdateIndustryTemplate(balanceSheets.First().IndustryTemplate, outFile, SimId);
+
+			await WriteBalanceSheetDataAsync(balanceSheets, outFile);
+			await WriteCashFlowDataAsync(cashFlows, outFile);
+			stopWatch.Stop();
+			DisplayTimeTaken(stopWatch, msg);
+			return true;
 		}
 
 		#endregion Public Methods
 
 
 		#region Private Methods
+
+		private static BankBalanceSheet BuildBankBalanceSheet(CompanyFinancials balanceSheet)
+		{
+			var bbs = new BankBalanceSheet
+			{
+				Calculated = balanceSheet.Calculated,
+				CompanyId = balanceSheet.CompanyId,
+				FYear = balanceSheet.FYear,
+				IndustryTemplate = balanceSheet.IndustryTemplate,
+				Statement = balanceSheet.Statement
+			};
+			bbs.CashCashEquivalents_1 = balanceSheet.Values.Find(a => a.StandardisedName == "Cash & Cash Equivalents" && a.Tid == 1).ValueAssigned;
+			bbs.Interbankassets_2 = balanceSheet.Values.Find(a => a.StandardisedName == "Interbank assets" && a.Tid == 2).ValueAssigned;
+			bbs.FedFundsSoldRepos_3 = balanceSheet.Values.Find(a => a.StandardisedName == "Fed Funds Sold & Repos" && a.Tid == 3).ValueAssigned;
+			bbs.OtherInterbankAssets_4 = balanceSheet.Values.Find(a => a.StandardisedName == "Other Interbank Assets" && a.Tid == 4).ValueAssigned;
+			bbs.ShortandLongTermInvestments_5 = balanceSheet.Values.Find(a => a.StandardisedName == "Short and Long Term Investments" && a.Tid == 5).ValueAssigned;
+			bbs.TradingSecurities_6 = balanceSheet.Values.Find(a => a.StandardisedName == "Trading Securities" && a.Tid == 6).ValueAssigned;
+			bbs.InvestmentSecuritiesAvailableforSale_7 = balanceSheet.Values.Find(a => a.StandardisedName == "Investment Securities Available for Sale" && a.Tid == 7).ValueAssigned;
+			bbs.InvestmentSecuritiesHeldtoMaturity_8 = balanceSheet.Values.Find(a => a.StandardisedName == "Investment Securities Held to Maturity" && a.Tid == 8).ValueAssigned;
+			bbs.RealEstateInvestments_9 = balanceSheet.Values.Find(a => a.StandardisedName == "Real Estate Investments" && a.Tid == 9).ValueAssigned;
+			bbs.OtherInvestments_10 = balanceSheet.Values.Find(a => a.StandardisedName == "Other Investments" && a.Tid == 10).ValueAssigned;
+			bbs.NetReceivables_11 = balanceSheet.Values.Find(a => a.StandardisedName == "Net Receivables" && a.Tid == 11).ValueAssigned;
+			bbs.NetLoans_25 = balanceSheet.Values.Find(a => a.StandardisedName == "Net Loans" && a.Tid == 25).ValueAssigned;
+			bbs.ReserveforLoanLosses_24 = balanceSheet.Values.Find(a => a.StandardisedName == "Reserve for Loan Losses" && a.Tid == 24).ValueAssigned;
+			bbs.TotalLoans_23 = balanceSheet.Values.Find(a => a.StandardisedName == "Total Loans" && a.Tid == 23).ValueAssigned;
+			bbs.TotalCommercialLoans_12 = balanceSheet.Values.Find(a => a.StandardisedName == "Total Commercial Loans" && a.Tid == 12).ValueAssigned;
+			bbs.CommercialRealEstateLoans_13 = balanceSheet.Values.Find(a => a.StandardisedName == "Commercial Real Estate Loans" && a.Tid == 13).ValueAssigned;
+			bbs.OtherCommercialLoans_14 = balanceSheet.Values.Find(a => a.StandardisedName == "Other Commercial Loans" && a.Tid == 14).ValueAssigned;
+			bbs.TotalConsumerLoans_15 = balanceSheet.Values.Find(a => a.StandardisedName == "Total Consumer Loans" && a.Tid == 15).ValueAssigned;
+			bbs.CreditCardLoans_16 = balanceSheet.Values.Find(a => a.StandardisedName == "Credit Card Loans" && a.Tid == 16).ValueAssigned;
+			bbs.HomeEquityLoans_17 = balanceSheet.Values.Find(a => a.StandardisedName == "Home Equity Loans" && a.Tid == 17).ValueAssigned;
+			bbs.FamilyResidentialLoans_18 = balanceSheet.Values.Find(a => a.StandardisedName == "Family Residential Loans" && a.Tid == 18).ValueAssigned;
+			bbs.AutoLoans_19 = balanceSheet.Values.Find(a => a.StandardisedName == "Auto Loans" && a.Tid == 19).ValueAssigned;
+			bbs.StudentLoans_20 = balanceSheet.Values.Find(a => a.StandardisedName == "Student Loans" && a.Tid == 20).ValueAssigned;
+			bbs.OtherConsumerLoans_21 = balanceSheet.Values.Find(a => a.StandardisedName == "Other Consumer Loans" && a.Tid == 21).ValueAssigned;
+			bbs.OtherLoans_22 = balanceSheet.Values.Find(a => a.StandardisedName == "Other Loans" && a.Tid == 22).ValueAssigned;
+			bbs.NetFixedAssets_26 = balanceSheet.Values.Find(a => a.StandardisedName == "Net Fixed Assets" && a.Tid == 26).ValueAssigned;
+			bbs.PropertyPlantEquipmentNet_27 = balanceSheet.Values.Find(a => a.StandardisedName == "Property, Plant & Equipment, Net" && a.Tid == 27).ValueAssigned;
+			bbs.OperatingLeaseAssets_28 = balanceSheet.Values.Find(a => a.StandardisedName == "Operating Lease Assets" && a.Tid == 28).ValueAssigned;
+			bbs.Otherfixedassets_75 = balanceSheet.Values.Find(a => a.StandardisedName == "Other fixed assets" && a.Tid == 75).ValueAssigned;
+			bbs.IntangibleAssets_29 = balanceSheet.Values.Find(a => a.StandardisedName == "Intangible Assets" && a.Tid == 29).ValueAssigned;
+			bbs.Goodwill_30 = balanceSheet.Values.Find(a => a.StandardisedName == "Goodwill" && a.Tid == 30).ValueAssigned;
+			bbs.OtherIntangibleAssets_31 = balanceSheet.Values.Find(a => a.StandardisedName == "Other Intangible Assets" && a.Tid == 31).ValueAssigned;
+			bbs.InvestmentsinAssociates_32 = balanceSheet.Values.Find(a => a.StandardisedName == "Investments in Associates" && a.Tid == 32).ValueAssigned;
+			bbs.DeferredTaxAssets_33 = balanceSheet.Values.Find(a => a.StandardisedName == "Deferred Tax Assets" && a.Tid == 33).ValueAssigned;
+			bbs.DerivativesHedging_34 = balanceSheet.Values.Find(a => a.StandardisedName == "Derivatives & Hedging" && a.Tid == 34).ValueAssigned;
+			bbs.DiscontinuedOperations_35 = balanceSheet.Values.Find(a => a.StandardisedName == "Discontinued Operations" && a.Tid == 35).ValueAssigned;
+			bbs.CustomerAcceptancesLiabilities_36 = balanceSheet.Values.Find(a => a.StandardisedName == "Customer Acceptances & Liabilities" && a.Tid == 36).ValueAssigned;
+			bbs.OtherAssets_37 = balanceSheet.Values.Find(a => a.StandardisedName == "Other Assets" && a.Tid == 37).ValueAssigned;
+			bbs.TotalAssets_38 = balanceSheet.Values.Find(a => a.StandardisedName == "Total Assets" && a.Tid == 38).ValueAssigned;
+			bbs.TotalDeposits_44 = balanceSheet.Values.Find(a => a.StandardisedName == "Total Deposits" && a.Tid == 44).ValueAssigned;
+			bbs.DemandDeposits_39 = balanceSheet.Values.Find(a => a.StandardisedName == "Demand Deposits" && a.Tid == 39).ValueAssigned;
+			bbs.InterestBearingDeposits_40 = balanceSheet.Values.Find(a => a.StandardisedName == "Interest Bearing Deposits" && a.Tid == 40).ValueAssigned;
+			bbs.SavingDeposits_41 = balanceSheet.Values.Find(a => a.StandardisedName == "Saving Deposits" && a.Tid == 41).ValueAssigned;
+			bbs.TimeDeposits_42 = balanceSheet.Values.Find(a => a.StandardisedName == "Time Deposits" && a.Tid == 42).ValueAssigned;
+			bbs.OtherDeposits_43 = balanceSheet.Values.Find(a => a.StandardisedName == "Other Deposits" && a.Tid == 43).ValueAssigned;
+			bbs.ShortTermBorrowingsRepos_45 = balanceSheet.Values.Find(a => a.StandardisedName == "Short Term Borrowings & Repos" && a.Tid == 45).ValueAssigned;
+			bbs.SecuritiesSoldUnderRepo_46 = balanceSheet.Values.Find(a => a.StandardisedName == "Securities Sold Under Repo" && a.Tid == 46).ValueAssigned;
+			bbs.TradingAccountLiabilities_47 = balanceSheet.Values.Find(a => a.StandardisedName == "Trading Account Liabilities" && a.Tid == 47).ValueAssigned;
+			bbs.ShortTermCapitalLeases_48 = balanceSheet.Values.Find(a => a.StandardisedName == "Short Term Capital Leases" && a.Tid == 48).ValueAssigned;
+			bbs.CurrentPortionofLongTermDebt_49 = balanceSheet.Values.Find(a => a.StandardisedName == "Current Portion of Long Term Debt" && a.Tid == 49).ValueAssigned;
+			bbs.ShortTermBorrowings_50 = balanceSheet.Values.Find(a => a.StandardisedName == "Short Term Borrowings" && a.Tid == 50).ValueAssigned;
+			bbs.PayablesBrokerDealers_51 = balanceSheet.Values.Find(a => a.StandardisedName == "Payables Broker Dealers" && a.Tid == 51).ValueAssigned;
+			bbs.LongTermDebt_52 = balanceSheet.Values.Find(a => a.StandardisedName == "Long Term Debt" && a.Tid == 52).ValueAssigned;
+			bbs.LongTermCapitalLeases_53 = balanceSheet.Values.Find(a => a.StandardisedName == "Long Term Capital Leases" && a.Tid == 53).ValueAssigned;
+			bbs.LongTermBorrowings_54 = balanceSheet.Values.Find(a => a.StandardisedName == "Long Term Borrowings" && a.Tid == 54).ValueAssigned;
+			bbs.PensionLiabilities_55 = balanceSheet.Values.Find(a => a.StandardisedName == "Pension Liabilities" && a.Tid == 55).ValueAssigned;
+			bbs.Pensions_56 = balanceSheet.Values.Find(a => a.StandardisedName == "Pensions" && a.Tid == 56).ValueAssigned;
+			bbs.OtherPostRetirementBenefits_57 = balanceSheet.Values.Find(a => a.StandardisedName == "Other Post-Retirement Benefits" && a.Tid == 57).ValueAssigned;
+			bbs.DeferredTaxLiabilities_58 = balanceSheet.Values.Find(a => a.StandardisedName == "Deferred Tax Liabilities" && a.Tid == 58).ValueAssigned;
+			bbs.DerivativesHedging_59 = balanceSheet.Values.Find(a => a.StandardisedName == "Derivatives & Hedging" && a.Tid == 59).ValueAssigned;
+			bbs.DiscontinuedOperations_60 = balanceSheet.Values.Find(a => a.StandardisedName == "Discontinued Operations" && a.Tid == 60).ValueAssigned;
+			bbs.OtherLiabilities_61 = balanceSheet.Values.Find(a => a.StandardisedName == "Other Liabilities" && a.Tid == 61).ValueAssigned;
+			bbs.TotalLiabilities_62 = balanceSheet.Values.Find(a => a.StandardisedName == "Total Liabilities" && a.Tid == 62).ValueAssigned;
+			bbs.PreferredEquity_63 = balanceSheet.Values.Find(a => a.StandardisedName == "Preferred Equity" && a.Tid == 63).ValueAssigned;
+			bbs.ShareCapitalAdditionalPaidInCapital_64 = balanceSheet.Values.Find(a => a.StandardisedName == "Share Capital & Additional Paid-In Capital" && a.Tid == 64).ValueAssigned;
+			bbs.CommonStock_65 = balanceSheet.Values.Find(a => a.StandardisedName == "Common Stock" && a.Tid == 65).ValueAssigned;
+			bbs.AdditionalPaidinCapital_66 = balanceSheet.Values.Find(a => a.StandardisedName == "Additional Paid in Capital" && a.Tid == 66).ValueAssigned;
+			bbs.OtherShareCapital_67 = balanceSheet.Values.Find(a => a.StandardisedName == "Other Share Capital" && a.Tid == 67).ValueAssigned;
+			bbs.TreasuryStock_68 = balanceSheet.Values.Find(a => a.StandardisedName == "Treasury Stock" && a.Tid == 68).ValueAssigned;
+			bbs.RetainedEarnings_69 = balanceSheet.Values.Find(a => a.StandardisedName == "Retained Earnings" && a.Tid == 69).ValueAssigned;
+			bbs.OtherEquity_70 = balanceSheet.Values.Find(a => a.StandardisedName == "Other Equity" && a.Tid == 70).ValueAssigned;
+			bbs.EquityBeforeMinorityInterest_71 = balanceSheet.Values.Find(a => a.StandardisedName == "Equity Before Minority Interest" && a.Tid == 71).ValueAssigned;
+			bbs.MinorityInterest_72 = balanceSheet.Values.Find(a => a.StandardisedName == "Minority Interest" && a.Tid == 72).ValueAssigned;
+			bbs.TotalEquity_73 = balanceSheet.Values.Find(a => a.StandardisedName == "Total Equity" && a.Tid == 73).ValueAssigned;
+			bbs.TotalLiabilitiesEquity_74 = balanceSheet.Values.Find(a => a.StandardisedName == "Total Liabilities & Equity" && a.Tid == 74).ValueAssigned;
+			return bbs;
+		}
+
+		private static GeneralBalanceSheet BuildGeneralBalanceSheet(CompanyFinancials balanceSheet)
+		{
+			var fbc = new GeneralBalanceSheet
+			{
+				Calculated = balanceSheet.Calculated,
+				CompanyId = balanceSheet.CompanyId,
+				FYear = balanceSheet.FYear,
+				IndustryTemplate = balanceSheet.IndustryTemplate,
+				Statement = balanceSheet.Statement,
+			};
+			fbc.CashCashEquivalentsShortTermInvestments_1 = balanceSheet.Values.Find(a => a.StandardisedName == "Cash, Cash Equivalents & Short Term Investments" && a.Tid == 1).ValueChosen;
+			fbc.CashCashEquivalentsShortTermInvestments_1 = balanceSheet.Values.Find(a => a.StandardisedName == "Cash, Cash Equivalents & Short Term Investments" && a.Tid == 1).ValueChosen;
+			fbc.CashCashEquivalents_2 = balanceSheet.Values.Find(a => a.StandardisedName == "Cash & Cash Equivalents" && a.Tid == 2).ValueChosen;
+			fbc.ShortTermInvestments_3 = balanceSheet.Values.Find(a => a.StandardisedName == "Short Term Investments" && a.Tid == 3).ValueChosen;
+			fbc.AccountsNotesReceivable_4 = balanceSheet.Values.Find(a => a.StandardisedName == "Accounts & Notes Receivable" && a.Tid == 4).ValueChosen;
+			fbc.AccountsReceivableNet_5 = balanceSheet.Values.Find(a => a.StandardisedName == "Accounts Receivable, Net" && a.Tid == 5).ValueChosen;
+			fbc.NotesReceivableNet_6 = balanceSheet.Values.Find(a => a.StandardisedName == "Notes Receivable, Net" && a.Tid == 6).ValueChosen;
+			fbc.UnbilledRevenues_7 = balanceSheet.Values.Find(a => a.StandardisedName == "Unbilled Revenues" && a.Tid == 7).ValueChosen;
+			fbc.Inventories_8 = balanceSheet.Values.Find(a => a.StandardisedName == "Inventories" && a.Tid == 8).ValueChosen;
+			fbc.RawMaterials_9 = balanceSheet.Values.Find(a => a.StandardisedName == "Raw Materials" && a.Tid == 9).ValueChosen;
+			fbc.WorkInProcess_10 = balanceSheet.Values.Find(a => a.StandardisedName == "Work In Process" && a.Tid == 10).ValueChosen;
+			fbc.FinishedGoods_11 = balanceSheet.Values.Find(a => a.StandardisedName == "Finished Goods" && a.Tid == 11).ValueChosen;
+			fbc.OtherInventory_12 = balanceSheet.Values.Find(a => a.StandardisedName == "Other Inventory" && a.Tid == 12).ValueChosen;
+			fbc.OtherShortTermAssets_13 = balanceSheet.Values.Find(a => a.StandardisedName == "Other Short Term Assets" && a.Tid == 13).ValueChosen;
+			fbc.PrepaidExpenses_14 = balanceSheet.Values.Find(a => a.StandardisedName == "Prepaid Expenses" && a.Tid == 14).ValueChosen;
+			fbc.DerivativeHedgingAssets_15 = balanceSheet.Values.Find(a => a.StandardisedName == "Derivative & Hedging Assets" && a.Tid == 15).ValueChosen;
+			fbc.AssetsHeldforSale_16 = balanceSheet.Values.Find(a => a.StandardisedName == "Assets Held-for-Sale" && a.Tid == 16).ValueChosen;
+			fbc.DeferredTaxAssets_17 = balanceSheet.Values.Find(a => a.StandardisedName == "Deferred Tax Assets" && a.Tid == 17).ValueChosen;
+			fbc.IncomeTaxesReceivable_18 = balanceSheet.Values.Find(a => a.StandardisedName == "Income Taxes Receivable" && a.Tid == 18).ValueChosen;
+			fbc.DiscontinuedOperations_19 = balanceSheet.Values.Find(a => a.StandardisedName == "Discontinued Operations" && a.Tid == 19).ValueChosen;
+			fbc.MiscellaneousShortTermAssets_20 = balanceSheet.Values.Find(a => a.StandardisedName == "Miscellaneous Short Term Assets" && a.Tid == 20).ValueChosen;
+			fbc.TotalCurrentAssets_21 = balanceSheet.Values.Find(a => a.StandardisedName == "Total Current Assets" && a.Tid == 21).ValueChosen;
+			fbc.PropertyPlantEquipmentNet_22 = balanceSheet.Values.Find(a => a.StandardisedName == "Property, Plant & Equipment, Net" && a.Tid == 22).ValueChosen;
+			fbc.PropertyPlantEquipment_23 = balanceSheet.Values.Find(a => a.StandardisedName == "Property, Plant & Equipment" && a.Tid == 23).ValueChosen;
+			fbc.AccumulatedDepreciation_24 = balanceSheet.Values.Find(a => a.StandardisedName == "Accumulated Depreciation" && a.Tid == 24).ValueChosen;
+			fbc.LongTermInvestmentsReceivables_25 = balanceSheet.Values.Find(a => a.StandardisedName == "Long Term Investments & Receivables" && a.Tid == 25).ValueChosen;
+			fbc.LongTermInvestments_26 = balanceSheet.Values.Find(a => a.StandardisedName == "Long Term Investments" && a.Tid == 26).ValueChosen;
+			fbc.LongTermMarketableSecurities_27 = balanceSheet.Values.Find(a => a.StandardisedName == "Long Term Marketable Securities" && a.Tid == 27).ValueChosen;
+			fbc.LongTermReceivables_28 = balanceSheet.Values.Find(a => a.StandardisedName == "Long Term Receivables" && a.Tid == 28).ValueChosen;
+			fbc.OtherLongTermAssets_29 = balanceSheet.Values.Find(a => a.StandardisedName == "Other Long Term Assets" && a.Tid == 29).ValueChosen;
+			fbc.IntangibleAssets_30 = balanceSheet.Values.Find(a => a.StandardisedName == "Intangible Assets" && a.Tid == 30).ValueChosen;
+			fbc.Goodwill_31 = balanceSheet.Values.Find(a => a.StandardisedName == "Goodwill" && a.Tid == 31).ValueChosen;
+			fbc.OtherIntangibleAssets_32 = balanceSheet.Values.Find(a => a.StandardisedName == "Other Intangible Assets" && a.Tid == 32).ValueChosen;
+			fbc.PrepaidExpense_33 = balanceSheet.Values.Find(a => a.StandardisedName == "Prepaid Expense" && a.Tid == 33).ValueChosen;
+			fbc.DeferredTaxAssets_34 = balanceSheet.Values.Find(a => a.StandardisedName == "Deferred Tax Assets" && a.Tid == 34).ValueChosen;
+			fbc.DerivativeHedgingAssets_35 = balanceSheet.Values.Find(a => a.StandardisedName == "Derivative & Hedging Assets" && a.Tid == 35).ValueChosen;
+			fbc.PrepaidPensionCosts_36 = balanceSheet.Values.Find(a => a.StandardisedName == "Prepaid Pension Costs" && a.Tid == 36).ValueChosen;
+			fbc.DiscontinuedOperations_37 = balanceSheet.Values.Find(a => a.StandardisedName == "Discontinued Operations" && a.Tid == 37).ValueChosen;
+			fbc.InvestmentsinAffiliates_38 = balanceSheet.Values.Find(a => a.StandardisedName == "Investments in Affiliates" && a.Tid == 38).ValueChosen;
+			fbc.MiscellaneousLongTermAssets_39 = balanceSheet.Values.Find(a => a.StandardisedName == "Miscellaneous Long Term Assets" && a.Tid == 39).ValueChosen;
+			fbc.TotalNoncurrentAssets_40 = balanceSheet.Values.Find(a => a.StandardisedName == "Total Noncurrent Assets" && a.Tid == 40).ValueChosen;
+			fbc.TotalAssets_41 = balanceSheet.Values.Find(a => a.StandardisedName == "Total Assets" && a.Tid == 41).ValueChosen;
+			fbc.PayablesAccruals_42 = balanceSheet.Values.Find(a => a.StandardisedName == "Payables & Accruals" && a.Tid == 42).ValueChosen;
+			fbc.AccountsPayable_43 = balanceSheet.Values.Find(a => a.StandardisedName == "Accounts Payable" && a.Tid == 43).ValueChosen;
+			fbc.AccruedTaxes_44 = balanceSheet.Values.Find(a => a.StandardisedName == "Accrued Taxes" && a.Tid == 44).ValueChosen;
+			fbc.InterestDividendsPayable_45 = balanceSheet.Values.Find(a => a.StandardisedName == "Interest & Dividends Payable" && a.Tid == 45).ValueChosen;
+			fbc.OtherPayablesAccruals_46 = balanceSheet.Values.Find(a => a.StandardisedName == "Other Payables & Accruals" && a.Tid == 46).ValueChosen;
+			fbc.ShortTermDebt_47 = balanceSheet.Values.Find(a => a.StandardisedName == "Short Term Debt" && a.Tid == 47).ValueChosen;
+			fbc.ShortTermBorrowings_48 = balanceSheet.Values.Find(a => a.StandardisedName == "Short Term Borrowings" && a.Tid == 48).ValueChosen;
+			fbc.ShortTermCapitalLeases_49 = balanceSheet.Values.Find(a => a.StandardisedName == "Short Term Capital Leases" && a.Tid == 49).ValueChosen;
+			fbc.CurrentPortionofLongTermDebt_50 = balanceSheet.Values.Find(a => a.StandardisedName == "Current Portion of Long Term Debt" && a.Tid == 50).ValueChosen;
+			fbc.OtherShortTermLiabilities_51 = balanceSheet.Values.Find(a => a.StandardisedName == "Other Short Term Liabilities" && a.Tid == 51).ValueChosen;
+			fbc.DeferredRevenue_52 = balanceSheet.Values.Find(a => a.StandardisedName == "Deferred Revenue" && a.Tid == 52).ValueChosen;
+			fbc.DerivativesHedging_53 = balanceSheet.Values.Find(a => a.StandardisedName == "Derivatives & Hedging" && a.Tid == 53).ValueChosen;
+			fbc.DeferredTaxLiabilities_54 = balanceSheet.Values.Find(a => a.StandardisedName == "Deferred Tax Liabilities" && a.Tid == 54).ValueChosen;
+			fbc.DiscontinuedOperations_55 = balanceSheet.Values.Find(a => a.StandardisedName == "Discontinued Operations" && a.Tid == 55).ValueChosen;
+			fbc.MiscellaneousShortTermLiabilities_56 = balanceSheet.Values.Find(a => a.StandardisedName == "Miscellaneous Short Term Liabilities" && a.Tid == 56).ValueChosen;
+			fbc.TotalCurrentLiabilities_57 = balanceSheet.Values.Find(a => a.StandardisedName == "Total Current Liabilities" && a.Tid == 57).ValueChosen;
+			fbc.LongTermDebt_58 = balanceSheet.Values.Find(a => a.StandardisedName == "Long Term Debt" && a.Tid == 58).ValueChosen;
+			fbc.LongTermBorrowings_59 = balanceSheet.Values.Find(a => a.StandardisedName == "Long Term Borrowings" && a.Tid == 59).ValueChosen;
+			fbc.LongTermCapitalLeases_60 = balanceSheet.Values.Find(a => a.StandardisedName == "Long Term Capital Leases" && a.Tid == 60).ValueChosen;
+			fbc.OtherLongTermLiabilities_61 = balanceSheet.Values.Find(a => a.StandardisedName == "Other Long Term Liabilities" && a.Tid == 61).ValueChosen;
+			fbc.AccruedLiabilities_62 = balanceSheet.Values.Find(a => a.StandardisedName == "Accrued Liabilities" && a.Tid == 62).ValueChosen;
+			fbc.PensionLiabilities_63 = balanceSheet.Values.Find(a => a.StandardisedName == "Pension Liabilities" && a.Tid == 63).ValueChosen;
+			fbc.Pensions_64 = balanceSheet.Values.Find(a => a.StandardisedName == "Pensions" && a.Tid == 64).ValueChosen;
+			fbc.OtherPostRetirementBenefits_65 = balanceSheet.Values.Find(a => a.StandardisedName == "Other Post-Retirement Benefits" && a.Tid == 65).ValueChosen;
+			fbc.DeferredCompensation_66 = balanceSheet.Values.Find(a => a.StandardisedName == "Deferred Compensation" && a.Tid == 66).ValueChosen;
+			fbc.DeferredRevenue_67 = balanceSheet.Values.Find(a => a.StandardisedName == "Deferred Revenue" && a.Tid == 67).ValueChosen;
+			fbc.DeferredTaxLiabilities_68 = balanceSheet.Values.Find(a => a.StandardisedName == "Deferred Tax Liabilities" && a.Tid == 68).ValueChosen;
+			fbc.DerivativesHedging_69 = balanceSheet.Values.Find(a => a.StandardisedName == "Derivatives & Hedging" && a.Tid == 69).ValueChosen;
+			fbc.DiscontinuedOperations_70 = balanceSheet.Values.Find(a => a.StandardisedName == "Discontinued Operations" && a.Tid == 70).ValueChosen;
+			fbc.MiscellaneousLongTermLiabilities_71 = balanceSheet.Values.Find(a => a.StandardisedName == "Miscellaneous Long Term Liabilities" && a.Tid == 71).ValueChosen;
+			fbc.TotalNoncurrentLiabilities_72 = balanceSheet.Values.Find(a => a.StandardisedName == "Total Noncurrent Liabilities" && a.Tid == 72).ValueChosen;
+			fbc.TotalLiabilities_73 = balanceSheet.Values.Find(a => a.StandardisedName == "Total Liabilities" && a.Tid == 73).ValueChosen;
+			fbc.PreferredEquity_74 = balanceSheet.Values.Find(a => a.StandardisedName == "Preferred Equity" && a.Tid == 74).ValueChosen;
+			fbc.ShareCapitalAdditionalPaidInCapital_75 = balanceSheet.Values.Find(a => a.StandardisedName == "Share Capital & Additional Paid-In Capital" && a.Tid == 75).ValueChosen;
+			fbc.CommonStock_76 = balanceSheet.Values.Find(a => a.StandardisedName == "Common Stock" && a.Tid == 76).ValueChosen;
+			fbc.AdditionalPaidinCapital_77 = balanceSheet.Values.Find(a => a.StandardisedName == "Additional Paid in Capital" && a.Tid == 77).ValueChosen;
+			fbc.OtherShareCapital_78 = balanceSheet.Values.Find(a => a.StandardisedName == "Other Share Capital" && a.Tid == 78).ValueChosen;
+			fbc.TreasuryStock_79 = balanceSheet.Values.Find(a => a.StandardisedName == "Treasury Stock" && a.Tid == 79).ValueChosen;
+			fbc.RetainedEarnings_80 = balanceSheet.Values.Find(a => a.StandardisedName == "Retained Earnings" && a.Tid == 80).ValueChosen;
+			fbc.OtherEquity_81 = balanceSheet.Values.Find(a => a.StandardisedName == "Other Equity" && a.Tid == 81).ValueChosen;
+			fbc.EquityBeforeMinorityInterest_82 = balanceSheet.Values.Find(a => a.StandardisedName == "Equity Before Minority Interest" && a.Tid == 82).ValueChosen;
+			fbc.MinorityInterest_83 = balanceSheet.Values.Find(a => a.StandardisedName == "Minority Interest" && a.Tid == 83).ValueChosen;
+			fbc.TotalEquity_84 = balanceSheet.Values.Find(a => a.StandardisedName == "Total Equity" && a.Tid == 84).ValueChosen;
+			fbc.TotalLiabilitiesEquity_85 = balanceSheet.Values.Find(a => a.StandardisedName == "Total Liabilities & Equity" && a.Tid == 85).ValueChosen;
+			return fbc;
+		}
+
+		private static InsuranceBalanceSheet BuildInsuranceBalanceSheet(CompanyFinancials balanceSheet)
+		{
+			var ibs = new InsuranceBalanceSheet
+			{
+				Calculated = balanceSheet.Calculated,
+				CompanyId = balanceSheet.CompanyId,
+				FYear = balanceSheet.FYear,
+				IndustryTemplate = balanceSheet.IndustryTemplate,
+				Statement = balanceSheet.Statement
+			};
+			ibs.TotalInvestments_1 = balanceSheet.Values.Find(a => a.StandardisedName == "Total Investments" && a.Tid == 1).ValueAssigned;
+			ibs.FixedIncomeTrading_AFSShortTermInv_2 = balanceSheet.Values.Find(a => a.StandardisedName == "Fixed Income-Trading/AFS & Short Term Inv." && a.Tid == 2).ValueAssigned;
+			ibs.LoansMortgages_3 = balanceSheet.Values.Find(a => a.StandardisedName == "Loans & Mortgages" && a.Tid == 3).ValueAssigned;
+			ibs.FixedIncomeSecuritiesHTM_4 = balanceSheet.Values.Find(a => a.StandardisedName == "Fixed Income Securities-HTM" && a.Tid == 4).ValueAssigned;
+			ibs.EquitySecurities_5 = balanceSheet.Values.Find(a => a.StandardisedName == "Equity Securities" && a.Tid == 5).ValueAssigned;
+			ibs.RealEstateInvestments_6 = balanceSheet.Values.Find(a => a.StandardisedName == "Real Estate Investments" && a.Tid == 6).ValueAssigned;
+			ibs.OtherInvestments_7 = balanceSheet.Values.Find(a => a.StandardisedName == "Other Investments" && a.Tid == 7).ValueAssigned;
+			ibs.CashCashEquivalents_8 = balanceSheet.Values.Find(a => a.StandardisedName == "Cash & Cash Equivalents" && a.Tid == 8).ValueAssigned;
+			ibs.AccountsNotesReceivable_9 = balanceSheet.Values.Find(a => a.StandardisedName == "Accounts & Notes Receivable" && a.Tid == 9).ValueAssigned;
+			ibs.NetFixedAssets_10 = balanceSheet.Values.Find(a => a.StandardisedName == "Net Fixed Assets" && a.Tid == 10).ValueAssigned;
+			ibs.DeferredPolicyAcquisitionCosts_11 = balanceSheet.Values.Find(a => a.StandardisedName == "Deferred Policy Acquisition Costs" && a.Tid == 11).ValueAssigned;
+			ibs.OtherAssets_12 = balanceSheet.Values.Find(a => a.StandardisedName == "Other Assets" && a.Tid == 12).ValueAssigned;
+			ibs.TotalAssets_13 = balanceSheet.Values.Find(a => a.StandardisedName == "Total Assets" && a.Tid == 13).ValueAssigned;
+			ibs.InsuranceReserves_14 = balanceSheet.Values.Find(a => a.StandardisedName == "Insurance Reserves" && a.Tid == 14).ValueAssigned;
+			ibs.ReserveforOutstandingClaimsLosses_15 = balanceSheet.Values.Find(a => a.StandardisedName == "Reserve for Outstanding Claims & Losses" && a.Tid == 15).ValueAssigned;
+			ibs.PremiumReserve_Unearned__16 = balanceSheet.Values.Find(a => a.StandardisedName == "Premium Reserve (Unearned)" && a.Tid == 16).ValueAssigned;
+			ibs.LifePolicyBenefits_17 = balanceSheet.Values.Find(a => a.StandardisedName == "Life Policy Benefits" && a.Tid == 17).ValueAssigned;
+			ibs.OtherInsuranceReserves_18 = balanceSheet.Values.Find(a => a.StandardisedName == "Other Insurance Reserves" && a.Tid == 18).ValueAssigned;
+			ibs.ShortTermDebt_19 = balanceSheet.Values.Find(a => a.StandardisedName == "Short Term Debt" && a.Tid == 19).ValueAssigned;
+			ibs.OtherShortTermLiabilities_20 = balanceSheet.Values.Find(a => a.StandardisedName == "Other Short Term Liabilities" && a.Tid == 20).ValueAssigned;
+			ibs.LongTermDebt_21 = balanceSheet.Values.Find(a => a.StandardisedName == "Long Term Debt" && a.Tid == 21).ValueAssigned;
+			ibs.PensionLiabilities_55 = balanceSheet.Values.Find(a => a.StandardisedName == "Pension Liabilities" && a.Tid == 55).ValueAssigned;
+			ibs.Pensions_56 = balanceSheet.Values.Find(a => a.StandardisedName == "Pensions" && a.Tid == 56).ValueAssigned;
+			ibs.OtherPostRetirementBenefits_57 = balanceSheet.Values.Find(a => a.StandardisedName == "Other Post-Retirement Benefits" && a.Tid == 57).ValueAssigned;
+			ibs.OtherLongTermLiabilities_22 = balanceSheet.Values.Find(a => a.StandardisedName == "Other Long Term Liabilities" && a.Tid == 22).ValueAssigned;
+			ibs.FundsforFutureAppropriations_23 = balanceSheet.Values.Find(a => a.StandardisedName == "Funds for Future Appropriations" && a.Tid == 23).ValueAssigned;
+			ibs.TotalLiabilities_24 = balanceSheet.Values.Find(a => a.StandardisedName == "Total Liabilities" && a.Tid == 24).ValueAssigned;
+			ibs.PreferredEquity_25 = balanceSheet.Values.Find(a => a.StandardisedName == "Preferred Equity" && a.Tid == 25).ValueAssigned;
+			ibs.PolicyholdersEquity_26 = balanceSheet.Values.Find(a => a.StandardisedName == "Policyholders' Equity" && a.Tid == 26).ValueAssigned;
+			ibs.ShareCapitalAdditionalPaidInCapital_27 = balanceSheet.Values.Find(a => a.StandardisedName == "Share Capital & Additional Paid-In Capital" && a.Tid == 27).ValueAssigned;
+			ibs.CommonStock_28 = balanceSheet.Values.Find(a => a.StandardisedName == "Common Stock" && a.Tid == 28).ValueAssigned;
+			ibs.AdditionalPaidinCapital_29 = balanceSheet.Values.Find(a => a.StandardisedName == "Additional Paid in Capital" && a.Tid == 29).ValueAssigned;
+			ibs.OtherShareCapital_30 = balanceSheet.Values.Find(a => a.StandardisedName == "Other Share Capital" && a.Tid == 30).ValueAssigned;
+			ibs.TreasuryStock_31 = balanceSheet.Values.Find(a => a.StandardisedName == "Treasury Stock" && a.Tid == 31).ValueAssigned;
+			ibs.RetainedEarnings_32 = balanceSheet.Values.Find(a => a.StandardisedName == "Retained Earnings" && a.Tid == 32).ValueAssigned;
+			ibs.OtherEquity_33 = balanceSheet.Values.Find(a => a.StandardisedName == "Other Equity" && a.Tid == 33).ValueAssigned;
+			ibs.EquityBeforeMinorityInterest_34 = balanceSheet.Values.Find(a => a.StandardisedName == "Equity Before Minority Interest" && a.Tid == 34).ValueAssigned;
+			ibs.MinorityInterest_35 = balanceSheet.Values.Find(a => a.StandardisedName == "Minority Interest" && a.Tid == 35).ValueAssigned;
+			ibs.TotalEquity_36 = balanceSheet.Values.Find(a => a.StandardisedName == "Total Equity" && a.Tid == 36).ValueAssigned;
+			ibs.TotalLiabilitiesEquity_37 = balanceSheet.Values.Find(a => a.StandardisedName == "Total Liabilities & Equity" && a.Tid == 37).ValueAssigned;
+			return ibs;
+		}
+
+		private static InsuranceCashFlow BuildInsurnaceCashFlow(CompanyFinancials cashFlow)
+		{
+			var icf = new InsuranceCashFlow
+			{
+				Calculated = cashFlow.Calculated,
+				CompanyId = cashFlow.CompanyId,
+				FYear = cashFlow.FYear,
+				IndustryTemplate = cashFlow.IndustryTemplate,
+				Statement = cashFlow.Statement
+			};
+			icf.NetIncome_StartingLine_1 = cashFlow.Values.Find(a => a.StandardisedName == "Net Income/Starting Line" && a.Tid == 1).ValueAssigned;
+			icf.NetIncome_2 = cashFlow.Values.Find(a => a.StandardisedName == "Net Income" && a.Tid == 2).ValueAssigned;
+			icf.NetIncomeFromDiscontinuedOperations_3 = cashFlow.Values.Find(a => a.StandardisedName == "Net Income From Discontinued Operations" && a.Tid == 3).ValueAssigned;
+			icf.OtherAdjustments_4 = cashFlow.Values.Find(a => a.StandardisedName == "Other Adjustments" && a.Tid == 4).ValueAssigned;
+			icf.DepreciationAmortization_5 = cashFlow.Values.Find(a => a.StandardisedName == "Depreciation & Amortization" && a.Tid == 5).ValueAssigned;
+			icf.NonCashItems_6 = cashFlow.Values.Find(a => a.StandardisedName == "Non-Cash Items" && a.Tid == 6).ValueAssigned;
+			icf.StockBasedCompensation_7 = cashFlow.Values.Find(a => a.StandardisedName == "Stock-Based Compensation" && a.Tid == 7).ValueAssigned;
+			icf.DeferredIncomeTaxes_8 = cashFlow.Values.Find(a => a.StandardisedName == "Deferred Income Taxes" && a.Tid == 8).ValueAssigned;
+			icf.OtherNonCashAdjustments_9 = cashFlow.Values.Find(a => a.StandardisedName == "Other Non-Cash Adjustments" && a.Tid == 9).ValueAssigned;
+			icf.NetChangeinOperatingCapital_10 = cashFlow.Values.Find(a => a.StandardisedName == "Net Change in Operating Capital" && a.Tid == 10).ValueAssigned;
+			icf.NetCashFromDiscontinuedOperations_operating__11 = cashFlow.Values.Find(a => a.StandardisedName == "Net Cash From Discontinued Operations (operating)" && a.Tid == 11).ValueAssigned;
+			icf.CashfromOperatingActivities_12 = cashFlow.Values.Find(a => a.StandardisedName == "Cash from Operating Activities" && a.Tid == 12).ValueAssigned;
+			icf.ChangeinFixedAssetsandIntangibles_37 = cashFlow.Values.Find(a => a.StandardisedName == "Change in Fixed Assets and Intangibles" && a.Tid == 37).ValueAssigned;
+			icf.DispositionofFixedAssetsIntangibles_13 = cashFlow.Values.Find(a => a.StandardisedName == "Disposition of Fixed Assets & Intangibles" && a.Tid == 13).ValueAssigned;
+			icf.AcquisitionofFixedAssetsIntangibles_14 = cashFlow.Values.Find(a => a.StandardisedName == "Acquisition of Fixed Assets & Intangibles" && a.Tid == 14).ValueAssigned;
+			icf.NetChangeinInvestments_36 = cashFlow.Values.Find(a => a.StandardisedName == "Net Change in Investments" && a.Tid == 36).ValueAssigned;
+			icf.IncreaseinInvestments_15 = cashFlow.Values.Find(a => a.StandardisedName == "Increase in Investments" && a.Tid == 15).ValueAssigned;
+			icf.DecreaseinInvestments_16 = cashFlow.Values.Find(a => a.StandardisedName == "Decrease in Investments" && a.Tid == 16).ValueAssigned;
+			icf.OtherInvestingActivities_17 = cashFlow.Values.Find(a => a.StandardisedName == "Other Investing Activities" && a.Tid == 17).ValueAssigned;
+			icf.NetCashFromDiscontinuedOperations_investing__18 = cashFlow.Values.Find(a => a.StandardisedName == "Net Cash From Discontinued Operations (investing)" && a.Tid == 18).ValueAssigned;
+			icf.CashfromInvestingActivities_19 = cashFlow.Values.Find(a => a.StandardisedName == "Cash from Investing Activities" && a.Tid == 19).ValueAssigned;
+			icf.DividendsPaid_20 = cashFlow.Values.Find(a => a.StandardisedName == "Dividends Paid" && a.Tid == 20).ValueAssigned;
+			icf.CashFrom_Repaymentof_Debt_21 = cashFlow.Values.Find(a => a.StandardisedName == "Cash From (Repayment of) Debt" && a.Tid == 21).ValueAssigned;
+			icf.CashFrom_Repaymentof_ShortTermDebtnet_22 = cashFlow.Values.Find(a => a.StandardisedName == "Cash From (Repayment of) Short Term Debt, net" && a.Tid == 22).ValueAssigned;
+			icf.CashFrom_Repaymentof_LongTermDebtnet_23 = cashFlow.Values.Find(a => a.StandardisedName == "Cash From (Repayment of) Long Term Debt, net" && a.Tid == 23).ValueAssigned;
+			icf.RepaymentsofLongTermDebt_24 = cashFlow.Values.Find(a => a.StandardisedName == "Repayments of Long Term Debt" && a.Tid == 24).ValueAssigned;
+			icf.CashFromLongTermDebt_25 = cashFlow.Values.Find(a => a.StandardisedName == "Cash From Long Term Debt" && a.Tid == 25).ValueAssigned;
+			icf.Cash_Repurchase_ofEquity_26 = cashFlow.Values.Find(a => a.StandardisedName == "Cash (Repurchase) of Equity" && a.Tid == 26).ValueAssigned;
+			icf.IncreaseinCapitalStock_27 = cashFlow.Values.Find(a => a.StandardisedName == "Increase in Capital Stock" && a.Tid == 27).ValueAssigned;
+			icf.DecreaseinCapitalStock_28 = cashFlow.Values.Find(a => a.StandardisedName == "Decrease in Capital Stock" && a.Tid == 28).ValueAssigned;
+			icf.ChangeinInsuranceReserves_29 = cashFlow.Values.Find(a => a.StandardisedName == "Change in Insurance Reserves" && a.Tid == 29).ValueAssigned;
+			icf.OtherFinancingActivities_30 = cashFlow.Values.Find(a => a.StandardisedName == "Other Financing Activities" && a.Tid == 30).ValueAssigned;
+			icf.NetCashFromDiscontinuedOperations_financing__31 = cashFlow.Values.Find(a => a.StandardisedName == "Net Cash From Discontinued Operations (financing)" && a.Tid == 31).ValueAssigned;
+			icf.CashfromFinancingActivities_32 = cashFlow.Values.Find(a => a.StandardisedName == "Cash from Financing Activities" && a.Tid == 32).ValueAssigned;
+			icf.NetCashBeforeDiscOperationsandFX_45 = cashFlow.Values.Find(a => a.StandardisedName == "Net Cash Before Disc. Operations and FX" && a.Tid == 45).ValueAssigned;
+			icf.ChangeinCashfromDiscOperationsandOther_34 = cashFlow.Values.Find(a => a.StandardisedName == "Change in Cash from Disc. Operations and Other" && a.Tid == 34).ValueAssigned;
+			icf.NetCashBeforeExchangeRates_44 = cashFlow.Values.Find(a => a.StandardisedName == "Net Cash Before Exchange Rates" && a.Tid == 44).ValueAssigned;
+			icf.EffectofForeignExchangeRates_33 = cashFlow.Values.Find(a => a.StandardisedName == "Effect of Foreign Exchange Rates" && a.Tid == 33).ValueAssigned;
+			icf.NetChangesinCash_35 = cashFlow.Values.Find(a => a.StandardisedName == "Net Changes in Cash" && a.Tid == 35).ValueAssigned;
+			return icf;
+		}
+
+		private static void DisplayTimeTaken(Stopwatch stopWatch, string msg)
+		{
+			var ts = stopWatch.Elapsed;
+			string elapsedTime = String.Format("{0:00}:{1:00}:{2:00}.{3:00}",
+				ts.Hours, ts.Minutes, ts.Seconds,
+				ts.Milliseconds / 10);
+			Console.WriteLine($"\n{msg} {elapsedTime}");
+		}
+		private BankCashFlow BuildBankCashFlow(CompanyFinancials cashFlow)
+		{
+			var bcf = new BankCashFlow
+			{
+				Calculated = cashFlow.Calculated,
+				CompanyId = cashFlow.CompanyId,
+				FYear = cashFlow.FYear,
+				IndustryTemplate = cashFlow.IndustryTemplate,
+				Statement = cashFlow.Statement
+			};
+			bcf.NetIncome_StartingLine_1 = cashFlow.Values.Find(a => a.StandardisedName == "Net Income/Starting Line" && a.Tid == 1).ValueAssigned;
+			bcf.NetIncome_2 = cashFlow.Values.Find(a => a.StandardisedName == "Net Income" && a.Tid == 2).ValueAssigned;
+			bcf.NetIncomeFromDiscontinuedOperations_3 = cashFlow.Values.Find(a => a.StandardisedName == "Net Income From Discontinued Operations" && a.Tid == 3).ValueAssigned;
+			bcf.OtherAdjustments_4 = cashFlow.Values.Find(a => a.StandardisedName == "Other Adjustments" && a.Tid == 4).ValueAssigned;
+			bcf.DepreciationAmortization_5 = cashFlow.Values.Find(a => a.StandardisedName == "Depreciation & Amortization" && a.Tid == 5).ValueAssigned;
+			bcf.ProvisionforLoanLosses_6 = cashFlow.Values.Find(a => a.StandardisedName == "Provision for Loan Losses" && a.Tid == 6).ValueAssigned;
+			bcf.NonCashItems_7 = cashFlow.Values.Find(a => a.StandardisedName == "Non-Cash Items" && a.Tid == 7).ValueAssigned;
+			bcf.GainonSaleofSecuritiesLoans_8 = cashFlow.Values.Find(a => a.StandardisedName == "Gain on Sale of Securities & Loans" && a.Tid == 8).ValueAssigned;
+			bcf.DeferredIncomeTaxes_9 = cashFlow.Values.Find(a => a.StandardisedName == "Deferred Income Taxes" && a.Tid == 9).ValueAssigned;
+			bcf.StockBasedCompensation_10 = cashFlow.Values.Find(a => a.StandardisedName == "Stock-Based Compensation" && a.Tid == 10).ValueAssigned;
+			bcf.OtherNonCashAdjustments_11 = cashFlow.Values.Find(a => a.StandardisedName == "Other Non-Cash Adjustments" && a.Tid == 11).ValueAssigned;
+			bcf.NetChangeinOperatingCapital_12 = cashFlow.Values.Find(a => a.StandardisedName == "Net Change in Operating Capital" && a.Tid == 12).ValueAssigned;
+			bcf.TradingAssetsLiabilities_13 = cashFlow.Values.Find(a => a.StandardisedName == "Trading Assets & Liabilities" && a.Tid == 13).ValueAssigned;
+			bcf.NetChangeofInvestments_14 = cashFlow.Values.Find(a => a.StandardisedName == "Net Change of Investments" && a.Tid == 14).ValueAssigned;
+			bcf.NetChangeofInterbankAssets_15 = cashFlow.Values.Find(a => a.StandardisedName == "Net Change of Interbank Assets" && a.Tid == 15).ValueAssigned;
+			bcf.NetChangeofInterbankLiabilities_16 = cashFlow.Values.Find(a => a.StandardisedName == "Net Change of Interbank Liabilities" && a.Tid == 16).ValueAssigned;
+			bcf.NetChangeinOperatingLoans_17 = cashFlow.Values.Find(a => a.StandardisedName == "Net Change in Operating Loans" && a.Tid == 17).ValueAssigned;
+			bcf.AccruedInterestReceivable_18 = cashFlow.Values.Find(a => a.StandardisedName == "Accrued Interest Receivable" && a.Tid == 18).ValueAssigned;
+			bcf.AccruedInterestPayable_19 = cashFlow.Values.Find(a => a.StandardisedName == "Accrued Interest Payable" && a.Tid == 19).ValueAssigned;
+			bcf.OtherOperatingAssets_Liabilities_20 = cashFlow.Values.Find(a => a.StandardisedName == "Other Operating Assets/Liabilities" && a.Tid == 20).ValueAssigned;
+			bcf.NetCashFromDiscontinuedOperations_operating__21 = cashFlow.Values.Find(a => a.StandardisedName == "Net Cash From Discontinued Operations (operating)" && a.Tid == 21).ValueAssigned;
+			bcf.CashfromOperatingActivities_22 = cashFlow.Values.Find(a => a.StandardisedName == "Cash from Operating Activities" && a.Tid == 22).ValueAssigned;
+			bcf.ChangeinFixedAssetsIntangibles_23 = cashFlow.Values.Find(a => a.StandardisedName == "Change in Fixed Assets & Intangibles" && a.Tid == 23).ValueAssigned;
+			bcf.DisposalofFixedAssetsIntangibles_24 = cashFlow.Values.Find(a => a.StandardisedName == "Disposal of Fixed Assets & Intangibles" && a.Tid == 24).ValueAssigned;
+			bcf.CapitalExpenditures_25 = cashFlow.Values.Find(a => a.StandardisedName == "Capital Expenditures" && a.Tid == 25).ValueAssigned;
+			bcf.NetChangeinInvestments_26 = cashFlow.Values.Find(a => a.StandardisedName == "Net Change in Investments" && a.Tid == 26).ValueAssigned;
+			bcf.DecreaseinInvestments_27 = cashFlow.Values.Find(a => a.StandardisedName == "Decrease in Investments" && a.Tid == 27).ValueAssigned;
+			bcf.DecreaseinHTMInvestments_28 = cashFlow.Values.Find(a => a.StandardisedName == "Decrease in HTM Investments" && a.Tid == 28).ValueAssigned;
+			bcf.DecreaseinAFSInvestments_29 = cashFlow.Values.Find(a => a.StandardisedName == "Decrease in AFS Investments" && a.Tid == 29).ValueAssigned;
+			bcf.IncreaseinInvestments_30 = cashFlow.Values.Find(a => a.StandardisedName == "Increase in Investments" && a.Tid == 30).ValueAssigned;
+			bcf.IncreaseinHTMInvestments_31 = cashFlow.Values.Find(a => a.StandardisedName == "Increase in HTM Investments" && a.Tid == 31).ValueAssigned;
+			bcf.IncreaseinAFSInvestments_32 = cashFlow.Values.Find(a => a.StandardisedName == "Increase in AFS Investments" && a.Tid == 32).ValueAssigned;
+			bcf.NetChangeinOtherInvestments_33 = cashFlow.Values.Find(a => a.StandardisedName == "Net Change in Other Investments" && a.Tid == 33).ValueAssigned;
+			bcf.NetChangeinLoansInterbank_34 = cashFlow.Values.Find(a => a.StandardisedName == "Net Change in Loans & Interbank" && a.Tid == 34).ValueAssigned;
+			bcf.NetChangeinCustomerLoans_35 = cashFlow.Values.Find(a => a.StandardisedName == "Net Change in Customer Loans" && a.Tid == 35).ValueAssigned;
+			bcf.NetChangeinInterbankAssets_36 = cashFlow.Values.Find(a => a.StandardisedName == "Net Change in Interbank Assets" && a.Tid == 36).ValueAssigned;
+			bcf.NetChangeinOtherLoans_37 = cashFlow.Values.Find(a => a.StandardisedName == "Net Change in Other Loans" && a.Tid == 37).ValueAssigned;
+			bcf.NetCashFromAcquisitionsDivestitures_38 = cashFlow.Values.Find(a => a.StandardisedName == "Net Cash From Acquisitions & Divestitures" && a.Tid == 38).ValueAssigned;
+			bcf.NetCashfromDivestitures_39 = cashFlow.Values.Find(a => a.StandardisedName == "Net Cash from Divestitures" && a.Tid == 39).ValueAssigned;
+			bcf.CashforAcqusitionofSubsidiaries_40 = cashFlow.Values.Find(a => a.StandardisedName == "Cash for Acqusition of Subsidiaries" && a.Tid == 40).ValueAssigned;
+			bcf.CashforJointVentures_41 = cashFlow.Values.Find(a => a.StandardisedName == "Cash for Joint Ventures" && a.Tid == 41).ValueAssigned;
+			bcf.NetCashfromOtherAcquisitions_42 = cashFlow.Values.Find(a => a.StandardisedName == "Net Cash from Other Acquisitions" && a.Tid == 42).ValueAssigned;
+			bcf.OtherInvestingActivities_43 = cashFlow.Values.Find(a => a.StandardisedName == "Other Investing Activities" && a.Tid == 43).ValueAssigned;
+			bcf.NetCashFromDiscontinuedOperations_investing__44 = cashFlow.Values.Find(a => a.StandardisedName == "Net Cash From Discontinued Operations (investing)" && a.Tid == 44).ValueAssigned;
+			bcf.CashfromInvestingActivities_45 = cashFlow.Values.Find(a => a.StandardisedName == "Cash from Investing Activities" && a.Tid == 45).ValueAssigned;
+			bcf.DividendsPaid_46 = cashFlow.Values.Find(a => a.StandardisedName == "Dividends Paid" && a.Tid == 46).ValueAssigned;
+			bcf.CashFrom_Repaymentof_Debt_47 = cashFlow.Values.Find(a => a.StandardisedName == "Cash From (Repayment of) Debt" && a.Tid == 47).ValueAssigned;
+			bcf.CashFrom_Repaymentof_ShortTermDebtnet_48 = cashFlow.Values.Find(a => a.StandardisedName == "Cash From (Repayment of) Short Term Debt, net" && a.Tid == 48).ValueAssigned;
+			bcf.NetChangeinInterbankTransfers_49 = cashFlow.Values.Find(a => a.StandardisedName == "Net Change in Interbank Transfers" && a.Tid == 49).ValueAssigned;
+			bcf.CashFrom_Repaymentof_LongTermDebtnet_50 = cashFlow.Values.Find(a => a.StandardisedName == "Cash From (Repayment of) Long Term Debt, net" && a.Tid == 50).ValueAssigned;
+			bcf.RepaymentsofLongTermDebt_51 = cashFlow.Values.Find(a => a.StandardisedName == "Repayments of Long Term Debt" && a.Tid == 51).ValueAssigned;
+			bcf.CashFromLongTermDebt_52 = cashFlow.Values.Find(a => a.StandardisedName == "Cash From Long Term Debt" && a.Tid == 52).ValueAssigned;
+			bcf.CashFrom_Repurchaseof_Equity_53 = cashFlow.Values.Find(a => a.StandardisedName == "Cash From (Repurchase of) Equity" && a.Tid == 53).ValueAssigned;
+			bcf.IncreaseinCapitalStock_54 = cashFlow.Values.Find(a => a.StandardisedName == "Increase in Capital Stock" && a.Tid == 54).ValueAssigned;
+			bcf.DecreaseinCapitalStock_55 = cashFlow.Values.Find(a => a.StandardisedName == "Decrease in Capital Stock" && a.Tid == 55).ValueAssigned;
+			bcf.NetChangeInDeposits_56 = cashFlow.Values.Find(a => a.StandardisedName == "Net Change In Deposits" && a.Tid == 56).ValueAssigned;
+			bcf.OtherFinancingActivities_57 = cashFlow.Values.Find(a => a.StandardisedName == "Other Financing Activities" && a.Tid == 57).ValueAssigned;
+			bcf.NetCashFromDiscontinuedOperations_financing__58 = cashFlow.Values.Find(a => a.StandardisedName == "Net Cash From Discontinued Operations (financing)" && a.Tid == 58).ValueAssigned;
+			bcf.CashfromFinancingActivities_59 = cashFlow.Values.Find(a => a.StandardisedName == "Cash from Financing Activities" && a.Tid == 59).ValueAssigned;
+			bcf.NetCashBeforeDiscOperationsandFX_71 = cashFlow.Values.Find(a => a.StandardisedName == "Net Cash Before Disc. Operations and FX" && a.Tid == 71).ValueAssigned;
+			bcf.ChangeinCashfromDiscOperationsandOther_61 = cashFlow.Values.Find(a => a.StandardisedName == "Change in Cash from Disc. Operations and Other" && a.Tid == 61).ValueAssigned;
+			bcf.NetCashBeforeFX_70 = cashFlow.Values.Find(a => a.StandardisedName == "Net Cash Before FX" && a.Tid == 70).ValueAssigned;
+			bcf.EffectofForeignExchangeRates_60 = cashFlow.Values.Find(a => a.StandardisedName == "Effect of Foreign Exchange Rates" && a.Tid == 60).ValueAssigned;
+			bcf.NetChangesinCash_62 = cashFlow.Values.Find(a => a.StandardisedName == "Net Changes in Cash" && a.Tid == 62).ValueAssigned;
+			return bcf;
+		}
+
+		private GeneralCashFlow BuildGeneralCashFlow(CompanyFinancials cashFlow)
+		{
+			var gcf = new GeneralCashFlow
+			{
+				Calculated = cashFlow.Calculated,
+				CompanyId = cashFlow.CompanyId,
+				FYear = cashFlow.FYear,
+				IndustryTemplate = cashFlow.IndustryTemplate,
+				Statement = cashFlow.Statement
+			};
+			gcf.NetIncome_StartingLine_1 = cashFlow.Values.Find(a => a.StandardisedName == "Net Income/Starting Line" && a.Tid == 1).ValueAssigned;
+			gcf.NetIncome_47 = cashFlow.Values.Find(a => a.StandardisedName == "Net Income" && a.Tid == 47).ValueAssigned;
+			gcf.NetIncomeFromDiscontinuedOperations_48 = cashFlow.Values.Find(a => a.StandardisedName == "Net Income From Discontinued Operations" && a.Tid == 48).ValueAssigned;
+			gcf.OtherAdjustments_49 = cashFlow.Values.Find(a => a.StandardisedName == "Other Adjustments" && a.Tid == 49).ValueAssigned;
+			gcf.DepreciationAmortization_2 = cashFlow.Values.Find(a => a.StandardisedName == "Depreciation & Amortization" && a.Tid == 2).ValueAssigned;
+			gcf.NonCashItems_3 = cashFlow.Values.Find(a => a.StandardisedName == "Non-Cash Items" && a.Tid == 3).ValueAssigned;
+			gcf.StockBasedCompensation_4 = cashFlow.Values.Find(a => a.StandardisedName == "Stock-Based Compensation" && a.Tid == 4).ValueAssigned;
+			gcf.DeferredIncomeTaxes_5 = cashFlow.Values.Find(a => a.StandardisedName == "Deferred Income Taxes" && a.Tid == 5).ValueAssigned;
+			gcf.OtherNonCashAdjustments_6 = cashFlow.Values.Find(a => a.StandardisedName == "Other Non-Cash Adjustments" && a.Tid == 6).ValueAssigned;
+			gcf.ChangeinWorkingCapital_7 = cashFlow.Values.Find(a => a.StandardisedName == "Change in Working Capital" && a.Tid == 7).ValueAssigned;
+			gcf._Increase_DecreaseinAccountsReceivable_8 = cashFlow.Values.Find(a => a.StandardisedName == "(Increase) Decrease in Accounts Receivable" && a.Tid == 8).ValueAssigned;
+			gcf._Increase_DecreaseinInventories_9 = cashFlow.Values.Find(a => a.StandardisedName == "(Increase) Decrease in Inventories" && a.Tid == 9).ValueAssigned;
+			gcf.Increase_Decrease_inAccountsPayable_10 = cashFlow.Values.Find(a => a.StandardisedName == "Increase (Decrease) in Accounts Payable" && a.Tid == 10).ValueAssigned;
+			gcf.Increase_Decrease_inOther_11 = cashFlow.Values.Find(a => a.StandardisedName == "Increase (Decrease) in Other" && a.Tid == 11).ValueAssigned;
+			gcf.NetCashFromDiscontinuedOperations_operating__12 = cashFlow.Values.Find(a => a.StandardisedName == "Net Cash From Discontinued Operations (operating)" && a.Tid == 12).ValueAssigned;
+			gcf.CashfromOperatingActivities_13 = cashFlow.Values.Find(a => a.StandardisedName == "Cash from Operating Activities" && a.Tid == 13).ValueAssigned;
+			gcf.ChangeinFixedAssetsIntangibles_14 = cashFlow.Values.Find(a => a.StandardisedName == "Change in Fixed Assets & Intangibles" && a.Tid == 14).ValueAssigned;
+			gcf.DispositionofFixedAssetsIntangibles_15 = cashFlow.Values.Find(a => a.StandardisedName == "Disposition of Fixed Assets & Intangibles" && a.Tid == 15).ValueAssigned;
+			gcf.DispositionofFixedAssets_16 = cashFlow.Values.Find(a => a.StandardisedName == "Disposition of Fixed Assets" && a.Tid == 16).ValueAssigned;
+			gcf.DispositionofIntangibleAssets_17 = cashFlow.Values.Find(a => a.StandardisedName == "Disposition of Intangible Assets" && a.Tid == 17).ValueAssigned;
+			gcf.AcquisitionofFixedAssetsIntangibles_18 = cashFlow.Values.Find(a => a.StandardisedName == "Acquisition of Fixed Assets & Intangibles" && a.Tid == 18).ValueAssigned;
+			gcf.PurchaseofFixedAssets_19 = cashFlow.Values.Find(a => a.StandardisedName == "Purchase of Fixed Assets" && a.Tid == 19).ValueAssigned;
+			gcf.AcquisitionofIntangibleAssets_20 = cashFlow.Values.Find(a => a.StandardisedName == "Acquisition of Intangible Assets" && a.Tid == 20).ValueAssigned;
+			gcf.OtherChangeinFixedAssetsIntangibles_21 = cashFlow.Values.Find(a => a.StandardisedName == "Other Change in Fixed Assets & Intangibles" && a.Tid == 21).ValueAssigned;
+			gcf.NetChangeinLongTermInvestment_22 = cashFlow.Values.Find(a => a.StandardisedName == "Net Change in Long Term Investment" && a.Tid == 22).ValueAssigned;
+			gcf.DecreaseinLongTermInvestment_23 = cashFlow.Values.Find(a => a.StandardisedName == "Decrease in Long Term Investment" && a.Tid == 23).ValueAssigned;
+			gcf.IncreaseinLongTermInvestment_24 = cashFlow.Values.Find(a => a.StandardisedName == "Increase in Long Term Investment" && a.Tid == 24).ValueAssigned;
+			gcf.NetCashFromAcquisitionsDivestitures_25 = cashFlow.Values.Find(a => a.StandardisedName == "Net Cash From Acquisitions & Divestitures" && a.Tid == 25).ValueAssigned;
+			gcf.NetCashfromDivestitures_26 = cashFlow.Values.Find(a => a.StandardisedName == "Net Cash from Divestitures" && a.Tid == 26).ValueAssigned;
+			gcf.CashforAcqusitionofSubsidiaries_27 = cashFlow.Values.Find(a => a.StandardisedName == "Cash for Acqusition of Subsidiaries" && a.Tid == 27).ValueAssigned;
+			gcf.CashforJointVentures_28 = cashFlow.Values.Find(a => a.StandardisedName == "Cash for Joint Ventures" && a.Tid == 28).ValueAssigned;
+			gcf.NetCashfromOtherAcquisitions_50 = cashFlow.Values.Find(a => a.StandardisedName == "Net Cash from Other Acquisitions" && a.Tid == 50).ValueAssigned;
+			gcf.OtherInvestingActivities_29 = cashFlow.Values.Find(a => a.StandardisedName == "Other Investing Activities" && a.Tid == 29).ValueAssigned;
+			gcf.NetCashFromDiscontinuedOperations_investing__30 = cashFlow.Values.Find(a => a.StandardisedName == "Net Cash From Discontinued Operations (investing)" && a.Tid == 30).ValueAssigned;
+			gcf.CashfromInvestingActivities_31 = cashFlow.Values.Find(a => a.StandardisedName == "Cash from Investing Activities" && a.Tid == 31).ValueAssigned;
+			gcf.DividendsPaid_32 = cashFlow.Values.Find(a => a.StandardisedName == "Dividends Paid" && a.Tid == 32).ValueAssigned;
+			gcf.CashFrom_Repaymentof_Debt_33 = cashFlow.Values.Find(a => a.StandardisedName == "Cash From (Repayment of) Debt" && a.Tid == 33).ValueAssigned;
+			gcf.CashFrom_Repaymentof_ShortTermDebtnet_34 = cashFlow.Values.Find(a => a.StandardisedName == "Cash From (Repayment of) Short Term Debt, net" && a.Tid == 34).ValueAssigned;
+			gcf.CashFrom_Repaymentof_LongTermDebtnet_35 = cashFlow.Values.Find(a => a.StandardisedName == "Cash From (Repayment of) Long Term Debt, net" && a.Tid == 35).ValueAssigned;
+			gcf.RepaymentsofLongTermDebt_36 = cashFlow.Values.Find(a => a.StandardisedName == "Repayments of Long Term Debt" && a.Tid == 36).ValueAssigned;
+			gcf.CashFromLongTermDebt_37 = cashFlow.Values.Find(a => a.StandardisedName == "Cash From Long Term Debt" && a.Tid == 37).ValueAssigned;
+			gcf.CashFrom_Repurchaseof_Equity_38 = cashFlow.Values.Find(a => a.StandardisedName == "Cash From (Repurchase of) Equity" && a.Tid == 38).ValueAssigned;
+			gcf.IncreaseinCapitalStock_39 = cashFlow.Values.Find(a => a.StandardisedName == "Increase in Capital Stock" && a.Tid == 39).ValueAssigned;
+			gcf.DecreaseinCapitalStock_40 = cashFlow.Values.Find(a => a.StandardisedName == "Decrease in Capital Stock" && a.Tid == 40).ValueAssigned;
+			gcf.OtherFinancingActivities_41 = cashFlow.Values.Find(a => a.StandardisedName == "Other Financing Activities" && a.Tid == 41).ValueAssigned;
+			gcf.NetCashFromDiscontinuedOperations_financing__42 = cashFlow.Values.Find(a => a.StandardisedName == "Net Cash From Discontinued Operations (financing)" && a.Tid == 42).ValueAssigned;
+			gcf.CashfromFinancingActivities_43 = cashFlow.Values.Find(a => a.StandardisedName == "Cash from Financing Activities" && a.Tid == 43).ValueAssigned;
+			gcf.NetCashBeforeDiscOperationsandFX_56 = cashFlow.Values.Find(a => a.StandardisedName == "Net Cash Before Disc. Operations and FX" && a.Tid == 56).ValueAssigned;
+			gcf.ChangeinCashfromDiscOperationsandOther_45 = cashFlow.Values.Find(a => a.StandardisedName == "Change in Cash from Disc. Operations and Other" && a.Tid == 45).ValueAssigned;
+			gcf.NetCashBeforeFX_55 = cashFlow.Values.Find(a => a.StandardisedName == "Net Cash Before FX" && a.Tid == 55).ValueAssigned;
+			gcf.EffectofForeignExchangeRates_44 = cashFlow.Values.Find(a => a.StandardisedName == "Effect of Foreign Exchange Rates" && a.Tid == 44).ValueAssigned;
+			gcf.NetChangesinCash_46 = cashFlow.Values.Find(a => a.StandardisedName == "Net Changes in Cash" && a.Tid == 46).ValueAssigned;
+
+			return gcf;
+		}
 
 		private ExcelWorksheet CreateSheet(string outFile, ExcelPackage package, string sheetName)
 		{
@@ -100,203 +554,13 @@ namespace ExcelReadWrite.Tools
 			return companyFinancials;
 		}
 
-		private async Task PopulateGeneralBSAsync(List<CompanyFinancials> balanceSheets, string outFile, ExcelPackage package)
-		{
-			ExcelWorksheet worksheet = CreateSheet(outFile, package, GeneralBsWorkSheetName);
-			var gbsl = new List<GeneralBalanceSheet>();
-			foreach (var balanceSheet in balanceSheets)
-			{
-				var fbc = new GeneralBalanceSheet
-				{
-					Calculated = balanceSheet.Calculated,
-					CompanyId = balanceSheet.CompanyId,
-					FYear = balanceSheet.FYear,
-					IndustryTemplate = balanceSheet.IndustryTemplate,
-					Statement = balanceSheet.Statement,
-				};
-				fbc.CashCashEquivalentsShortTermInvestments_1 = balanceSheet.Values.Find(a => a.StandardisedName == "Cash, Cash Equivalents & Short Term Investments" && a.Tid == 1).ValueChosen;
-				fbc.CashCashEquivalentsShortTermInvestments_1 = balanceSheet.Values.Find(a => a.StandardisedName == "Cash, Cash Equivalents & Short Term Investments" && a.Tid == 1).ValueChosen;
-				fbc.CashCashEquivalents_2 = balanceSheet.Values.Find(a => a.StandardisedName == "Cash & Cash Equivalents" && a.Tid == 2).ValueChosen;
-				fbc.ShortTermInvestments_3 = balanceSheet.Values.Find(a => a.StandardisedName == "Short Term Investments" && a.Tid == 3).ValueChosen;
-				fbc.AccountsNotesReceivable_4 = balanceSheet.Values.Find(a => a.StandardisedName == "Accounts & Notes Receivable" && a.Tid == 4).ValueChosen;
-				fbc.AccountsReceivableNet_5 = balanceSheet.Values.Find(a => a.StandardisedName == "Accounts Receivable, Net" && a.Tid == 5).ValueChosen;
-				fbc.NotesReceivableNet_6 = balanceSheet.Values.Find(a => a.StandardisedName == "Notes Receivable, Net" && a.Tid == 6).ValueChosen;
-				fbc.UnbilledRevenues_7 = balanceSheet.Values.Find(a => a.StandardisedName == "Unbilled Revenues" && a.Tid == 7).ValueChosen;
-				fbc.Inventories_8 = balanceSheet.Values.Find(a => a.StandardisedName == "Inventories" && a.Tid == 8).ValueChosen;
-				fbc.RawMaterials_9 = balanceSheet.Values.Find(a => a.StandardisedName == "Raw Materials" && a.Tid == 9).ValueChosen;
-				fbc.WorkInProcess_10 = balanceSheet.Values.Find(a => a.StandardisedName == "Work In Process" && a.Tid == 10).ValueChosen;
-				fbc.FinishedGoods_11 = balanceSheet.Values.Find(a => a.StandardisedName == "Finished Goods" && a.Tid == 11).ValueChosen;
-				fbc.OtherInventory_12 = balanceSheet.Values.Find(a => a.StandardisedName == "Other Inventory" && a.Tid == 12).ValueChosen;
-				fbc.OtherShortTermAssets_13 = balanceSheet.Values.Find(a => a.StandardisedName == "Other Short Term Assets" && a.Tid == 13).ValueChosen;
-				fbc.PrepaidExpenses_14 = balanceSheet.Values.Find(a => a.StandardisedName == "Prepaid Expenses" && a.Tid == 14).ValueChosen;
-				fbc.DerivativeHedgingAssets_15 = balanceSheet.Values.Find(a => a.StandardisedName == "Derivative & Hedging Assets" && a.Tid == 15).ValueChosen;
-				fbc.AssetsHeldforSale_16 = balanceSheet.Values.Find(a => a.StandardisedName == "Assets Held-for-Sale" && a.Tid == 16).ValueChosen;
-				fbc.DeferredTaxAssets_17 = balanceSheet.Values.Find(a => a.StandardisedName == "Deferred Tax Assets" && a.Tid == 17).ValueChosen;
-				fbc.IncomeTaxesReceivable_18 = balanceSheet.Values.Find(a => a.StandardisedName == "Income Taxes Receivable" && a.Tid == 18).ValueChosen;
-				fbc.DiscontinuedOperations_19 = balanceSheet.Values.Find(a => a.StandardisedName == "Discontinued Operations" && a.Tid == 19).ValueChosen;
-				fbc.MiscellaneousShortTermAssets_20 = balanceSheet.Values.Find(a => a.StandardisedName == "Miscellaneous Short Term Assets" && a.Tid == 20).ValueChosen;
-				fbc.TotalCurrentAssets_21 = balanceSheet.Values.Find(a => a.StandardisedName == "Total Current Assets" && a.Tid == 21).ValueChosen;
-				fbc.PropertyPlantEquipmentNet_22 = balanceSheet.Values.Find(a => a.StandardisedName == "Property, Plant & Equipment, Net" && a.Tid == 22).ValueChosen;
-				fbc.PropertyPlantEquipment_23 = balanceSheet.Values.Find(a => a.StandardisedName == "Property, Plant & Equipment" && a.Tid == 23).ValueChosen;
-				fbc.AccumulatedDepreciation_24 = balanceSheet.Values.Find(a => a.StandardisedName == "Accumulated Depreciation" && a.Tid == 24).ValueChosen;
-				fbc.LongTermInvestmentsReceivables_25 = balanceSheet.Values.Find(a => a.StandardisedName == "Long Term Investments & Receivables" && a.Tid == 25).ValueChosen;
-				fbc.LongTermInvestments_26 = balanceSheet.Values.Find(a => a.StandardisedName == "Long Term Investments" && a.Tid == 26).ValueChosen;
-				fbc.LongTermMarketableSecurities_27 = balanceSheet.Values.Find(a => a.StandardisedName == "Long Term Marketable Securities" && a.Tid == 27).ValueChosen;
-				fbc.LongTermReceivables_28 = balanceSheet.Values.Find(a => a.StandardisedName == "Long Term Receivables" && a.Tid == 28).ValueChosen;
-				fbc.OtherLongTermAssets_29 = balanceSheet.Values.Find(a => a.StandardisedName == "Other Long Term Assets" && a.Tid == 29).ValueChosen;
-				fbc.IntangibleAssets_30 = balanceSheet.Values.Find(a => a.StandardisedName == "Intangible Assets" && a.Tid == 30).ValueChosen;
-				fbc.Goodwill_31 = balanceSheet.Values.Find(a => a.StandardisedName == "Goodwill" && a.Tid == 31).ValueChosen;
-				fbc.OtherIntangibleAssets_32 = balanceSheet.Values.Find(a => a.StandardisedName == "Other Intangible Assets" && a.Tid == 32).ValueChosen;
-				fbc.PrepaidExpense_33 = balanceSheet.Values.Find(a => a.StandardisedName == "Prepaid Expense" && a.Tid == 33).ValueChosen;
-				fbc.DeferredTaxAssets_34 = balanceSheet.Values.Find(a => a.StandardisedName == "Deferred Tax Assets" && a.Tid == 34).ValueChosen;
-				fbc.DerivativeHedgingAssets_35 = balanceSheet.Values.Find(a => a.StandardisedName == "Derivative & Hedging Assets" && a.Tid == 35).ValueChosen;
-				fbc.PrepaidPensionCosts_36 = balanceSheet.Values.Find(a => a.StandardisedName == "Prepaid Pension Costs" && a.Tid == 36).ValueChosen;
-				fbc.DiscontinuedOperations_37 = balanceSheet.Values.Find(a => a.StandardisedName == "Discontinued Operations" && a.Tid == 37).ValueChosen;
-				fbc.InvestmentsinAffiliates_38 = balanceSheet.Values.Find(a => a.StandardisedName == "Investments in Affiliates" && a.Tid == 38).ValueChosen;
-				fbc.MiscellaneousLongTermAssets_39 = balanceSheet.Values.Find(a => a.StandardisedName == "Miscellaneous Long Term Assets" && a.Tid == 39).ValueChosen;
-				fbc.TotalNoncurrentAssets_40 = balanceSheet.Values.Find(a => a.StandardisedName == "Total Noncurrent Assets" && a.Tid == 40).ValueChosen;
-				fbc.TotalAssets_41 = balanceSheet.Values.Find(a => a.StandardisedName == "Total Assets" && a.Tid == 41).ValueChosen;
-				fbc.PayablesAccruals_42 = balanceSheet.Values.Find(a => a.StandardisedName == "Payables & Accruals" && a.Tid == 42).ValueChosen;
-				fbc.AccountsPayable_43 = balanceSheet.Values.Find(a => a.StandardisedName == "Accounts Payable" && a.Tid == 43).ValueChosen;
-				fbc.AccruedTaxes_44 = balanceSheet.Values.Find(a => a.StandardisedName == "Accrued Taxes" && a.Tid == 44).ValueChosen;
-				fbc.InterestDividendsPayable_45 = balanceSheet.Values.Find(a => a.StandardisedName == "Interest & Dividends Payable" && a.Tid == 45).ValueChosen;
-				fbc.OtherPayablesAccruals_46 = balanceSheet.Values.Find(a => a.StandardisedName == "Other Payables & Accruals" && a.Tid == 46).ValueChosen;
-				fbc.ShortTermDebt_47 = balanceSheet.Values.Find(a => a.StandardisedName == "Short Term Debt" && a.Tid == 47).ValueChosen;
-				fbc.ShortTermBorrowings_48 = balanceSheet.Values.Find(a => a.StandardisedName == "Short Term Borrowings" && a.Tid == 48).ValueChosen;
-				fbc.ShortTermCapitalLeases_49 = balanceSheet.Values.Find(a => a.StandardisedName == "Short Term Capital Leases" && a.Tid == 49).ValueChosen;
-				fbc.CurrentPortionofLongTermDebt_50 = balanceSheet.Values.Find(a => a.StandardisedName == "Current Portion of Long Term Debt" && a.Tid == 50).ValueChosen;
-				fbc.OtherShortTermLiabilities_51 = balanceSheet.Values.Find(a => a.StandardisedName == "Other Short Term Liabilities" && a.Tid == 51).ValueChosen;
-				fbc.DeferredRevenue_52 = balanceSheet.Values.Find(a => a.StandardisedName == "Deferred Revenue" && a.Tid == 52).ValueChosen;
-				fbc.DerivativesHedging_53 = balanceSheet.Values.Find(a => a.StandardisedName == "Derivatives & Hedging" && a.Tid == 53).ValueChosen;
-				fbc.DeferredTaxLiabilities_54 = balanceSheet.Values.Find(a => a.StandardisedName == "Deferred Tax Liabilities" && a.Tid == 54).ValueChosen;
-				fbc.DiscontinuedOperations_55 = balanceSheet.Values.Find(a => a.StandardisedName == "Discontinued Operations" && a.Tid == 55).ValueChosen;
-				fbc.MiscellaneousShortTermLiabilities_56 = balanceSheet.Values.Find(a => a.StandardisedName == "Miscellaneous Short Term Liabilities" && a.Tid == 56).ValueChosen;
-				fbc.TotalCurrentLiabilities_57 = balanceSheet.Values.Find(a => a.StandardisedName == "Total Current Liabilities" && a.Tid == 57).ValueChosen;
-				fbc.LongTermDebt_58 = balanceSheet.Values.Find(a => a.StandardisedName == "Long Term Debt" && a.Tid == 58).ValueChosen;
-				fbc.LongTermBorrowings_59 = balanceSheet.Values.Find(a => a.StandardisedName == "Long Term Borrowings" && a.Tid == 59).ValueChosen;
-				fbc.LongTermCapitalLeases_60 = balanceSheet.Values.Find(a => a.StandardisedName == "Long Term Capital Leases" && a.Tid == 60).ValueChosen;
-				fbc.OtherLongTermLiabilities_61 = balanceSheet.Values.Find(a => a.StandardisedName == "Other Long Term Liabilities" && a.Tid == 61).ValueChosen;
-				fbc.AccruedLiabilities_62 = balanceSheet.Values.Find(a => a.StandardisedName == "Accrued Liabilities" && a.Tid == 62).ValueChosen;
-				fbc.PensionLiabilities_63 = balanceSheet.Values.Find(a => a.StandardisedName == "Pension Liabilities" && a.Tid == 63).ValueChosen;
-				fbc.Pensions_64 = balanceSheet.Values.Find(a => a.StandardisedName == "Pensions" && a.Tid == 64).ValueChosen;
-				fbc.OtherPostRetirementBenefits_65 = balanceSheet.Values.Find(a => a.StandardisedName == "Other Post-Retirement Benefits" && a.Tid == 65).ValueChosen;
-				fbc.DeferredCompensation_66 = balanceSheet.Values.Find(a => a.StandardisedName == "Deferred Compensation" && a.Tid == 66).ValueChosen;
-				fbc.DeferredRevenue_67 = balanceSheet.Values.Find(a => a.StandardisedName == "Deferred Revenue" && a.Tid == 67).ValueChosen;
-				fbc.DeferredTaxLiabilities_68 = balanceSheet.Values.Find(a => a.StandardisedName == "Deferred Tax Liabilities" && a.Tid == 68).ValueChosen;
-				fbc.DerivativesHedging_69 = balanceSheet.Values.Find(a => a.StandardisedName == "Derivatives & Hedging" && a.Tid == 69).ValueChosen;
-				fbc.DiscontinuedOperations_70 = balanceSheet.Values.Find(a => a.StandardisedName == "Discontinued Operations" && a.Tid == 70).ValueChosen;
-				fbc.MiscellaneousLongTermLiabilities_71 = balanceSheet.Values.Find(a => a.StandardisedName == "Miscellaneous Long Term Liabilities" && a.Tid == 71).ValueChosen;
-				fbc.TotalNoncurrentLiabilities_72 = balanceSheet.Values.Find(a => a.StandardisedName == "Total Noncurrent Liabilities" && a.Tid == 72).ValueChosen;
-				fbc.TotalLiabilities_73 = balanceSheet.Values.Find(a => a.StandardisedName == "Total Liabilities" && a.Tid == 73).ValueChosen;
-				fbc.PreferredEquity_74 = balanceSheet.Values.Find(a => a.StandardisedName == "Preferred Equity" && a.Tid == 74).ValueChosen;
-				fbc.ShareCapitalAdditionalPaidInCapital_75 = balanceSheet.Values.Find(a => a.StandardisedName == "Share Capital & Additional Paid-In Capital" && a.Tid == 75).ValueChosen;
-				fbc.CommonStock_76 = balanceSheet.Values.Find(a => a.StandardisedName == "Common Stock" && a.Tid == 76).ValueChosen;
-				fbc.AdditionalPaidinCapital_77 = balanceSheet.Values.Find(a => a.StandardisedName == "Additional Paid in Capital" && a.Tid == 77).ValueChosen;
-				fbc.OtherShareCapital_78 = balanceSheet.Values.Find(a => a.StandardisedName == "Other Share Capital" && a.Tid == 78).ValueChosen;
-				fbc.TreasuryStock_79 = balanceSheet.Values.Find(a => a.StandardisedName == "Treasury Stock" && a.Tid == 79).ValueChosen;
-				fbc.RetainedEarnings_80 = balanceSheet.Values.Find(a => a.StandardisedName == "Retained Earnings" && a.Tid == 80).ValueChosen;
-				fbc.OtherEquity_81 = balanceSheet.Values.Find(a => a.StandardisedName == "Other Equity" && a.Tid == 81).ValueChosen;
-				fbc.EquityBeforeMinorityInterest_82 = balanceSheet.Values.Find(a => a.StandardisedName == "Equity Before Minority Interest" && a.Tid == 82).ValueChosen;
-				fbc.MinorityInterest_83 = balanceSheet.Values.Find(a => a.StandardisedName == "Minority Interest" && a.Tid == 83).ValueChosen;
-				fbc.TotalEquity_84 = balanceSheet.Values.Find(a => a.StandardisedName == "Total Equity" && a.Tid == 84).ValueChosen;
-				fbc.TotalLiabilitiesEquity_85 = balanceSheet.Values.Find(a => a.StandardisedName == "Total Liabilities & Equity" && a.Tid == 85).ValueChosen;
-				gbsl.Add(fbc);
-			}
-			var row = worksheet.Dimension == null ? 1 : worksheet.Dimension.End.Row;
-			worksheet.Cells[row, 1].LoadFromCollection(gbsl, (row == 1));
-
-			var fullData = package.GetAsByteArray();
-			await File.WriteAllBytesAsync(outFile, fullData);
-		}
 		private async Task PopulateBankBSAsync(List<CompanyFinancials> balanceSheets, string outFile, ExcelPackage package)
 		{
 			ExcelWorksheet worksheet = CreateSheet(outFile, package, BankBsWorkSheetName);
 			var bbsl = new List<BankBalanceSheet>();
 			foreach (var balanceSheet in balanceSheets)
 			{
-				var bbs = new BankBalanceSheet
-				{
-					Calculated = balanceSheet.Calculated,
-					CompanyId = balanceSheet.CompanyId,
-					FYear = balanceSheet.FYear,
-					IndustryTemplate = balanceSheet.IndustryTemplate,
-					Statement = balanceSheet.Statement
-				};
-				bbs.CashCashEquivalents_1 = balanceSheet.Values.Find(a => a.StandardisedName == "Cash & Cash Equivalents" && a.Tid == 1).ValueAssigned;
-				bbs.Interbankassets_2 = balanceSheet.Values.Find(a => a.StandardisedName == "Interbank assets" && a.Tid == 2).ValueAssigned;
-				bbs.FedFundsSoldRepos_3 = balanceSheet.Values.Find(a => a.StandardisedName == "Fed Funds Sold & Repos" && a.Tid == 3).ValueAssigned;
-				bbs.OtherInterbankAssets_4 = balanceSheet.Values.Find(a => a.StandardisedName == "Other Interbank Assets" && a.Tid == 4).ValueAssigned;
-				bbs.ShortandLongTermInvestments_5 = balanceSheet.Values.Find(a => a.StandardisedName == "Short and Long Term Investments" && a.Tid == 5).ValueAssigned;
-				bbs.TradingSecurities_6 = balanceSheet.Values.Find(a => a.StandardisedName == "Trading Securities" && a.Tid == 6).ValueAssigned;
-				bbs.InvestmentSecuritiesAvailableforSale_7 = balanceSheet.Values.Find(a => a.StandardisedName == "Investment Securities Available for Sale" && a.Tid == 7).ValueAssigned;
-				bbs.InvestmentSecuritiesHeldtoMaturity_8 = balanceSheet.Values.Find(a => a.StandardisedName == "Investment Securities Held to Maturity" && a.Tid == 8).ValueAssigned;
-				bbs.RealEstateInvestments_9 = balanceSheet.Values.Find(a => a.StandardisedName == "Real Estate Investments" && a.Tid == 9).ValueAssigned;
-				bbs.OtherInvestments_10 = balanceSheet.Values.Find(a => a.StandardisedName == "Other Investments" && a.Tid == 10).ValueAssigned;
-				bbs.NetReceivables_11 = balanceSheet.Values.Find(a => a.StandardisedName == "Net Receivables" && a.Tid == 11).ValueAssigned;
-				bbs.NetLoans_25 = balanceSheet.Values.Find(a => a.StandardisedName == "Net Loans" && a.Tid == 25).ValueAssigned;
-				bbs.ReserveforLoanLosses_24 = balanceSheet.Values.Find(a => a.StandardisedName == "Reserve for Loan Losses" && a.Tid == 24).ValueAssigned;
-				bbs.TotalLoans_23 = balanceSheet.Values.Find(a => a.StandardisedName == "Total Loans" && a.Tid == 23).ValueAssigned;
-				bbs.TotalCommercialLoans_12 = balanceSheet.Values.Find(a => a.StandardisedName == "Total Commercial Loans" && a.Tid == 12).ValueAssigned;
-				bbs.CommercialRealEstateLoans_13 = balanceSheet.Values.Find(a => a.StandardisedName == "Commercial Real Estate Loans" && a.Tid == 13).ValueAssigned;
-				bbs.OtherCommercialLoans_14 = balanceSheet.Values.Find(a => a.StandardisedName == "Other Commercial Loans" && a.Tid == 14).ValueAssigned;
-				bbs.TotalConsumerLoans_15 = balanceSheet.Values.Find(a => a.StandardisedName == "Total Consumer Loans" && a.Tid == 15).ValueAssigned;
-				bbs.CreditCardLoans_16 = balanceSheet.Values.Find(a => a.StandardisedName == "Credit Card Loans" && a.Tid == 16).ValueAssigned;
-				bbs.HomeEquityLoans_17 = balanceSheet.Values.Find(a => a.StandardisedName == "Home Equity Loans" && a.Tid == 17).ValueAssigned;
-				bbs.FamilyResidentialLoans_18 = balanceSheet.Values.Find(a => a.StandardisedName == "Family Residential Loans" && a.Tid == 18).ValueAssigned;
-				bbs.AutoLoans_19 = balanceSheet.Values.Find(a => a.StandardisedName == "Auto Loans" && a.Tid == 19).ValueAssigned;
-				bbs.StudentLoans_20 = balanceSheet.Values.Find(a => a.StandardisedName == "Student Loans" && a.Tid == 20).ValueAssigned;
-				bbs.OtherConsumerLoans_21 = balanceSheet.Values.Find(a => a.StandardisedName == "Other Consumer Loans" && a.Tid == 21).ValueAssigned;
-				bbs.OtherLoans_22 = balanceSheet.Values.Find(a => a.StandardisedName == "Other Loans" && a.Tid == 22).ValueAssigned;
-				bbs.NetFixedAssets_26 = balanceSheet.Values.Find(a => a.StandardisedName == "Net Fixed Assets" && a.Tid == 26).ValueAssigned;
-				bbs.PropertyPlantEquipmentNet_27 = balanceSheet.Values.Find(a => a.StandardisedName == "Property, Plant & Equipment, Net" && a.Tid == 27).ValueAssigned;
-				bbs.OperatingLeaseAssets_28 = balanceSheet.Values.Find(a => a.StandardisedName == "Operating Lease Assets" && a.Tid == 28).ValueAssigned;
-				bbs.Otherfixedassets_75 = balanceSheet.Values.Find(a => a.StandardisedName == "Other fixed assets" && a.Tid == 75).ValueAssigned;
-				bbs.IntangibleAssets_29 = balanceSheet.Values.Find(a => a.StandardisedName == "Intangible Assets" && a.Tid == 29).ValueAssigned;
-				bbs.Goodwill_30 = balanceSheet.Values.Find(a => a.StandardisedName == "Goodwill" && a.Tid == 30).ValueAssigned;
-				bbs.OtherIntangibleAssets_31 = balanceSheet.Values.Find(a => a.StandardisedName == "Other Intangible Assets" && a.Tid == 31).ValueAssigned;
-				bbs.InvestmentsinAssociates_32 = balanceSheet.Values.Find(a => a.StandardisedName == "Investments in Associates" && a.Tid == 32).ValueAssigned;
-				bbs.DeferredTaxAssets_33 = balanceSheet.Values.Find(a => a.StandardisedName == "Deferred Tax Assets" && a.Tid == 33).ValueAssigned;
-				bbs.DerivativesHedging_34 = balanceSheet.Values.Find(a => a.StandardisedName == "Derivatives & Hedging" && a.Tid == 34).ValueAssigned;
-				bbs.DiscontinuedOperations_35 = balanceSheet.Values.Find(a => a.StandardisedName == "Discontinued Operations" && a.Tid == 35).ValueAssigned;
-				bbs.CustomerAcceptancesLiabilities_36 = balanceSheet.Values.Find(a => a.StandardisedName == "Customer Acceptances & Liabilities" && a.Tid == 36).ValueAssigned;
-				bbs.OtherAssets_37 = balanceSheet.Values.Find(a => a.StandardisedName == "Other Assets" && a.Tid == 37).ValueAssigned;
-				bbs.TotalAssets_38 = balanceSheet.Values.Find(a => a.StandardisedName == "Total Assets" && a.Tid == 38).ValueAssigned;
-				bbs.TotalDeposits_44 = balanceSheet.Values.Find(a => a.StandardisedName == "Total Deposits" && a.Tid == 44).ValueAssigned;
-				bbs.DemandDeposits_39 = balanceSheet.Values.Find(a => a.StandardisedName == "Demand Deposits" && a.Tid == 39).ValueAssigned;
-				bbs.InterestBearingDeposits_40 = balanceSheet.Values.Find(a => a.StandardisedName == "Interest Bearing Deposits" && a.Tid == 40).ValueAssigned;
-				bbs.SavingDeposits_41 = balanceSheet.Values.Find(a => a.StandardisedName == "Saving Deposits" && a.Tid == 41).ValueAssigned;
-				bbs.TimeDeposits_42 = balanceSheet.Values.Find(a => a.StandardisedName == "Time Deposits" && a.Tid == 42).ValueAssigned;
-				bbs.OtherDeposits_43 = balanceSheet.Values.Find(a => a.StandardisedName == "Other Deposits" && a.Tid == 43).ValueAssigned;
-				bbs.ShortTermBorrowingsRepos_45 = balanceSheet.Values.Find(a => a.StandardisedName == "Short Term Borrowings & Repos" && a.Tid == 45).ValueAssigned;
-				bbs.SecuritiesSoldUnderRepo_46 = balanceSheet.Values.Find(a => a.StandardisedName == "Securities Sold Under Repo" && a.Tid == 46).ValueAssigned;
-				bbs.TradingAccountLiabilities_47 = balanceSheet.Values.Find(a => a.StandardisedName == "Trading Account Liabilities" && a.Tid == 47).ValueAssigned;
-				bbs.ShortTermCapitalLeases_48 = balanceSheet.Values.Find(a => a.StandardisedName == "Short Term Capital Leases" && a.Tid == 48).ValueAssigned;
-				bbs.CurrentPortionofLongTermDebt_49 = balanceSheet.Values.Find(a => a.StandardisedName == "Current Portion of Long Term Debt" && a.Tid == 49).ValueAssigned;
-				bbs.ShortTermBorrowings_50 = balanceSheet.Values.Find(a => a.StandardisedName == "Short Term Borrowings" && a.Tid == 50).ValueAssigned;
-				bbs.PayablesBrokerDealers_51 = balanceSheet.Values.Find(a => a.StandardisedName == "Payables Broker Dealers" && a.Tid == 51).ValueAssigned;
-				bbs.LongTermDebt_52 = balanceSheet.Values.Find(a => a.StandardisedName == "Long Term Debt" && a.Tid == 52).ValueAssigned;
-				bbs.LongTermCapitalLeases_53 = balanceSheet.Values.Find(a => a.StandardisedName == "Long Term Capital Leases" && a.Tid == 53).ValueAssigned;
-				bbs.LongTermBorrowings_54 = balanceSheet.Values.Find(a => a.StandardisedName == "Long Term Borrowings" && a.Tid == 54).ValueAssigned;
-				bbs.PensionLiabilities_55 = balanceSheet.Values.Find(a => a.StandardisedName == "Pension Liabilities" && a.Tid == 55).ValueAssigned;
-				bbs.Pensions_56 = balanceSheet.Values.Find(a => a.StandardisedName == "Pensions" && a.Tid == 56).ValueAssigned;
-				bbs.OtherPostRetirementBenefits_57 = balanceSheet.Values.Find(a => a.StandardisedName == "Other Post-Retirement Benefits" && a.Tid == 57).ValueAssigned;
-				bbs.DeferredTaxLiabilities_58 = balanceSheet.Values.Find(a => a.StandardisedName == "Deferred Tax Liabilities" && a.Tid == 58).ValueAssigned;
-				bbs.DerivativesHedging_59 = balanceSheet.Values.Find(a => a.StandardisedName == "Derivatives & Hedging" && a.Tid == 59).ValueAssigned;
-				bbs.DiscontinuedOperations_60 = balanceSheet.Values.Find(a => a.StandardisedName == "Discontinued Operations" && a.Tid == 60).ValueAssigned;
-				bbs.OtherLiabilities_61 = balanceSheet.Values.Find(a => a.StandardisedName == "Other Liabilities" && a.Tid == 61).ValueAssigned;
-				bbs.TotalLiabilities_62 = balanceSheet.Values.Find(a => a.StandardisedName == "Total Liabilities" && a.Tid == 62).ValueAssigned;
-				bbs.PreferredEquity_63 = balanceSheet.Values.Find(a => a.StandardisedName == "Preferred Equity" && a.Tid == 63).ValueAssigned;
-				bbs.ShareCapitalAdditionalPaidInCapital_64 = balanceSheet.Values.Find(a => a.StandardisedName == "Share Capital & Additional Paid-In Capital" && a.Tid == 64).ValueAssigned;
-				bbs.CommonStock_65 = balanceSheet.Values.Find(a => a.StandardisedName == "Common Stock" && a.Tid == 65).ValueAssigned;
-				bbs.AdditionalPaidinCapital_66 = balanceSheet.Values.Find(a => a.StandardisedName == "Additional Paid in Capital" && a.Tid == 66).ValueAssigned;
-				bbs.OtherShareCapital_67 = balanceSheet.Values.Find(a => a.StandardisedName == "Other Share Capital" && a.Tid == 67).ValueAssigned;
-				bbs.TreasuryStock_68 = balanceSheet.Values.Find(a => a.StandardisedName == "Treasury Stock" && a.Tid == 68).ValueAssigned;
-				bbs.RetainedEarnings_69 = balanceSheet.Values.Find(a => a.StandardisedName == "Retained Earnings" && a.Tid == 69).ValueAssigned;
-				bbs.OtherEquity_70 = balanceSheet.Values.Find(a => a.StandardisedName == "Other Equity" && a.Tid == 70).ValueAssigned;
-				bbs.EquityBeforeMinorityInterest_71 = balanceSheet.Values.Find(a => a.StandardisedName == "Equity Before Minority Interest" && a.Tid == 71).ValueAssigned;
-				bbs.MinorityInterest_72 = balanceSheet.Values.Find(a => a.StandardisedName == "Minority Interest" && a.Tid == 72).ValueAssigned;
-				bbs.TotalEquity_73 = balanceSheet.Values.Find(a => a.StandardisedName == "Total Equity" && a.Tid == 73).ValueAssigned;
-				bbs.TotalLiabilitiesEquity_74 = balanceSheet.Values.Find(a => a.StandardisedName == "Total Liabilities & Equity" && a.Tid == 74).ValueAssigned;
+				BankBalanceSheet bbs = BuildBankBalanceSheet(balanceSheet);
 				bbsl.Add(bbs);
 			}
 			var row = worksheet.Dimension == null ? 1 : worksheet.Dimension.End.Row;
@@ -305,60 +569,61 @@ namespace ExcelReadWrite.Tools
 			var fullData = package.GetAsByteArray();
 			await File.WriteAllBytesAsync(outFile, fullData);
 		}
+
+		private async Task PopulateBankCFAsync(List<CompanyFinancials> cashFlows, string outFile, ExcelPackage package)
+		{
+			ExcelWorksheet worksheet = CreateSheet(outFile, package, BankCfWorkSheetName);
+			var bcfl = new List<BankCashFlow>();
+			foreach (var cashFlow in cashFlows)
+			{
+				BankCashFlow bbs = BuildBankCashFlow(cashFlow);
+				bcfl.Add(bbs);
+			}
+			var row = worksheet.Dimension == null ? 1 : worksheet.Dimension.End.Row;
+			worksheet.Cells[row, 1].LoadFromCollection(bcfl, (row == 1));
+
+			var fullData = package.GetAsByteArray();
+			await File.WriteAllBytesAsync(outFile, fullData);
+		}
+		private async Task PopulateGeneralBSAsync(List<CompanyFinancials> balanceSheets, string outFile, ExcelPackage package)
+		{
+			ExcelWorksheet worksheet = CreateSheet(outFile, package, GeneralBsWorkSheetName);
+			var gbsl = new List<GeneralBalanceSheet>();
+			foreach (var balanceSheet in balanceSheets)
+			{
+				GeneralBalanceSheet gbs = BuildGeneralBalanceSheet(balanceSheet);
+				gbsl.Add(gbs);
+			}
+			var row = worksheet.Dimension == null ? 1 : worksheet.Dimension.End.Row;
+			worksheet.Cells[row, 1].LoadFromCollection(gbsl, (row == 1));
+
+			var fullData = package.GetAsByteArray();
+			await File.WriteAllBytesAsync(outFile, fullData);
+		}
+
+		private async Task PopulateGeneralCFAsync(List<CompanyFinancials> cashFlows, string outFile, ExcelPackage package)
+		{
+			ExcelWorksheet worksheet = CreateSheet(outFile, package, GeneralCfWorkSheetName);
+			var gcfl = new List<GeneralCashFlow>();
+			foreach (var cashFlow in cashFlows)
+			{
+				GeneralCashFlow gcf = BuildGeneralCashFlow(cashFlow);
+				gcfl.Add(gcf);
+			}
+			var row = worksheet.Dimension == null ? 1 : worksheet.Dimension.End.Row;
+			worksheet.Cells[row, 1].LoadFromCollection(gcfl, (row == 1));
+
+			var fullData = package.GetAsByteArray();
+			await File.WriteAllBytesAsync(outFile, fullData);
+
+		}
 		private async Task PopulateInsuranceBSAsync(List<CompanyFinancials> balanceSheets, string outFile, ExcelPackage package)
 		{
 			ExcelWorksheet worksheet = CreateSheet(outFile, package, InsuranceBsWorkSheetName);
 			var ibsl = new List<InsuranceBalanceSheet>();
 			foreach (var balanceSheet in balanceSheets)
 			{
-				var ibs = new InsuranceBalanceSheet
-				{
-					Calculated = balanceSheet.Calculated,
-					CompanyId = balanceSheet.CompanyId,
-					FYear = balanceSheet.FYear,
-					IndustryTemplate = balanceSheet.IndustryTemplate,
-					Statement = balanceSheet.Statement
-				};
-				ibs.TotalInvestments_1 = balanceSheet.Values.Find(a => a.StandardisedName == "Total Investments" && a.Tid == 1).ValueAssigned;
-				ibs.FixedIncomeTrading_AFSShortTermInv_2 = balanceSheet.Values.Find(a => a.StandardisedName == "Fixed Income-Trading/AFS & Short Term Inv." && a.Tid == 2).ValueAssigned;
-				ibs.LoansMortgages_3 = balanceSheet.Values.Find(a => a.StandardisedName == "Loans & Mortgages" && a.Tid == 3).ValueAssigned;
-				ibs.FixedIncomeSecuritiesHTM_4 = balanceSheet.Values.Find(a => a.StandardisedName == "Fixed Income Securities-HTM" && a.Tid == 4).ValueAssigned;
-				ibs.EquitySecurities_5 = balanceSheet.Values.Find(a => a.StandardisedName == "Equity Securities" && a.Tid == 5).ValueAssigned;
-				ibs.RealEstateInvestments_6 = balanceSheet.Values.Find(a => a.StandardisedName == "Real Estate Investments" && a.Tid == 6).ValueAssigned;
-				ibs.OtherInvestments_7 = balanceSheet.Values.Find(a => a.StandardisedName == "Other Investments" && a.Tid == 7).ValueAssigned;
-				ibs.CashCashEquivalents_8 = balanceSheet.Values.Find(a => a.StandardisedName == "Cash & Cash Equivalents" && a.Tid == 8).ValueAssigned;
-				ibs.AccountsNotesReceivable_9 = balanceSheet.Values.Find(a => a.StandardisedName == "Accounts & Notes Receivable" && a.Tid == 9).ValueAssigned;
-				ibs.NetFixedAssets_10 = balanceSheet.Values.Find(a => a.StandardisedName == "Net Fixed Assets" && a.Tid == 10).ValueAssigned;
-				ibs.DeferredPolicyAcquisitionCosts_11 = balanceSheet.Values.Find(a => a.StandardisedName == "Deferred Policy Acquisition Costs" && a.Tid == 11).ValueAssigned;
-				ibs.OtherAssets_12 = balanceSheet.Values.Find(a => a.StandardisedName == "Other Assets" && a.Tid == 12).ValueAssigned;
-				ibs.TotalAssets_13 = balanceSheet.Values.Find(a => a.StandardisedName == "Total Assets" && a.Tid == 13).ValueAssigned;
-				ibs.InsuranceReserves_14 = balanceSheet.Values.Find(a => a.StandardisedName == "Insurance Reserves" && a.Tid == 14).ValueAssigned;
-				ibs.ReserveforOutstandingClaimsLosses_15 = balanceSheet.Values.Find(a => a.StandardisedName == "Reserve for Outstanding Claims & Losses" && a.Tid == 15).ValueAssigned;
-				ibs.PremiumReserve_Unearned__16 = balanceSheet.Values.Find(a => a.StandardisedName == "Premium Reserve (Unearned)" && a.Tid == 16).ValueAssigned;
-				ibs.LifePolicyBenefits_17 = balanceSheet.Values.Find(a => a.StandardisedName == "Life Policy Benefits" && a.Tid == 17).ValueAssigned;
-				ibs.OtherInsuranceReserves_18 = balanceSheet.Values.Find(a => a.StandardisedName == "Other Insurance Reserves" && a.Tid == 18).ValueAssigned;
-				ibs.ShortTermDebt_19 = balanceSheet.Values.Find(a => a.StandardisedName == "Short Term Debt" && a.Tid == 19).ValueAssigned;
-				ibs.OtherShortTermLiabilities_20 = balanceSheet.Values.Find(a => a.StandardisedName == "Other Short Term Liabilities" && a.Tid == 20).ValueAssigned;
-				ibs.LongTermDebt_21 = balanceSheet.Values.Find(a => a.StandardisedName == "Long Term Debt" && a.Tid == 21).ValueAssigned;
-				ibs.PensionLiabilities_55 = balanceSheet.Values.Find(a => a.StandardisedName == "Pension Liabilities" && a.Tid == 55).ValueAssigned;
-				ibs.Pensions_56 = balanceSheet.Values.Find(a => a.StandardisedName == "Pensions" && a.Tid == 56).ValueAssigned;
-				ibs.OtherPostRetirementBenefits_57 = balanceSheet.Values.Find(a => a.StandardisedName == "Other Post-Retirement Benefits" && a.Tid == 57).ValueAssigned;
-				ibs.OtherLongTermLiabilities_22 = balanceSheet.Values.Find(a => a.StandardisedName == "Other Long Term Liabilities" && a.Tid == 22).ValueAssigned;
-				ibs.FundsforFutureAppropriations_23 = balanceSheet.Values.Find(a => a.StandardisedName == "Funds for Future Appropriations" && a.Tid == 23).ValueAssigned;
-				ibs.TotalLiabilities_24 = balanceSheet.Values.Find(a => a.StandardisedName == "Total Liabilities" && a.Tid == 24).ValueAssigned;
-				ibs.PreferredEquity_25 = balanceSheet.Values.Find(a => a.StandardisedName == "Preferred Equity" && a.Tid == 25).ValueAssigned;
-				ibs.PolicyholdersEquity_26 = balanceSheet.Values.Find(a => a.StandardisedName == "Policyholders' Equity" && a.Tid == 26).ValueAssigned;
-				ibs.ShareCapitalAdditionalPaidInCapital_27 = balanceSheet.Values.Find(a => a.StandardisedName == "Share Capital & Additional Paid-In Capital" && a.Tid == 27).ValueAssigned;
-				ibs.CommonStock_28 = balanceSheet.Values.Find(a => a.StandardisedName == "Common Stock" && a.Tid == 28).ValueAssigned;
-				ibs.AdditionalPaidinCapital_29 = balanceSheet.Values.Find(a => a.StandardisedName == "Additional Paid in Capital" && a.Tid == 29).ValueAssigned;
-				ibs.OtherShareCapital_30 = balanceSheet.Values.Find(a => a.StandardisedName == "Other Share Capital" && a.Tid == 30).ValueAssigned;
-				ibs.TreasuryStock_31 = balanceSheet.Values.Find(a => a.StandardisedName == "Treasury Stock" && a.Tid == 31).ValueAssigned;
-				ibs.RetainedEarnings_32 = balanceSheet.Values.Find(a => a.StandardisedName == "Retained Earnings" && a.Tid == 32).ValueAssigned;
-				ibs.OtherEquity_33 = balanceSheet.Values.Find(a => a.StandardisedName == "Other Equity" && a.Tid == 33).ValueAssigned;
-				ibs.EquityBeforeMinorityInterest_34 = balanceSheet.Values.Find(a => a.StandardisedName == "Equity Before Minority Interest" && a.Tid == 34).ValueAssigned;
-				ibs.MinorityInterest_35 = balanceSheet.Values.Find(a => a.StandardisedName == "Minority Interest" && a.Tid == 35).ValueAssigned;
-				ibs.TotalEquity_36 = balanceSheet.Values.Find(a => a.StandardisedName == "Total Equity" && a.Tid == 36).ValueAssigned;
-				ibs.TotalLiabilitiesEquity_37 = balanceSheet.Values.Find(a => a.StandardisedName == "Total Liabilities & Equity" && a.Tid == 37).ValueAssigned;
+				InsuranceBalanceSheet ibs = BuildInsuranceBalanceSheet(balanceSheet);
 				ibsl.Add(ibs);
 			}
 			var row = worksheet.Dimension == null ? 1 : worksheet.Dimension.End.Row;
@@ -368,10 +633,29 @@ namespace ExcelReadWrite.Tools
 			await File.WriteAllBytesAsync(outFile, fullData);
 		}
 
+		private async Task PopulateInsuranceCFAsync(List<CompanyFinancials> cashFlows, string outFile, ExcelPackage package)
+		{
+			ExcelWorksheet worksheet = CreateSheet(outFile, package, InsuranceCfWorkSheetName);
+			var icfl = new List<InsuranceCashFlow>();
+			foreach (var cashFlow in cashFlows)
+			{
+				InsuranceCashFlow icf = BuildInsurnaceCashFlow(cashFlow);
+				icfl.Add(icf);
+			}
+			var row = worksheet.Dimension == null ? 1 : worksheet.Dimension.End.Row;
+			worksheet.Cells[row, 1].LoadFromCollection(icfl, (row == 1));
+
+			var fullData = package.GetAsByteArray();
+			await File.WriteAllBytesAsync(outFile, fullData);
+		}
+		private async Task UpdateIndustryTemplate(string industryTemplate, string outFile, string simId)
+		{
+			var wloc = new WriteListOfCompanies(_logger);
+			await wloc.UpdateIndustryTemplateAsync(simId, industryTemplate, outFile);
+		}
+
 		private async Task WriteBalanceSheetDataAsync(List<CompanyFinancials> balanceSheets, string outFile)
 		{
-			var flattendData = new Dictionary<string, string>();
-
 			using (var package = new ExcelPackage())
 			{
 				if (balanceSheets.First().IndustryTemplate.Equals("general"))
@@ -397,8 +681,33 @@ namespace ExcelReadWrite.Tools
 			return;
 		}
 
-		
+		private async Task WriteCashFlowDataAsync(List<CompanyFinancials> cashFlows, string outFile)
+		{
+			using (var package = new ExcelPackage())
+			{
+				if (cashFlows.First().IndustryTemplate.Equals("insurances"))
+				{
+					_logger.LogInformation("Processing Cash flow for Insurance");
+					await PopulateInsuranceCFAsync(cashFlows, outFile, package);
+				}
+				else if (cashFlows.First().IndustryTemplate.Equals("general"))
+				{
+					_logger.LogInformation("Processing General");
+					await PopulateGeneralCFAsync(cashFlows, outFile, package);
+				}
+				else if (cashFlows.First().IndustryTemplate.Equals("banks"))
+				{
+					_logger.LogInformation("Processing Bank");
+					await PopulateBankCFAsync(cashFlows, outFile, package);
+				}
+				else
+				{
+					_logger.LogError($"Unknown Industry template {cashFlows.First().IndustryTemplate}");
+				}
+			}
+		}
 
 		#endregion Private Methods
+
 	}
 }
