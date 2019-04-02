@@ -30,12 +30,15 @@ namespace MongoReadWrite
 			var spylist = new string[] {
 					"VMC", "RF", "RSG", "MCHP", "FCX", "PNW", "JBHT", "WMT", "TSN", "RE", "FRC", "MXIM", "KEYS", "FTNT", "ANET", "TWTR", "NKTR", "SIVB", "CDNS", "RMD", "ALGN", "AMD", "ARE", "SNPS", "COO", "DLR", "ILMN", "HPE", "ATVI", "PYPL", "O", "EQIX", "AVGO", "GOOGL", "ESS", "FB", "MAC", "LRCX", "MNST", "EW", "NFLX", "ROST", "V", "WDC", "CRM", "ISRG", "HCP", "JEC", "VAR", "CBRE", "GOOG", "PSA", "GILD", "PLD", "SYMC", "EA", "NVDA", "INTU", "RHI", "A", "XLNX", "NTAP", "SCHW", "ADBE", "AMAT", "CSCO", "AMGN", "ADSK", "ORCL", "AVY", "GPS", "OXY", "AAPL", "MAT", "INTC", "DIS", "WFC", "HPQ", "CLX", "CVX", "EBAY", "EIX", "BEN", "JNPR", "KLAC", "MCK", "QCOM", "SRE", "PSA", "EIX", "SRE", "DISH", "CMG", "TAP", "XEC", "DVA", "WU", "NEM", "BLL", "AIV", "UDR", "CHTR", "BKNG", "SYF", "HIG", "PBCT", "ALXN", "CI", "UTX", "SWK", "URI", "APH", "IT", "XRX", "DHR", "INCY", "LEN", "CCL", "NCLH", "RCL", "DRI", "RJF", "WCG", "HRS", "ROP", "CSX", "CTXS", "FIS", "REG", "SBAC", "NEE" };
 			var miniCompDetails = b.Where(cd => spylist.Contains(cd.Ticker)).OrderBy(cd => cd.Ticker).ToList();
+			var listCount = miniCompDetails.Count();
+			Console.WriteLine($"Obtaining for {listCount} companies" );
 			Stopwatch stopWatch = new Stopwatch();
+			int counter = 0;
 			foreach (var company in miniCompDetails)
 			{
 				stopWatch.Reset();
 				stopWatch.Start();
-				Console.WriteLine($"Working on {company.Name}; its Ticker is {company.Ticker}");
+				Console.WriteLine($"Working on {++counter} of {listCount}  => {company.Name}; its Ticker is {company.Ticker}");
 				var d = c.UpdateStatements(company.SimId).Result;
 				var status = d ? "Success" : "Failed";
 				Console.WriteLine($"Financial for {company.Name} obtained {status}" );
