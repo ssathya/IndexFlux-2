@@ -1,19 +1,26 @@
 ﻿using Models;
-using MongoDB.Bson;
 using MongoDB.Driver;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace MongoReadWrite.Utils
 {
-    public class DBConnectionHandler<T> where T: IBaseModel
+	public class DBConnectionHandler<T> where T : IBaseModel
 	{
+
+		#region Private Fields
+
 		private readonly string _connectionString;
 		private readonly string _dbName;
 		private IMongoCollection<T> collection;
+
+		#endregion Private Fields
+
+
+		#region Public Constructors
+
 		public DBConnectionHandler()
 		{
 			_connectionString = Environment.GetEnvironmentVariable("MongoUri", EnvironmentVariableTarget.Process);
@@ -23,6 +30,12 @@ namespace MongoReadWrite.Utils
 				_dbName = "DropMe";
 			}
 		}
+
+		#endregion Public Constructors
+
+
+		#region Public Methods
+
 		public IMongoCollection<T> ConnectToDatabase(string collectionName)
 		{
 			var client = new MongoClient(MongoUrl.Create(_connectionString));
@@ -30,15 +43,7 @@ namespace MongoReadWrite.Utils
 			collection = db.GetCollection<T>(collectionName);
 			return collection;
 		}
-		public IEnumerable<T> Get()
-		{			
-			return collection.Find(all => true).ToEnumerable();
-		}
-		public T Get(string id)
-		{
-			return Get().Where(r => r.Id == id).FirstOrDefault();			
-		}
-		
+
 		public async Task<T> Create(T newRecord)
 		{
 			try
@@ -54,17 +59,33 @@ namespace MongoReadWrite.Utils
 			}
 		}
 
-		private static void UpdateIdIfNeeded(T newRecord)
+		public async Task<bool> Create(List<T> records)
 		{
-			var serviceInterface = typeof(T);
-			var id = (string)serviceInterface.GetProperty("Id").GetValue(newRecord, null);
-			if (string.IsNullOrWhiteSpace(id))
+			foreach (var record in records)
 			{
-				serviceInterface.GetProperty("Id").SetValue(newRecord, Guid.NewGuid().ToString());
+				UpdateIdIfNeeded(record);
+			}
+			try
+			{
+				await collection.InsertManyAsync(records);
+				return true;
+			}
+			catch (Exception ex)
+			{
+				Console.WriteLine($"Exception while inserting a new records\n{ex.Message}");
+				return false;
 			}
 		}
 
-		
+		public IEnumerable<T> Get()
+		{
+			return collection.Find(all => true).ToEnumerable();
+		}
+
+		public T Get(string id)
+		{
+			return Get().Where(r => r.Id == id).FirstOrDefault();
+		}
 		public async Task<bool> Remove(string id)
 		{
 			try
@@ -79,6 +100,21 @@ namespace MongoReadWrite.Utils
 				return false;
 			}
 		}
+
+		public async Task<bool> RemoveAll()
+		{
+			try
+			{
+				await collection.DeleteManyAsync(all => true);
+				return true;
+			}
+			catch (Exception ex)
+			{
+				Console.WriteLine($"Exception while deleting all records\n{ex.Message}");
+				return false;
+			}
+		}
+
 		public async Task<bool> Update(string id, T record)
 		{
 			try
@@ -94,5 +130,21 @@ namespace MongoReadWrite.Utils
 			}
 		}
 
+		#endregion Public Methods
+
+
+		#region Private Methods
+
+		private static void UpdateIdIfNeeded(T newRecord)
+		{
+			var serviceInterface = typeof(T);
+			var id = (string)serviceInterface.GetProperty("Id").GetValue(newRecord, null);
+			if (string.IsNullOrWhiteSpace(id))
+			{
+				serviceInterface.GetProperty("Id").SetValue(newRecord, Guid.NewGuid().ToString());
+			}
+		}
+
+		#endregion Private Methods
 	}
 }

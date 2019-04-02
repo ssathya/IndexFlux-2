@@ -36,21 +36,19 @@ namespace MongoReadWrite.Tools
 			{
 				allCompanies.Add(new CompanyDetailMd(company));
 			}
-			var savedList = _dbconCompany.Get();
-			foreach (var company in allCompanies)
+
+			var deleteStatus = await _dbconCompany.RemoveAll();
+			if (deleteStatus == false)
 			{
-				var oldEntry = savedList.FirstOrDefault(r => r.Ticker == company.Ticker);
-				if (oldEntry == null)
-				{
-					await _dbconCompany.Create(company);
-				}
-				else
-				{
-					company.Id = oldEntry.Id;
-					await _dbconCompany.Update(oldEntry.Id, company);
-				}
+				return null;
 			}
-			return allCompanies;
+			var insertStatus = await _dbconCompany.Create(allCompanies);
+			Task.WaitAll();
+			if (insertStatus)
+			{
+				return allCompanies;
+			}			
+			return null;
 		}
 
 

@@ -3,8 +3,9 @@
     "MongoReadWrite": {
       "commandName": "Project",
       "environmentVariables": {
-        "MongoUri": "mongodb://localhost:27017",
-        "SimFinKey": "nRzxBRIv37Ywg7c1LTsyqloX6gMGzSiM"
+        "MongoUri": "mongodb://loadit:pass123@ds044989.mlab.com:44989/simfin",
+        "SimFinKey": "nRzxBRIv37Ywg7c1LTsyqloX6gMGzSiM",
+        "DbName": "simfin"
       }
     }
   }
