@@ -89,16 +89,7 @@ namespace ExcelReadWrite.Tools
 							Name = workSheet.Cells[$"C{i}"].Text.Trim(),
 							IndustryTemplate = workSheet.Cells[$"D{i}"].Text.Trim()
 						};
-						var strDate = workSheet.Cells[$"E{i}"].Text.Trim();
-						if (!string.IsNullOrWhiteSpace(strDate))
-						{
-							
-							var result = DateTime.TryParse(strDate, out DateTime resultValue);
-							if (result == true)
-							{
-								cd.LastUpdate = resultValue;
-							}
-						}
+						GetLastUpdateDate(workSheet, i, cd);
 						CompanyDetails.Add(cd);
 					}
 				}
@@ -110,6 +101,24 @@ namespace ExcelReadWrite.Tools
 			}
 			return CompanyDetails;
 		}
+
+		private static void GetLastUpdateDate(ExcelWorksheet workSheet, int i, CompanyDetail cd)
+		{
+			
+			var strDate = workSheet.Cells[$"E{i}"].Text.Trim();
+			var value = workSheet.Cells[$"E{i}"].Value;
+			var cellType = workSheet.Cells[$"E{i}"].GetType();
+			if (!string.IsNullOrWhiteSpace(strDate))
+			{
+				
+				var result = DateTime.TryParse(strDate, out DateTime resultValue);				
+				if (result == true)
+				{
+					cd.LastUpdate = resultValue;
+				}
+			}
+		}
+
 		public async Task WriteAllCompanines(string destinationFile)
 		{
 			var allCompanies = await GetAllCompanines();

@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using Models;
 using Newtonsoft.Json;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
@@ -18,7 +19,6 @@ namespace HandleSimFin.Methods
 
 	public class ListOfStatements
 	{
-
 
 		#region Private Fields
 
@@ -40,6 +40,25 @@ namespace HandleSimFin.Methods
 
 
 		#region Public Methods
+
+		public StatementList ExtractYearEndReports(StatementList statement = null)
+		{
+			if (statement == null)
+			{
+				statement = statementList;
+			}
+			var returnValue = new StatementList
+			{
+				Bs = statement.Bs.Where(bs => bs.Period.Equals("TTM") || bs.Period.Contains("FY") || (bs.Period.Equals("Q4") && bs.Calculated == false)).ToList(),
+				Cf = statement.Cf.Where(cf => cf.Period.Equals("TTM") || cf.Period.Contains("FY")).ToList(),
+				Pl = statement.Pl.Where(pl => pl.Period.Equals("TTM") || pl.Period.Equals("FY") || pl.Period.Equals("Q4")).ToList()
+			};
+			returnValue.Bs = GetOneStatementPerYear(returnValue.Bs);
+			returnValue.Cf = GetOneStatementPerYear(returnValue.Cf);
+			returnValue.Pl = GetOneStatementPerYear(returnValue.Pl);
+			returnValue.CompanyId = statement.CompanyId;
+			return returnValue;
+		}
 
 		public async Task<StatementList> FetchStatementList(string identifyer, IdentifyerType identifyerType = IdentifyerType.SimFinId)
 		{
@@ -66,25 +85,23 @@ namespace HandleSimFin.Methods
 			};
 			return returnValue;
 		}
-		public StatementList ExtractYearEndReports(StatementList statement = null)
-		{
-			if (statement == null)
-			{
-				statement = statementList;
-			}
-			var returnValue = new StatementList
-			{
-				Bs = statement.Bs.Where(bs => bs.Period.Equals("TTM") || bs.Period.Contains("FY") || (bs.Period.Equals("Q4") && bs.Calculated==false)).ToList(),
-				Cf = statement.Cf.Where(cf => cf.Period.Equals("TTM") || cf.Period.Contains("FY")).ToList(),
-				Pl = statement.Pl.Where(pl => pl.Period.Equals("TTM") || pl.Period.Contains("FY")).ToList()
-			};
-			returnValue.CompanyId = statement.CompanyId;
-			return returnValue;
-		}
+
 		#endregion Public Methods
 
 
 		#region Private Methods
+
+		private static List<StatementDetails> GetOneStatementPerYear(List<StatementDetails> sd)
+		{
+			var newSd = new List<StatementDetails>();
+			var grouping = sd.GroupBy(Sd => Sd.Fyear);
+			foreach (var item in grouping)
+			{
+				var extract = item.FirstOrDefault();
+				newSd.Add(extract);
+			}
+			return newSd;
+		}
 
 		private async Task<StatementList> GetListOfStatements(string companyId)
 		{
@@ -143,6 +160,5 @@ namespace HandleSimFin.Methods
 		}
 
 		#endregion Private Methods
-
 	}
 }

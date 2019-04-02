@@ -1,0 +1,11 @@
+{
+  "profiles": {
+    "MongoReadWrite": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "MongoUri": "mongodb://localhost:27017",
+        "SimFinKey": "nRzxBRIv37Ywg7c1LTsyqloX6gMGzSiM"
+      }
+    }
+  }
+}

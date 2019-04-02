@@ -753,6 +753,12 @@ namespace ExcelReadWrite.Tools
 			statementList.Bs = statementList.Bs.OrderByDescending(b => b.Fyear).Take(4).ToList();
 			statementList.Cf = statementList.Cf.OrderByDescending(c => c.Fyear).Take(4).ToList();
 			statementList.Pl = statementList.Pl.OrderByDescending(p => p.Fyear).Take(4).ToList();
+			if (statementList.Bs.Count() != 4 
+				|| statementList.Cf.Count() != 4
+				|| statementList.Pl.Count() != 4)
+			{
+				Console.WriteLine("Something is wrong");
+			}
 
 			var dri = new DownloadReportableItems(_logger);
 			var companyFinancials = await dri.DownloadFinancialsAsync(statementList);

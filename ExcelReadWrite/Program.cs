@@ -30,8 +30,8 @@ namespace ExcelReadWrite
 		{
 			var logger = CreateLogger<WriteListOfCompanies>();
 			var wlc = new WriteListOfCompanies(logger);
-			await wlc.GetAllCompanines();
-			await wlc.WriteAllCompanines(outFile);
+			//			await wlc.GetAllCompanines();
+			//			await wlc.WriteAllCompanines(outFile);
 
 			companyDetails = wlc.GetCompanyDetails(outFile);
 			if (companyDetails == null || companyDetails.Count == 0)
@@ -47,8 +47,9 @@ namespace ExcelReadWrite
 			var insurance = new string[] { "AET", "HUM", "UNH", "MET" };
 			var miniCompDetail = companyDetails.Where(cd => banks.Contains(cd.Ticker)).ToList();
 			miniCompDetail.AddRange(companyDetails.Where(cd => retailers.Contains(cd.Ticker)).ToList());
-			miniCompDetail.AddRange(companyDetails.Where(cd => insurance.Contains(cd.Ticker)).ToList());			
-			var spylist = new string[] { "MMM", "ABT", "ABBV", "ABMD", "ACN", "ATVI", "ADBE", "AMD", "AAP", "AES", "AMG", "AFL", "A", "APD", "AKAM", "ALK", "ALB", "ARE", "ALXN", "ALGN", "ALLE", "AGN", "ADS", "LNT", "ALL", "GOOGL", "GOOG" };
+			miniCompDetail.AddRange(companyDetails.Where(cd => insurance.Contains(cd.Ticker)).ToList());
+			var spylist = new string[] {
+					"VMC", "RF", "RSG", "MCHP", "FCX", "PNW", "JBHT", "WMT", "TSN", "RE", "FRC", "MXIM", "KEYS", "FTNT", "ANET", "TWTR", "NKTR", "SIVB", "CDNS", "RMD", "ALGN", "AMD", "ARE", "SNPS", "COO", "DLR", "ILMN", "HPE", "ATVI", "PYPL", "O", "EQIX", "AVGO", "GOOGL", "ESS", "FB", "MAC", "LRCX", "MNST", "EW", "NFLX", "ROST", "V", "WDC", "CRM", "ISRG", "HCP", "JEC", "VAR", "CBRE", "GOOG", "PSA", "GILD", "PLD", "SYMC", "EA", "NVDA", "INTU", "RHI", "A", "XLNX", "NTAP", "SCHW", "ADBE", "AMAT", "CSCO", "AMGN", "ADSK", "ORCL", "AVY", "GPS", "OXY", "AAPL", "MAT", "INTC", "DIS", "WFC", "HPQ", "CLX", "CVX", "EBAY", "EIX", "BEN", "JNPR", "KLAC", "MCK", "QCOM", "SRE", "PSA", "EIX", "SRE", "DISH", "CMG", "TAP", "XEC", "DVA", "WU", "NEM", "BLL", "AIV", "UDR", "CHTR", "BKNG", "SYF", "HIG", "PBCT", "ALXN", "CI", "UTX", "SWK", "URI", "APH", "IT", "XRX", "DHR", "INCY", "LEN", "CCL", "NCLH", "RCL", "DRI", "RJF", "WCG", "HRS", "ROP", "CSX", "CTXS", "FIS", "REG", "SBAC", "NEE" };
 			miniCompDetail.AddRange(companyDetails.Where(cd => spylist.Contains(cd.Ticker)).ToList());
 			foreach (var companyDetail in miniCompDetail)
 			{
@@ -56,7 +57,7 @@ namespace ExcelReadWrite
 					((TimeSpan)(DateTime.Now - companyDetail.LastUpdate)).Days < 7)
 				{
 					Console.WriteLine($"Skipping {companyDetail.Name} as it was updated recently");
-					continue;					
+					continue;
 				}
 				var simId = companyDetail.SimId;
 				Console.WriteLine($"Starting {count}: {simId} at {DateTime.Now}");
