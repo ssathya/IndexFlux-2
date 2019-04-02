@@ -34,7 +34,24 @@ namespace Models
 		public List<Value> Values { get; set; }
 		#endregion Public Properties
 	}
+	public class CompanyFinancialsMd : CompanyFinancials, IBaseModel
+	{
+		public CompanyFinancialsMd()
+		{
 
+		}
+		public CompanyFinancialsMd(CompanyFinancials cf)
+		{
+			Calculated = cf.Calculated;
+			CalculationSchemes = cf.CalculationSchemes;
+			CompanyId = cf.CompanyId;
+			FYear = cf.FYear;
+			IndustryTemplate = cf.IndustryTemplate;
+			Statement = cf.Statement;
+			Values = cf.Values;
+		}
+		public string Id { get; set; }
+	}
 	public class Value
 	{
 		#region Public Properties

@@ -50,7 +50,39 @@ namespace MongoReadWrite.Tools
 			}			
 			return null;
 		}
-
+		public List<CompanyDetailMd> GetAllCompaniesFromDb()
+		{
+			var returnValue = _dbconCompany.Get().ToList();
+			return returnValue;
+		}
+		public CompanyDetail GetCompanyDetails(string simId)
+		{
+			var selectedRecord = _dbconCompany.Get().Where(cd => cd.SimId.Equals(simId)).FirstOrDefault();
+			if (selectedRecord == null)
+			{
+				return null;
+			}
+			var returnValue = new CompanyDetail
+			{
+				IndustryTemplate = selectedRecord.IndustryTemplate,
+				LastUpdate = selectedRecord.LastUpdate,
+				Name = selectedRecord.Name,
+				SimId = selectedRecord.SimId,
+				Ticker = selectedRecord.Ticker
+			};
+			return returnValue;
+		}
+		public async Task<bool> UpdateCompanyDetailAsync(string simId, string industryTemplate, DateTime? updateTime = null)
+		{
+			var selectedRecord = _dbconCompany.Get().Where(cd => cd.SimId.Equals(simId)).FirstOrDefault();
+			if (selectedRecord == null)
+			{
+				return false;
+			}
+			selectedRecord.IndustryTemplate = industryTemplate;
+			selectedRecord.LastUpdate = updateTime == null ? DateTime.Now : updateTime;
+			return await _dbconCompany.Update(selectedRecord.Id, selectedRecord);
+		}
 
 	}
 }

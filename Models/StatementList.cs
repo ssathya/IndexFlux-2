@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace Models
 {
@@ -14,5 +15,21 @@ namespace Models
 		public string Period { get; set; }
 		public int Fyear { get; set; }
 		public bool Calculated { get; set; }
+	}
+	public class StatementListMd : StatementList, IBaseModel
+	{
+		public StatementListMd()
+		{
+
+		}
+		public StatementListMd(StatementList sl)
+		{
+			Pl = sl.Pl;
+			Bs = sl.Bs;
+			Cf = sl.Cf;
+			CompanyId = sl.CompanyId;
+		}
+		public string Id { get; set; }
+		public DateTime? LastUpdateDate { get; set; }
 	}
 }
