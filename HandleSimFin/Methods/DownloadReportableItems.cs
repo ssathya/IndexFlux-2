@@ -56,7 +56,7 @@ namespace HandleSimFin.Methods
 					cfl.Add(bsToAdd);
 				}
 			}
-
+			
 			// get profit and loss
 			statementType = "pl";
 			reportingList = statementList.Pl.OrderByDescending(b => b.Fyear).Take(5);
@@ -69,7 +69,7 @@ namespace HandleSimFin.Methods
 					cfl.Add(plToAdd);
 				}				
 			}
-
+			
 			//get cash flow
 			statementType = "cf";
 			reportingList = statementList.Cf.OrderByDescending(b => b.Fyear).Take(5);

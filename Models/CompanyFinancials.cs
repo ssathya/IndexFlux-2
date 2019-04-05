@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace Models
 {
@@ -30,16 +31,19 @@ namespace Models
 		public string CompanyId { get; set; }
 		public int FYear { get; set; }
 		public string IndustryTemplate { get; set; }
+		public DateTime? PeriodEndDate { get; set; }
 		public StatementType Statement { get; set; }
 		public List<Value> Values { get; set; }
+
 		#endregion Public Properties
 	}
+
 	public class CompanyFinancialsMd : CompanyFinancials, IBaseModel
 	{
 		public CompanyFinancialsMd()
 		{
-
 		}
+
 		public CompanyFinancialsMd(CompanyFinancials cf)
 		{
 			Calculated = cf.Calculated;
@@ -50,8 +54,10 @@ namespace Models
 			Statement = cf.Statement;
 			Values = cf.Values;
 		}
+
 		public string Id { get; set; }
 	}
+
 	public class Value
 	{
 		#region Public Properties

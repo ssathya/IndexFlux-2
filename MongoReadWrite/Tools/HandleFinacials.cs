@@ -11,8 +11,8 @@ using System.Threading.Tasks;
 
 namespace MongoReadWrite.Tools
 {
-    public class HandleFinacials
-    {
+	public class HandleFinacials
+	{
 		private readonly DBConnectionHandler<CompanyFinancialsMd> _dbconCompany;
 		private readonly IMongoCollection<CompanyFinancialsMd> _statementConnection;
 
@@ -31,7 +31,7 @@ namespace MongoReadWrite.Tools
 			}
 			var hcl = new HandleCompanyList();
 			var cd = hcl.GetCompanyDetails(simId);
-			if (cd.LastUpdate != null && ((TimeSpan)(DateTime.Now - cd.LastUpdate)).Days < 7)
+			if (cd.LastUpdate != null && ((TimeSpan)(DateTime.Now - cd.LastUpdate)).Days < 30)
 			{
 				return true;
 			}
@@ -42,18 +42,43 @@ namespace MongoReadWrite.Tools
 				return false;
 			}
 			var cfMdl = new List<CompanyFinancialsMd>();
-			foreach (var companyFinancial in companyFinancials)
+			var oldcfML = _dbconCompany.Get().Where(o => o.CompanyId.Equals(simId)).ToList();
+			/*
+			 * Not sure what the wizard did was the right thing. Original code was
+			 * foreach (var companyFinancial in companyFinancials)
+					{
+					var oldcf = oldcfML.Where(o => o.CompanyId.Equals(companyFinancial.CompanyId)
+						&& o.FYear == companyFinancial.FYear
+						&& o.Statement == companyFinancial.Statement).FirstOrDefault();
+					cfMdl.Add(new CompanyFinancialsMd(companyFinancial));
+					if (oldcf != null)
+					{
+						cfMdl.Last().Id = oldcf.Id;
+					}
+			}
+			 */
+			foreach (var (companyFinancial, oldcf) in from companyFinancial in companyFinancials
+													  let oldcf = oldcfML.Where(o => o.CompanyId.Equals(companyFinancial.CompanyId)
+															&& o.FYear == companyFinancial.FYear
+															&& o.Statement == companyFinancial.Statement).FirstOrDefault()
+													  select (companyFinancial, oldcf))
 			{
 				cfMdl.Add(new CompanyFinancialsMd(companyFinancial));
+				if (oldcf != null)
+				{
+					cfMdl.Last().Id = oldcf.Id;
+				}
 			}
+
 			try
 			{
-				var returnValue = await _dbconCompany.Create(cfMdl);
+				var returnValue = await _dbconCompany.UpdateMultipe(cfMdl);
 				if (returnValue == false)
 				{
 					return false;
 				}
-				
+				await RemoveUnwantedRecords(cfMdl, oldcfML);
+
 				returnValue = await hcl.UpdateCompanyDetailAsync(simId, cfMdl.First().IndustryTemplate);
 				return returnValue;
 			}
@@ -63,6 +88,23 @@ namespace MongoReadWrite.Tools
 				return false;
 			}
 		}
+
+		private async Task RemoveUnwantedRecords(List<CompanyFinancialsMd> cfMdl, List<CompanyFinancialsMd> oldcfML)
+		{
+			CompanyFinancialsMd recordsToBeDeleted;
+			do
+			{
+				recordsToBeDeleted = (from o in oldcfML
+									  where !(cfMdl.Any(c => c.FYear == o.FYear))
+									  select o).FirstOrDefault();
+				if (recordsToBeDeleted != null)
+				{
+					await _dbconCompany.Remove(recordsToBeDeleted.Id);
+					oldcfML.Remove(recordsToBeDeleted);
+				}
+			} while (recordsToBeDeleted != null);
+		}
+
 		private async Task<List<CompanyFinancials>> ObtainCompanyFinancilasAsync(string simId)
 		{
 			var lf = new LoggerFactory();

@@ -61,6 +61,10 @@ namespace MongoReadWrite.Utils
 
 		public async Task<bool> Create(List<T> records)
 		{
+			if (records == null || records.Count == 0)
+			{
+				return false;
+			}
 			foreach (var record in records)
 			{
 				UpdateIdIfNeeded(record);
@@ -129,6 +133,48 @@ namespace MongoReadWrite.Utils
 				return false;
 			}
 		}
+		public async Task<bool> UpdateMultipe(List<T> updateRecords)
+		{
+			var objsWithoutId = new List<T>();
+			var updates = new List<WriteModel<T>>();
+			var filterBuilder = Builders<T>.Filter;
+			foreach (var updateRecord in updateRecords)
+			{
+				
+				ExtractId(updateRecord, out Type serviceInterface, out string id);
+				if (!string.IsNullOrWhiteSpace(id))
+				{
+					var filter = filterBuilder.Where(x => x.Id == updateRecord.Id);
+					updates.Add(new ReplaceOneModel<T>(filter, updateRecord));
+				}
+				else
+				{
+					objsWithoutId.Add(updateRecord);
+				}
+			}
+			try
+			{
+				var operation1Result = true;
+				var operation2Result = true;
+				if (updates.Count != 0)
+				{
+					var result1 = await collection.BulkWriteAsync(updates);
+					operation1Result = result1.ModifiedCount != 0;
+				}
+				if (objsWithoutId.Count != 0)
+				{
+					operation2Result = await Create(objsWithoutId);
+				}
+				return operation1Result && operation2Result;
+				
+			}
+			catch (Exception ex)
+			{
+				Console.WriteLine($"Exception while Bulk Updating a record\n{ex.Message}");
+				return false;
+			}
+			
+		}
 
 		#endregion Public Methods
 
@@ -137,12 +183,17 @@ namespace MongoReadWrite.Utils
 
 		private static void UpdateIdIfNeeded(T newRecord)
 		{
-			var serviceInterface = typeof(T);
-			var id = (string)serviceInterface.GetProperty("Id").GetValue(newRecord, null);
+			ExtractId(newRecord, out Type serviceInterface, out string id);
 			if (string.IsNullOrWhiteSpace(id))
 			{
 				serviceInterface.GetProperty("Id").SetValue(newRecord, Guid.NewGuid().ToString());
 			}
+		}
+
+		private static void ExtractId(T newRecord, out Type serviceInterface, out string id)
+		{
+			serviceInterface = typeof(T);
+			id = (string)serviceInterface.GetProperty("Id").GetValue(newRecord, null);
 		}
 
 		#endregion Private Methods

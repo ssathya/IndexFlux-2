@@ -31,28 +31,47 @@ namespace MongoReadWrite.Tools
 			var dLF = new DownloadListedFirms(localLogger);
 			var tmpList = await dLF.GetCompanyList();
 			allCompanies = new List<CompanyDetailMd>();
-			
+			var dbCompanies = _dbconCompany.Get().ToList();
+			if (dbCompanies.Count() < 100 || dbCompanies.Where(x => string.IsNullOrWhiteSpace(x.IndustryTemplate)).Count() < 20)
+			{
+				var deleteStatus = await _dbconCompany.RemoveAll();
+				if (deleteStatus == false)
+				{
+					return null;
+				}
+			}
+			dbCompanies = _dbconCompany.Get().ToList();
 			foreach (var company in tmpList)
 			{
-				allCompanies.Add(new CompanyDetailMd(company));
+				var dbCompany = dbCompanies.Where(x => x.SimId == company.SimId).FirstOrDefault();
+				if (dbCompany != null)
+				{
+					allCompanies.Add(dbCompany);
+				}
+				else
+				{
+					allCompanies.Add(new CompanyDetailMd(company));
+				}				
 			}
 
-			var deleteStatus = await _dbconCompany.RemoveAll();
-			if (deleteStatus == false)
-			{
-				return null;
-			}
-			var insertStatus = await _dbconCompany.Create(allCompanies);
-			Task.WaitAll();
+
+
+
+			//var insertStatus = await _dbconCompany.Create(allCompanies);
+			var insertStatus = await _dbconCompany.UpdateMultipe(allCompanies);
 			if (insertStatus)
 			{
 				return allCompanies;
 			}			
 			return null;
 		}
-		public List<CompanyDetailMd> GetAllCompaniesFromDb()
+		public async Task<List<CompanyDetailMd>> GetAllCompaniesFromDbAsync()
 		{
 			var returnValue = _dbconCompany.Get().ToList();
+			if (returnValue.Count <= 10)
+			{
+				returnValue = await GetAllCompaniesAsync();
+			}
 			return returnValue;
 		}
 		public CompanyDetail GetCompanyDetails(string simId)
