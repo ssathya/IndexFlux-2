@@ -16,6 +16,11 @@ namespace MongoReadWrite.Tools
 		private readonly DBConnectionHandler<CompanyFinancialsMd> _dbconCompany;
 		private readonly IMongoCollection<CompanyFinancialsMd> _statementConnection;
 
+		/// <summary>
+		/// Get statements from data provider and insert it to database.
+		/// </summary>
+		/// <param name="simId">The sim identifier.</param>
+		/// <returns></returns>
 		public HandleFinacials()
 		{
 			_dbconCompany = new DBConnectionHandler<CompanyFinancialsMd>();
@@ -105,6 +110,11 @@ namespace MongoReadWrite.Tools
 			} while (recordsToBeDeleted != null);
 		}
 
+		/// <summary>
+		/// Obtains the company financial asynchronous.
+		/// </summary>
+		/// <param name="simId">The SIM identifier.</param>
+		/// <returns></returns>
 		private async Task<List<CompanyFinancials>> ObtainCompanyFinancilasAsync(string simId)
 		{
 			var lf = new LoggerFactory();
