@@ -12,7 +12,6 @@ namespace MongoReadWrite.Tools
 {
 	public class HandleFinacials
 	{
-
 		#region Private Fields
 
 		private readonly DBConnectionHandler<CompanyFinancialsMd> _dbconCompany;
@@ -29,7 +28,7 @@ namespace MongoReadWrite.Tools
 			_statementConnection = _dbconCompany.ConnectToDatabase("CompanyFinancials");
 		}
 
-		#endregion Public Constructors
+		#endregion Private Fields
 
 		#region Public Methods
 
