@@ -6,13 +6,15 @@ using MongoReadWrite.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace MongoReadWrite.Tools
 {
 	public class HandleFinacials
 	{
+
+		#region Private Fields
+
 		private readonly DBConnectionHandler<CompanyFinancialsMd> _dbconCompany;
 		private readonly IMongoCollection<CompanyFinancialsMd> _statementConnection;
 
@@ -27,9 +29,17 @@ namespace MongoReadWrite.Tools
 			_statementConnection = _dbconCompany.ConnectToDatabase("CompanyFinancials");
 		}
 
+		#endregion Public Constructors
+
+		#region Public Methods
+
+		/// <summary>
+		/// Get statements from data provider and insert it to database.
+		/// </summary>
+		/// <param name="simId">The sim identifier.</param>
+		/// <returns></returns>
 		public async Task<bool> UpdateStatements(string simId)
 		{
-
 			if (string.IsNullOrWhiteSpace(simId))
 			{
 				return false;
@@ -94,21 +104,9 @@ namespace MongoReadWrite.Tools
 			}
 		}
 
-		private async Task RemoveUnwantedRecords(List<CompanyFinancialsMd> cfMdl, List<CompanyFinancialsMd> oldcfML)
-		{
-			CompanyFinancialsMd recordsToBeDeleted;
-			do
-			{
-				recordsToBeDeleted = (from o in oldcfML
-									  where !(cfMdl.Any(c => c.FYear == o.FYear))
-									  select o).FirstOrDefault();
-				if (recordsToBeDeleted != null)
-				{
-					await _dbconCompany.Remove(recordsToBeDeleted.Id);
-					oldcfML.Remove(recordsToBeDeleted);
-				}
-			} while (recordsToBeDeleted != null);
-		}
+		#endregion Public Methods
+
+		#region Private Methods
 
 		/// <summary>
 		/// Obtains the company financial asynchronous.
@@ -141,5 +139,31 @@ namespace MongoReadWrite.Tools
 			var companyFinancials = await dri.DownloadFinancialsAsync(statementList);
 			return companyFinancials;
 		}
+
+		/// <summary>
+		/// Removes stale unwanted records.
+		/// </summary>
+		/// <param name="cfMdl">Statements obtained from external data source</param>
+		/// <param name="oldcfML">Statements in database.</param>
+		/// <returns></returns>
+		private async Task RemoveUnwantedRecords(List<CompanyFinancialsMd> cfMdl, List<CompanyFinancialsMd> oldcfML)
+		{
+			CompanyFinancialsMd recordsToBeDeleted;
+			//Do statement is sufficient here. 99% of the time there will not be more than one
+			//record to delete. Why create a list that will contain 0 or 1 elements always.
+			do
+			{
+				recordsToBeDeleted = (from o in oldcfML
+									  where !(cfMdl.Any(c => c.FYear == o.FYear))
+									  select o).FirstOrDefault();
+				if (recordsToBeDeleted != null)
+				{
+					await _dbconCompany.Remove(recordsToBeDeleted.Id);
+					oldcfML.Remove(recordsToBeDeleted);
+				}
+			} while (recordsToBeDeleted != null);
+		}
+
+		#endregion Private Methods
 	}
 }
