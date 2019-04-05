@@ -1,32 +1,41 @@
 ﻿using Models;
-using MongoDB.Bson;
 using MongoDB.Driver;
 using MongoReadWrite.Tools;
 using MongoReadWrite.Utils;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Threading.Tasks;
 
 namespace MongoReadWrite
 {
-	class Program
+	internal class Program
 	{
-		static void Main(string[] args)
+		private static void Main(string[] args)
 		{
-			
-			var a = new HandleCompanyList();
-
-			var b = a.GetAllCompaniesFromDbAsync().Result;
-			if (b == null || b.Count < 100)
+			AutoMapperConfig.Start();
+			var handleCompList = new HandleCompanyList();
+			var handleFin = new HandleFinacials();
+			var compDetailsLst = handleCompList.GetAllCompaniesFromDbAsync().Result;
+			if (compDetailsLst == null || compDetailsLst.Count < 100)
 			{
-				b = a.GetAllCompaniesAsync().Result;
-			}				
+				compDetailsLst = handleCompList.GetAllCompaniesAsync().Result;
+			}
 			Console.WriteLine("Obtained list of companies");
-			
-			b = b.Where(cd => cd.Ticker != null).ToList();
-			b = b.Where(cd => cd.Ticker != "").ToList();
-			var c = new HandleFinacials();
+
+			// UpdateDataFromExternalFeed(compDetailsLst);
+			var simId = compDetailsLst.FirstOrDefault(cd => cd.Ticker == "GE").SimId;
+			var compFinLst = handleFin.ReadFinanceValues(simId);
+			Console.WriteLine("Done");
+		}
+
+
+
+		private static void UpdateDataFromExternalFeed(System.Collections.Generic.List<CompanyDetail> compDetailsLst)
+		{
+			compDetailsLst = compDetailsLst.Where(cd => cd.Ticker != null).ToList();
+			compDetailsLst = compDetailsLst.Where(cd => cd.Ticker != "").ToList();
+			var handleFinancials = new HandleFinacials();
 			var spylist = new string[] {
  "RF", "VMC", "RSG", "MCHP", "FCX", "PNW", "WMT", "TSN", "JBHT", "RE", "ATVI", "EA", "GOOGL", "GOOG", "FB", "TWTR", "NFLX", "DIS", "GPS", "ROST", "EBAY", "MAT", "CLX", "MNST", "CVX", "OXY", "BEN", "V", "WFC", "SCHW", "FRC", "SIVB", "AMGN", "GILD", "MCK", "A", "EW", "ISRG", "RMD", "VAR", "ALGN", "COO", "ILMN", "NKTR", "JEC", "RHI", "ADBE", "ADSK", "CDNS", "ORCL", "SYMC", "SNPS", "ANET", "CSCO", "JNPR", "PYPL", "KEYS", "INTU", "NTAP", "CRM", "AMAT", "KLAC", "LRCX", "AMD", "AVGO", "INTC", "MXIM", "NVDA", "QCOM", "XLNX", "FTNT", "AAPL", "HPE", "HPQ", "WDC", "AVY", "HCP", "PLD", "ARE", "CBRE", "ESS", "MAC", "O", "DLR", "EQIX", "PSA", "EIX", "SRE", "DISH", "CMG", "TAP", "XEC", "DVA", "WU", "NEM",
 "BLL", "AIV", "UDR", "CHTR", "BKNG", "SYF", "HIG", "PBCT", "ALXN", "CI", "UTX", "SWK", "URI", "APH", "IT", "XRX", "DHR", "INCY", "LEN", "CCL", "NCLH", "RCL", "DRI", "RJF", "WCG", "HRS", "ROP", "CSX", "CTXS", "FIS", "REG", "SBAC", "NEE", "HD", "PHM", "NWL", "GPC", "KO", "IVZ", "ICE", "AFL", "STI", "UPS", "DAL", "ROL", "EFX", "GPN", "FLT", "TSS", "SO", "LW", "MU", "LKQ", "MCD", "ULTA", "ADM", "WBA", "CAG", "MDLZ", "NTRS", "DFS", "CBOE", "CME", "AJG", "ALL", "ABT", "BAX", "ABBV", "BA", "DE", "UAL", "FBHS", "CAT", "DOV", "GWW", "ITW", "MSI", "CF", "PKG", "VTR", "EQR", "EXC", "ZBH", "ANTM", "LLY", "CMI", "DRE", "SPG", "NI", "PFG", "MDT", "AGN", "PRGO", "ALLE", "JCI", "ETN", "IR", "ACN", "STX", "APTV",
@@ -34,10 +43,10 @@ namespace MongoReadWrite
 "KR", "SJM", "PG", "MPC", "CINF", "PGR", "FITB", "HBAN", "KEY", "CAH", "MTD", "TDG", "CTAS", "PH", "SHW", "WELL", "AEP", "FE", "DVN", "OKE", "WMB", "HP", "NKE", "FLIR", "CMCSA", "KHC", "HSY", "LNC", "PNC", "ABC", "TFX", "UHS", "XRAY", "WAB", "AME", "ANSS", "FMC", "APD", "PPG", "PPL", "HAS", "CFG", "CVS", "TXT", "LIN", "GRMN", "CB", "TEL", "DG", "AZO", "TSCO", "UNM", "HCA", "FDX", "EMN", "IP", "MAA", "T", "DHI", "SYY", "KMB", "XOM", "BHGE", "HAL", "NOV", "APC", "APA", "COG", "CXO", "COP", "FANG", "EOG", "MRO", "NBL", "PXD", "HFC", "PSX", "VLO", "KMI", "CMA", "TMK", "AAL", "LUV", "FLR", "PWR", "CPRT", "WM", "FLS", "ADS", "TXN", "CE", "CCI", "ATO", "CNP", "PNR", "FTI", "AON", "WLTW", "INFO", "ZION",
 "EXR", "AAP", "DLTR", "HLT", "KMX", "MO", "COF", "GD", "HII", "NOC", "NSC", "VRSN", "DXC", "WRK", "D", "AES", "AVB", "JWN", "AMZN", "EXPE", "SBUX", "COST", "EXPD", "ALK", "PCAR", "FTV", "FFIV", "MSFT", "WY", "KSS", "HOG", "AOS", "ROK", "SNA", "FISV", "LNT", "WEC"
 };
-			var miniCompDetails = b.Where(cd => spylist.Contains(cd.Ticker)).OrderByDescending(cd => cd.Name).ToList();
+			var miniCompDetails = compDetailsLst.Where(cd => spylist.Contains(cd.Ticker)).OrderByDescending(cd => cd.Name).ToList();
 
 			var listCount = miniCompDetails.Count();
-			Console.WriteLine($"Obtaining for {listCount} companies" );
+			Console.WriteLine($"Obtaining for {listCount} companies");
 			Stopwatch stopWatch = new Stopwatch();
 			int counter = 0;
 			int downloadCount = 0;
@@ -46,9 +55,9 @@ namespace MongoReadWrite
 				stopWatch.Reset();
 				stopWatch.Start();
 				Console.WriteLine($"Working on {++counter} of {listCount}  => {company.Name}; its Ticker is {company.Ticker}");
-				var d = c.UpdateStatements(company.SimId).Result;
-				var status = d ? "Success" : "Failed";
-				Console.WriteLine($"Financial for {company.Name} obtained {status}" );
+				var getFinanceStatus = handleFinancials.UpdateStatements(company.SimId).Result;
+				var status = getFinanceStatus ? "Success" : "Failed";
+				Console.WriteLine($"Financial for {company.Name} obtained {status}");
 				stopWatch.Stop();
 				var msg = company.Name + " took ";
 				DisplayTimeTaken(stopWatch, msg);
@@ -64,8 +73,6 @@ namespace MongoReadWrite
 					Console.WriteLine($"Downloaded {downloadCount} against allocated quota of {limit} for this run");
 				}
 			}
-			Console.WriteLine("Done");
-			
 		}
 
 		private static void DisplayTimeTaken(Stopwatch stopWatch, string msg)
@@ -76,7 +83,5 @@ namespace MongoReadWrite
 				ts.Milliseconds / 10);
 			Console.WriteLine($"\n{msg} {elapsedTime}");
 		}
-
-		
 	}
 }

@@ -1,4 +1,5 @@
-﻿using HandleSimFin.Methods;
+﻿using AutoMapper;
+using HandleSimFin.Methods;
 using Microsoft.Extensions.Logging;
 using Models;
 using MongoDB.Driver;
@@ -6,28 +7,39 @@ using MongoReadWrite.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace MongoReadWrite.Tools
 {
-	
 	public class HandleCompanyList
-    {
+	{
+
+		#region Private Fields
+
+		private readonly IMongoCollection<CompanyDetailMd> _companyConnection;
+		private readonly DBConnectionHandler<CompanyDetailMd> _dbconCompany;
 		private List<CompanyDetailMd> allCompanies;
 
-		private readonly DBConnectionHandler<CompanyDetailMd> _dbconCompany;
-		private readonly IMongoCollection<CompanyDetailMd> _companyConnection;
+		#endregion Private Fields
+
+
+		#region Public Constructors
 
 		public HandleCompanyList()
 		{
 			_dbconCompany = new DBConnectionHandler<CompanyDetailMd>();
 			_companyConnection = _dbconCompany.ConnectToDatabase("CompanyDetail");
 		}
-		public async Task<List<CompanyDetailMd>> GetAllCompaniesAsync()
+
+		#endregion Public Constructors
+
+
+		#region Public Methods
+
+		public async Task<List<CompanyDetail>> GetAllCompaniesAsync()
 		{
 			var lf = new LoggerFactory();
-			var localLogger = LoggerFactoryExtensions.CreateLogger(lf, typeof(Logger<DownloadListedFirms>));			
+			var localLogger = LoggerFactoryExtensions.CreateLogger(lf, typeof(Logger<DownloadListedFirms>));
 			var dLF = new DownloadListedFirms(localLogger);
 			var tmpList = await dLF.GetCompanyList();
 			allCompanies = new List<CompanyDetailMd>();
@@ -51,29 +63,30 @@ namespace MongoReadWrite.Tools
 				else
 				{
 					allCompanies.Add(new CompanyDetailMd(company));
-				}				
+				}
 			}
-
-
-
-
-			//var insertStatus = await _dbconCompany.Create(allCompanies);
 			var insertStatus = await _dbconCompany.UpdateMultipe(allCompanies);
 			if (insertStatus)
 			{
-				return allCompanies;
-			}			
+				var listOfAllCompanies = (Mapper.Map<List<CompanyDetailMd>, List<CompanyDetail>>(allCompanies));
+				return listOfAllCompanies;
+			}
 			return null;
 		}
-		public async Task<List<CompanyDetailMd>> GetAllCompaniesFromDbAsync()
+
+		public async Task<List<CompanyDetail>> GetAllCompaniesFromDbAsync()
 		{
-			var returnValue = _dbconCompany.Get().ToList();
-			if (returnValue.Count <= 10)
+			List<CompanyDetail> compDetailList;
+			var savedValue = _dbconCompany.Get().ToList();
+			if (savedValue.Count <= 10)
 			{
-				returnValue = await GetAllCompaniesAsync();
+				compDetailList = await GetAllCompaniesAsync();
+				return compDetailList;
 			}
-			return returnValue;
+			compDetailList = (Mapper.Map<List<CompanyDetailMd>, List<CompanyDetail>>(savedValue));
+			return compDetailList;
 		}
+
 		public CompanyDetail GetCompanyDetails(string simId)
 		{
 			var selectedRecord = _dbconCompany.Get().Where(cd => cd.SimId.Equals(simId)).FirstOrDefault();
@@ -91,6 +104,7 @@ namespace MongoReadWrite.Tools
 			};
 			return returnValue;
 		}
+
 		public async Task<bool> UpdateCompanyDetailAsync(string simId, string industryTemplate, DateTime? updateTime = null)
 		{
 			var selectedRecord = _dbconCompany.Get().Where(cd => cd.SimId.Equals(simId)).FirstOrDefault();
@@ -103,5 +117,6 @@ namespace MongoReadWrite.Tools
 			return await _dbconCompany.Update(selectedRecord.Id, selectedRecord);
 		}
 
+		#endregion Public Methods
 	}
 }

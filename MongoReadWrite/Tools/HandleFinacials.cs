@@ -1,4 +1,5 @@
-﻿using HandleSimFin.Methods;
+﻿using AutoMapper;
+using HandleSimFin.Methods;
 using Microsoft.Extensions.Logging;
 using Models;
 using MongoDB.Driver;
@@ -12,7 +13,6 @@ namespace MongoReadWrite.Tools
 {
 	public class HandleFinacials
 	{
-		#region Private Fields
 
 		private readonly DBConnectionHandler<CompanyFinancialsMd> _dbconCompany;
 		private readonly IMongoCollection<CompanyFinancialsMd> _statementConnection;
@@ -28,9 +28,12 @@ namespace MongoReadWrite.Tools
 			_statementConnection = _dbconCompany.ConnectToDatabase("CompanyFinancials");
 		}
 
-		#endregion Private Fields
-
-		#region Public Methods
+		internal List<CompanyFinancials> ReadFinanceValues(string simId)
+		{
+			var finacials = _dbconCompany.Get().Where(cf => cf.CompanyId.Equals(simId));
+			var cfLst = (Mapper.Map<IEnumerable<CompanyFinancialsMd>, IEnumerable<CompanyFinancials>>(finacials)).ToList();
+			return cfLst;			
+		}
 
 		/// <summary>
 		/// Get statements from data provider and insert it to database.
@@ -103,9 +106,7 @@ namespace MongoReadWrite.Tools
 			}
 		}
 
-		#endregion Public Methods
-
-		#region Private Methods
+		
 
 		/// <summary>
 		/// Obtains the company financial asynchronous.
@@ -163,6 +164,5 @@ namespace MongoReadWrite.Tools
 			} while (recordsToBeDeleted != null);
 		}
 
-		#endregion Private Methods
 	}
 }
