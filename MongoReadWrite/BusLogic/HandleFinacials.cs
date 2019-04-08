@@ -4,13 +4,15 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Models;
 using MongoDB.Driver;
+using MongoReadWrite.BusLogic;
+using MongoReadWrite.Extensions;
 using MongoReadWrite.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace MongoReadWrite.Tools
+namespace MongoReadWrite.BusLogic
 {
 	public class HandleFinacials
 	{
@@ -32,8 +34,10 @@ namespace MongoReadWrite.Tools
 
 		internal List<CompanyFinancials> ReadFinanceValues(string simId)
 		{
-			var finacials = _dbconCompany.Get().Where(cf => cf.CompanyId.Equals(simId));
-			var cfLst = (Mapper.Map<IEnumerable<CompanyFinancialsMd>, IEnumerable<CompanyFinancials>>(finacials)).ToList();
+			//var financial = _dbconCompany.Get().Where(cf => cf.CompanyId.Equals(simId));
+			var financials = _dbconCompany.Get(cf => cf.CompanyId.Equals(simId));
+
+			var cfLst = Mapper.Map<IEnumerable<CompanyFinancialsMd>, IEnumerable<CompanyFinancials>>(financials).ToList();
 			return cfLst;
 		}
 
@@ -44,11 +48,11 @@ namespace MongoReadWrite.Tools
 		/// <returns></returns>
 		public async Task<bool> UpdateStatements(string simId)
 		{
-			if (string.IsNullOrWhiteSpace(simId))
+			if (simId.IsNullOrWhiteSpace())
 			{
 				return false;
 			}
-			var hcl = Program.Provider.GetService<HandleCompanyList>();			
+			var hcl = Program.Provider.GetService<HandleCompanyList>();
 			var cd = hcl.GetCompanyDetails(simId);
 			if (cd.LastUpdate != null && ((TimeSpan)(DateTime.Now - cd.LastUpdate)).Days < 30)
 			{
@@ -61,7 +65,7 @@ namespace MongoReadWrite.Tools
 				return false;
 			}
 			var cfMdl = new List<CompanyFinancialsMd>();
-			var oldcfML = _dbconCompany.Get().Where(o => o.CompanyId.Equals(simId)).ToList();
+			var oldcfML = _dbconCompany.Get(o => o.CompanyId.Equals(simId)).ToList();
 			/*
 			 * Not sure what the wizard did was the right thing. Original code was
 			 * foreach (var companyFinancial in companyFinancials)
@@ -91,7 +95,7 @@ namespace MongoReadWrite.Tools
 
 			try
 			{
-				var returnValue = await _dbconCompany.UpdateMultipe(cfMdl);
+				var returnValue = await _dbconCompany.UpdateMultiple(cfMdl);
 				if (returnValue == false)
 				{
 					return false;
@@ -131,7 +135,7 @@ namespace MongoReadWrite.Tools
 				|| statementList.Pl.Count() != 4)
 			{
 				Console.WriteLine("Something is wrong");
-			}			
+			}
 			var dri = Program.Provider.GetService<DownloadReportableItems>();
 			var companyFinancials = await dri.DownloadFinancialsAsync(statementList);
 			return companyFinancials;
@@ -151,7 +155,7 @@ namespace MongoReadWrite.Tools
 			do
 			{
 				recordsToBeDeleted = (from o in oldcfML
-									  where !(cfMdl.Any(c => c.FYear == o.FYear))
+									  where !cfMdl.Any(c => c.FYear == o.FYear)
 									  select o).FirstOrDefault();
 				if (recordsToBeDeleted != null)
 				{

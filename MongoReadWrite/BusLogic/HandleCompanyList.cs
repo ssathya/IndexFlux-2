@@ -9,9 +9,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
+using MongoReadWrite.Extensions;
 
-
-namespace MongoReadWrite.Tools
+namespace MongoReadWrite.BusLogic
 {
 	public class HandleCompanyList
 	{
@@ -28,7 +28,7 @@ namespace MongoReadWrite.Tools
 		#region Public Constructors
 
 		public HandleCompanyList(ILogger<HandleCompanyList> logger, IDBConnectionHandler<CompanyDetailMd> dbconCompany)
-		{			
+		{
 			_dbconCompany = dbconCompany;
 			_companyConnection = _dbconCompany.ConnectToDatabase("CompanyDetail");
 		}
@@ -45,7 +45,7 @@ namespace MongoReadWrite.Tools
 			var tmpList = await dLF.GetCompanyList();
 			allCompanies = new List<CompanyDetailMd>();
 			var dbCompanies = _dbconCompany.Get().ToList();
-			if (dbCompanies.Count() < 100 || dbCompanies.Where(x => string.IsNullOrWhiteSpace(x.IndustryTemplate)).Count() < 20)
+			if (dbCompanies.Count() < 100 || dbCompanies.Where(x => x.IndustryTemplate.IsNullOrWhiteSpace()).Count() < 20)
 			{
 				var deleteStatus = await _dbconCompany.RemoveAll();
 				if (deleteStatus == false)
@@ -66,10 +66,10 @@ namespace MongoReadWrite.Tools
 					allCompanies.Add(new CompanyDetailMd(company));
 				}
 			}
-			var insertStatus = await _dbconCompany.UpdateMultipe(allCompanies);
+			var insertStatus = await _dbconCompany.UpdateMultiple(allCompanies);
 			if (insertStatus)
 			{
-				var listOfAllCompanies = (Mapper.Map<List<CompanyDetailMd>, List<CompanyDetail>>(allCompanies));
+				var listOfAllCompanies = Mapper.Map<List<CompanyDetailMd>, List<CompanyDetail>>(allCompanies);
 				return listOfAllCompanies;
 			}
 			return null;
@@ -84,13 +84,13 @@ namespace MongoReadWrite.Tools
 				compDetailList = await GetAllCompaniesAsync();
 				return compDetailList;
 			}
-			compDetailList = (Mapper.Map<List<CompanyDetailMd>, List<CompanyDetail>>(savedValue));
+			compDetailList = Mapper.Map<List<CompanyDetailMd>, List<CompanyDetail>>(savedValue);
 			return compDetailList;
 		}
 
 		public CompanyDetail GetCompanyDetails(string simId)
 		{
-			var selectedRecord = _dbconCompany.Get().Where(cd => cd.SimId.Equals(simId)).FirstOrDefault();
+			var selectedRecord = _dbconCompany.Get(cd => cd.SimId.Equals(simId)).FirstOrDefault();
 			if (selectedRecord == null)
 			{
 				return null;
@@ -108,7 +108,7 @@ namespace MongoReadWrite.Tools
 
 		public async Task<bool> UpdateCompanyDetailAsync(string simId, string industryTemplate, DateTime? updateTime = null)
 		{
-			var selectedRecord = _dbconCompany.Get().Where(cd => cd.SimId.Equals(simId)).FirstOrDefault();
+			var selectedRecord = _dbconCompany.Get(cd => cd.SimId.Equals(simId)).FirstOrDefault();
 			if (selectedRecord == null)
 			{
 				return false;
