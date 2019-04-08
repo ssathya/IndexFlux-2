@@ -192,7 +192,7 @@ namespace MongoReadWrite.Utils
 		/// </summary>
 		/// <param name="updateRecords">The update records.</param>
 		/// <returns></returns>
-/		public async Task<bool> UpdateMultiple(List<T> updateRecords)
+		public async Task<bool> UpdateMultiple(List<T> updateRecords)
 		{
 			var objsWithoutId = new List<T>();
 			var updates = new List<WriteModel<T>>();
