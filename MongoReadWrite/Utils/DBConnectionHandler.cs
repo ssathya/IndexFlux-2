@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace MongoReadWrite.Utils
 {
-	public class DBConnectionHandler<T> where T : IBaseModel
+	public class DBConnectionHandler<T> : IDBConnectionHandler<T> where T : IBaseModel
 	{
 
 		#region Private Fields
@@ -140,7 +140,7 @@ namespace MongoReadWrite.Utils
 			var filterBuilder = Builders<T>.Filter;
 			foreach (var updateRecord in updateRecords)
 			{
-				
+
 				ExtractId(updateRecord, out Type serviceInterface, out string id);
 				if (!string.IsNullOrWhiteSpace(id))
 				{
@@ -166,14 +166,14 @@ namespace MongoReadWrite.Utils
 					operation2Result = await Create(objsWithoutId);
 				}
 				return operation1Result && operation2Result;
-				
+
 			}
 			catch (Exception ex)
 			{
 				Console.WriteLine($"Exception while Bulk Updating a record\n{ex.Message}");
 				return false;
 			}
-			
+
 		}
 
 		#endregion Public Methods

@@ -23,7 +23,7 @@ namespace HandleSimFin.Methods
 		#region Private Fields
 
 		private const string urlForStatmentList = @"https://simfin.com/api/v1/companies/id/{companyId}/statements/list?api-key={API-KEY}";
-		private readonly ILogger _logger;
+		private readonly ILogger<ListOfStatements> _logger;
 		private StatementList statementList;
 
 		#endregion Private Fields
@@ -31,7 +31,7 @@ namespace HandleSimFin.Methods
 
 		#region Public Constructors
 
-		public ListOfStatements(ILogger logger)
+		public ListOfStatements(ILogger<ListOfStatements> logger)
 		{
 			_logger = logger;
 		}

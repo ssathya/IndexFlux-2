@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using HandleSimFin.Methods;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Models;
 using MongoDB.Driver;
@@ -13,26 +14,27 @@ namespace MongoReadWrite.Tools
 {
 	public class HandleFinacials
 	{
-
-		private readonly DBConnectionHandler<CompanyFinancialsMd> _dbconCompany;
+		private readonly IDBConnectionHandler<CompanyFinancialsMd> _dbconCompany;
 		private readonly IMongoCollection<CompanyFinancialsMd> _statementConnection;
+		private readonly ILogger<HandleFinacials> _logger;
 
 		/// <summary>
 		/// Get statements from data provider and insert it to database.
 		/// </summary>
 		/// <param name="simId">The sim identifier.</param>
 		/// <returns></returns>
-		public HandleFinacials()
+		public HandleFinacials(IDBConnectionHandler<CompanyFinancialsMd> dbconCompany, ILogger<HandleFinacials> logger)
 		{
-			_dbconCompany = new DBConnectionHandler<CompanyFinancialsMd>();
+			_dbconCompany = dbconCompany;
 			_statementConnection = _dbconCompany.ConnectToDatabase("CompanyFinancials");
+			_logger = logger;
 		}
 
 		internal List<CompanyFinancials> ReadFinanceValues(string simId)
 		{
 			var finacials = _dbconCompany.Get().Where(cf => cf.CompanyId.Equals(simId));
 			var cfLst = (Mapper.Map<IEnumerable<CompanyFinancialsMd>, IEnumerable<CompanyFinancials>>(finacials)).ToList();
-			return cfLst;			
+			return cfLst;
 		}
 
 		/// <summary>
@@ -46,7 +48,7 @@ namespace MongoReadWrite.Tools
 			{
 				return false;
 			}
-			var hcl = new HandleCompanyList();
+			var hcl = Program.Provider.GetService<HandleCompanyList>();			
 			var cd = hcl.GetCompanyDetails(simId);
 			if (cd.LastUpdate != null && ((TimeSpan)(DateTime.Now - cd.LastUpdate)).Days < 30)
 			{
@@ -106,8 +108,6 @@ namespace MongoReadWrite.Tools
 			}
 		}
 
-		
-
 		/// <summary>
 		/// Obtains the company financial asynchronous.
 		/// </summary>
@@ -115,9 +115,7 @@ namespace MongoReadWrite.Tools
 		/// <returns></returns>
 		private async Task<List<CompanyFinancials>> ObtainCompanyFinancilasAsync(string simId)
 		{
-			var lf = new LoggerFactory();
-			var loggerLos = LoggerFactoryExtensions.CreateLogger(lf, typeof(Logger<ListOfStatements>));
-			var loS = new ListOfStatements(loggerLos);
+			var loS = Program.Provider.GetService<ListOfStatements>();
 			StatementList statementList = await loS.FetchStatementList(simId, IdentifyerType.SimFinId);
 			statementList = loS.ExtractYearEndReports(statementList);
 			if (statementList.Bs.Count == 0 || statementList.Cf.Count == 0
@@ -133,9 +131,8 @@ namespace MongoReadWrite.Tools
 				|| statementList.Pl.Count() != 4)
 			{
 				Console.WriteLine("Something is wrong");
-			}
-			var loggerRI = LoggerFactoryExtensions.CreateLogger(lf, typeof(Logger<DownloadReportableItems>));
-			var dri = new DownloadReportableItems(loggerRI);
+			}			
+			var dri = Program.Provider.GetService<DownloadReportableItems>();
 			var companyFinancials = await dri.DownloadFinancialsAsync(statementList);
 			return companyFinancials;
 		}
@@ -163,6 +160,5 @@ namespace MongoReadWrite.Tools
 				}
 			} while (recordsToBeDeleted != null);
 		}
-
 	}
 }

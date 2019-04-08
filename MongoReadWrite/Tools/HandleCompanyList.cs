@@ -8,6 +8,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
+
 
 namespace MongoReadWrite.Tools
 {
@@ -17,7 +19,7 @@ namespace MongoReadWrite.Tools
 		#region Private Fields
 
 		private readonly IMongoCollection<CompanyDetailMd> _companyConnection;
-		private readonly DBConnectionHandler<CompanyDetailMd> _dbconCompany;
+		private readonly IDBConnectionHandler<CompanyDetailMd> _dbconCompany;
 		private List<CompanyDetailMd> allCompanies;
 
 		#endregion Private Fields
@@ -25,9 +27,9 @@ namespace MongoReadWrite.Tools
 
 		#region Public Constructors
 
-		public HandleCompanyList()
-		{
-			_dbconCompany = new DBConnectionHandler<CompanyDetailMd>();
+		public HandleCompanyList(ILogger<HandleCompanyList> logger, IDBConnectionHandler<CompanyDetailMd> dbconCompany)
+		{			
+			_dbconCompany = dbconCompany;
 			_companyConnection = _dbconCompany.ConnectToDatabase("CompanyDetail");
 		}
 
@@ -38,9 +40,8 @@ namespace MongoReadWrite.Tools
 
 		public async Task<List<CompanyDetail>> GetAllCompaniesAsync()
 		{
-			var lf = new LoggerFactory();
-			var localLogger = LoggerFactoryExtensions.CreateLogger(lf, typeof(Logger<DownloadListedFirms>));
-			var dLF = new DownloadListedFirms(localLogger);
+
+			var dLF = Program.Provider.GetService<DownloadListedFirms>();
 			var tmpList = await dLF.GetCompanyList();
 			allCompanies = new List<CompanyDetailMd>();
 			var dbCompanies = _dbconCompany.Get().ToList();

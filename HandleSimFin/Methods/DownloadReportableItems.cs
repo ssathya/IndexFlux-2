@@ -16,14 +16,14 @@ namespace HandleSimFin.Methods
 		#region Private Fields
 
 		private const string UrlTemplate = @"https://simfin.com/api/v1/companies/id/{companyId}/statements/standardised?api-key={API-KEY}&stype={statementType}&ptype={periodType}&fyear={financialYear}";
-		private readonly ILogger _logger;
+		private readonly ILogger<DownloadReportableItems> _logger;
 
 		#endregion Private Fields
 
 
 		#region Public Constructors
 
-		public DownloadReportableItems(ILogger logger)
+		public DownloadReportableItems(ILogger<DownloadReportableItems> logger)
 		{
 			_logger = logger;
 		}
@@ -60,7 +60,7 @@ namespace HandleSimFin.Methods
 			// get profit and loss
 			statementType = "pl";
 			reportingList = statementList.Pl.OrderByDescending(b => b.Fyear).Take(5);
-			foreach (var pl in reportingList)
+			foreach (StatementDetails pl in reportingList)
 			{
 				var plToAdd = await ObtainReportedNumbers(companyId, apiKey, statementType, pl);
 				if (plToAdd != null)

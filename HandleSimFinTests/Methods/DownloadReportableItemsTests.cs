@@ -15,13 +15,13 @@ namespace HandleSimFinTests.Methods
 	{
 		private MockRepository mockRepository;
 
-		private Mock<ILogger> mockLogger;
+		private Mock<ILogger<DownloadReportableItems>> mockLogger;
 
 		public DownloadReportableItemsTests()
 		{
 			this.mockRepository = new MockRepository(MockBehavior.Strict);
 
-			this.mockLogger = new Mock<ILogger>();
+			this.mockLogger = new Mock<ILogger<DownloadReportableItems>>();
 			dynamic res = JsonConvert.DeserializeObject(File.ReadAllText("appsettings.json"));
 			Environment.SetEnvironmentVariable("SimFinKey", (string)res.SimFinKey, EnvironmentVariableTarget.Process);
 		}
