@@ -19,17 +19,27 @@ namespace MongoReadWrite.BusLogic
 		private readonly IDBConnectionHandler<CompanyFinancialsMd> _dbconCompany;
 		private readonly IMongoCollection<CompanyFinancialsMd> _statementConnection;
 		private readonly ILogger<HandleFinacials> _logger;
+		private readonly HandleCompanyList _hcl;
+		private readonly ListOfStatements _los;
+		private readonly DownloadReportableItems _dri;
 
 		/// <summary>
 		/// Get statements from data provider and insert it to database.
 		/// </summary>
 		/// <param name="simId">The sim identifier.</param>
 		/// <returns></returns>
-		public HandleFinacials(IDBConnectionHandler<CompanyFinancialsMd> dbconCompany, ILogger<HandleFinacials> logger)
+		public HandleFinacials(IDBConnectionHandler<CompanyFinancialsMd> dbconCompany, 
+			ILogger<HandleFinacials> logger, 
+			HandleCompanyList hcl, 
+			ListOfStatements los, 
+			DownloadReportableItems dri)
 		{
 			_dbconCompany = dbconCompany;
 			_statementConnection = _dbconCompany.ConnectToDatabase("CompanyFinancials");
 			_logger = logger;
+			_hcl = hcl;
+			_los = los;
+			_dri = dri;
 		}
 
 		internal List<CompanyFinancials> ReadFinanceValues(string simId, string industryTemplate)
@@ -101,8 +111,8 @@ namespace MongoReadWrite.BusLogic
 			{
 				return false;
 			}
-			var hcl = Program.Provider.GetService<HandleCompanyList>();
-			var cd = hcl.GetCompanyDetails(simId);
+			
+			var cd = _hcl.GetCompanyDetails(simId);
 			if (cd.LastUpdate != null && ((TimeSpan)(DateTime.Now - cd.LastUpdate)).Days < 30)
 			{
 				return true;
@@ -115,20 +125,7 @@ namespace MongoReadWrite.BusLogic
 			}
 			var cfMdl = new List<CompanyFinancialsMd>();
 			var oldcfML = _dbconCompany.Get(o => o.CompanyId.Equals(simId)).ToList();
-			/*
-			 * Not sure what the wizard did was the right thing. Original code was
-			 * foreach (var companyFinancial in companyFinancials)
-					{
-					var oldcf = oldcfML.Where(o => o.CompanyId.Equals(companyFinancial.CompanyId)
-						&& o.FYear == companyFinancial.FYear
-						&& o.Statement == companyFinancial.Statement).FirstOrDefault();
-					cfMdl.Add(new CompanyFinancialsMd(companyFinancial));
-					if (oldcf != null)
-					{
-						cfMdl.Last().Id = oldcf.Id;
-					}
-			}
-			 */
+			
 			foreach (var (companyFinancial, oldcf) in from companyFinancial in companyFinancials
 													  let oldcf = oldcfML.Where(o => o.CompanyId.Equals(companyFinancial.CompanyId)
 															&& o.FYear == companyFinancial.FYear
@@ -151,7 +148,7 @@ namespace MongoReadWrite.BusLogic
 				}
 				await RemoveUnwantedRecords(cfMdl, oldcfML);
 
-				returnValue = await hcl.UpdateCompanyDetailAsync(simId, cfMdl.First().IndustryTemplate);
+				returnValue = await _hcl.UpdateCompanyDetailAsync(simId, cfMdl.First().IndustryTemplate);
 				return returnValue;
 			}
 			catch (Exception ex)
@@ -167,10 +164,9 @@ namespace MongoReadWrite.BusLogic
 		/// <param name="simId">The SIM identifier.</param>
 		/// <returns></returns>
 		private async Task<List<CompanyFinancials>> ObtainCompanyFinancilasAsync(string simId)
-		{
-			var loS = Program.Provider.GetService<ListOfStatements>();
-			StatementList statementList = await loS.FetchStatementList(simId, IdentifyerType.SimFinId);
-			statementList = loS.ExtractYearEndReports(statementList);
+		{			
+			StatementList statementList = await _los.FetchStatementList(simId, IdentifyerType.SimFinId);
+			statementList = _los.ExtractYearEndReports(statementList);
 			if (statementList.Bs.Count == 0 || statementList.Cf.Count == 0
 				|| statementList.Pl.Count == 0)
 			{
@@ -185,8 +181,8 @@ namespace MongoReadWrite.BusLogic
 			{
 				Console.WriteLine("Something is wrong");
 			}
-			var dri = Program.Provider.GetService<DownloadReportableItems>();
-			var companyFinancials = await dri.DownloadFinancialsAsync(statementList);
+			
+			var companyFinancials = await _dri.DownloadFinancialsAsync(statementList);
 			return companyFinancials;
 		}
 

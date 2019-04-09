@@ -16,7 +16,7 @@ namespace MongoReadWrite
 
 		#region Public Properties
 
-		public static IServiceProvider Provider { get; set; }
+		private static IServiceProvider Provider;
 
 		#endregion Public Properties
 
@@ -38,7 +38,7 @@ namespace MongoReadWrite
 			}
 			Console.WriteLine("Obtained list of companies");
 
-			//UpdateDataFromExternalFeed(compDetailsLst);
+			UpdateDataFromExternalFeed(compDetailsLst);
 			var selectedFirms = new string[] { "MSFT", "GE", "BBY", "KO", "CAT", "DOV", "CW" };
 			foreach (var selectedFirm in selectedFirms)
 			{
@@ -91,7 +91,7 @@ namespace MongoReadWrite
 				var msg = company.Name + " took ";
 				DisplayTimeTaken(stopWatch, msg);
 				downloadCount += stopWatch.Elapsed.Seconds > 4 ? 1 : 0;
-				var limit = 35;
+				var limit = 3;
 				if (downloadCount >= limit)
 				{
 					Console.WriteLine($"Obtained data for more than {limit} companies. Terminating this run.");

@@ -10,6 +10,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using MongoReadWrite.Extensions;
+using Microsoft.Extensions.Configuration;
 
 namespace MongoReadWrite.BusLogic
 {
@@ -19,6 +20,8 @@ namespace MongoReadWrite.BusLogic
 		#region Private Fields
 
 		private readonly IMongoCollection<CompanyDetailMd> _companyConnection;
+		private readonly DownloadListedFirms _dlf;
+		private readonly ILogger<HandleCompanyList> _logger;
 		private readonly IDBConnectionHandler<CompanyDetailMd> _dbconCompany;
 		private List<CompanyDetailMd> allCompanies;
 
@@ -27,10 +30,14 @@ namespace MongoReadWrite.BusLogic
 
 		#region Public Constructors
 
-		public HandleCompanyList(ILogger<HandleCompanyList> logger, IDBConnectionHandler<CompanyDetailMd> dbconCompany)
+		public HandleCompanyList(ILogger<HandleCompanyList> logger, 
+			IDBConnectionHandler<CompanyDetailMd> 
+			dbconCompany, DownloadListedFirms dlf)
 		{
 			_dbconCompany = dbconCompany;
 			_companyConnection = _dbconCompany.ConnectToDatabase("CompanyDetail");
+			_dlf = dlf;
+			_logger = logger;
 		}
 
 		#endregion Public Constructors
@@ -40,9 +47,8 @@ namespace MongoReadWrite.BusLogic
 
 		public async Task<List<CompanyDetail>> GetAllCompaniesAsync()
 		{
-
-			var dLF = Program.Provider.GetService<DownloadListedFirms>();
-			var tmpList = await dLF.GetCompanyList();
+						
+			var tmpList = await _dlf.GetCompanyList();
 			allCompanies = new List<CompanyDetailMd>();
 			var dbCompanies = _dbconCompany.Get().ToList();
 			if (dbCompanies.Count() < 100 || dbCompanies.Where(x => x.IndustryTemplate.IsNullOrWhiteSpace()).Count() < 20)
