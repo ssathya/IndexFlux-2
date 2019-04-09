@@ -32,15 +32,28 @@ namespace MongoReadWrite
 
 			var handleFin = Provider.GetService<HandleFinacials>();
 			var compDetailsLst = handleCompList.GetAllCompaniesFromDbAsync().Result;
-			if (compDetailsLst == null || compDetailsLst.Count < 100)
+			if (compDetailsLst == null || compDetailsLst.Count < 2400)
 			{
 				compDetailsLst = handleCompList.GetAllCompaniesAsync().Result;
 			}
 			Console.WriteLine("Obtained list of companies");
 
-			UpdateDataFromExternalFeed(compDetailsLst);
-			var simId = compDetailsLst.FirstOrDefault(cd => cd.Ticker == "GE").SimId;
-			var compFinLst = handleFin.ReadFinanceValues(simId);
+			//UpdateDataFromExternalFeed(compDetailsLst);
+			var selectedFirms = new string[] { "MSFT", "GE", "BBY", "KO", "CAT", "DOV", "CW" };
+			foreach (var selectedFirm in selectedFirms)
+			{
+				var cd = compDetailsLst.FirstOrDefault(c => c.Ticker == selectedFirm);
+				if (cd != null)
+				{
+					Console.WriteLine($"Printing financial values for {cd.Name}");
+					var compFinLst = handleFin.ReadFinanceValues(cd.SimId, cd.IndustryTemplate);
+				}
+				else
+				{
+					Console.WriteLine($"Did not find a record for {selectedFirm}");
+				}
+			}
+			
 			Console.WriteLine("Done");
 			//Provider.GetService()
 		}
@@ -59,9 +72,13 @@ namespace MongoReadWrite
 			Console.WriteLine($"\n{msg} {elapsedTime}");
 		}
 
-		private static void DownloadFinancialData(System.Collections.Generic.List<CompanyDetail> miniCompDetails, int listCount, Stopwatch stopWatch, ref int counter, ref int downloadCount)
+		private static void DownloadFinancialData(System.Collections.Generic.List<CompanyDetail> miniCompDetails)
 		{
+			Stopwatch stopWatch = new Stopwatch();
+			int counter = 0;
+			int downloadCount = 0;
 			var handleFinancials = Provider.GetService<HandleFinacials>();
+			var listCount = miniCompDetails.Count();
 			foreach (var company in miniCompDetails)
 			{
 				stopWatch.Reset();
@@ -110,10 +127,7 @@ namespace MongoReadWrite
 
 			var listCount = miniCompDetails.Count();
 			Console.WriteLine($"Obtaining for {listCount} companies");
-			Stopwatch stopWatch = new Stopwatch();
-			int counter = 0;
-			int downloadCount = 0;
-			DownloadFinancialData(miniCompDetails, listCount, stopWatch, ref counter, ref downloadCount);
+			DownloadFinancialData(miniCompDetails);
 		}
 
 		#endregion Private Methods

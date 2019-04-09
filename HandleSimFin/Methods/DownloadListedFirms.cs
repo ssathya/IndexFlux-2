@@ -13,9 +13,9 @@ namespace HandleSimFin.Methods
 {
     public class DownloadListedFirms
     {
-		private readonly ILogger _logger;
+		private readonly ILogger<DownloadListedFirms> _logger;
 		private readonly string _allEntities = @"https://simfin.com/api/v1/info/all-entities?api-key={API-KEY}";
-		public DownloadListedFirms(ILogger log)
+		public DownloadListedFirms(ILogger<DownloadListedFirms> log)
 		{
 			_logger = log;
 		}

@@ -32,13 +32,62 @@ namespace MongoReadWrite.BusLogic
 			_logger = logger;
 		}
 
-		internal List<CompanyFinancials> ReadFinanceValues(string simId)
+		internal List<CompanyFinancials> ReadFinanceValues(string simId, string industryTemplate)
 		{
 			//var financial = _dbconCompany.Get().Where(cf => cf.CompanyId.Equals(simId));
 			var financials = _dbconCompany.Get(cf => cf.CompanyId.Equals(simId));
 
 			var cfLst = Mapper.Map<IEnumerable<CompanyFinancialsMd>, IEnumerable<CompanyFinancials>>(financials).ToList();
+			Dictionary<int, Dictionary<string, long>> valueToUse;
+			switch (industryTemplate)
+			{
+				case "general":
+					valueToUse = GeneralFlattenData(cfLst);
+					break;
+				default:
+					break;
+			}
+						
 			return cfLst;
+		}
+
+		private static Dictionary<int, Dictionary<string, long>> GeneralFlattenData(List<CompanyFinancials> cfLst)
+		{
+			var valueRef = new Dictionary<int, Dictionary<string, long>>();
+			var years = cfLst.Select(x => x.FYear).Distinct();
+			foreach (var year in years)
+			{
+				valueRef.Add(year, new Dictionary<string, long>());
+				var bsKeys = new string[] { "Total Assets", "Total Current Assets", "Total Current Liabilities", "Total Equity", "Total Liabilities", "Total Liabilities & Equity", "Total Noncurrent Assets", "Total Noncurrent Liabilities" };
+				foreach (var bsKey in bsKeys)
+				{										
+					valueRef[year].Add(bsKey, (from bs in cfLst.Where(i => i.Statement == StatementType.BalanceSheet && i.FYear == year)
+											   select (long)(bs.Values.Find(a => a.StandardisedName.Equals(bsKey)).ValueChosen)).FirstOrDefault());
+				}
+				var cfKeys = new string[] { "Cash from Financing Activities", "Cash from Investing Activities", "Cash from Operating Activities", "Net Changes in Cash" };
+				foreach (var cfKey in cfKeys)
+				{
+					valueRef[year].Add(cfKey, (from cf in cfLst.Where(i => i.Statement == StatementType.CashFlow && i.FYear == year)
+											   select (long)(cf.Values.Find(a => a.StandardisedName.Equals(cfKey)).ValueChosen)).FirstOrDefault());
+				}
+				var plKeys = new string[] { "Gross Profit", "Net Income Available to Common Shareholders", "Operating Income (Loss)", "Pretax Income (Loss)" };
+				foreach (var plKey in plKeys)
+				{
+					valueRef[year].Add(plKey, (from pl in cfLst.Where(i => i.Statement == StatementType.ProfitLoss && i.FYear == year)
+											   select (long)(pl.Values.Find(a => a.StandardisedName.Equals(plKey)).ValueChosen)).FirstOrDefault());
+				}								
+			}
+			foreach (var key in valueRef.Keys)
+			{
+				Console.WriteLine($"Year : {key}");
+				var format = "#,##0";
+				foreach (var values in valueRef[key])
+				{
+					Console.WriteLine($"{values.Key} => {values.Value.ToString(format)}");
+				}
+			}
+
+			return valueRef;
 		}
 
 		/// <summary>

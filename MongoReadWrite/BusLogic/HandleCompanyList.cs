@@ -59,6 +59,8 @@ namespace MongoReadWrite.BusLogic
 				var dbCompany = dbCompanies.Where(x => x.SimId == company.SimId).FirstOrDefault();
 				if (dbCompany != null)
 				{
+					dbCompany.Name = company.Name;
+					dbCompany.Ticker = company.Ticker;
 					allCompanies.Add(dbCompany);
 				}
 				else
