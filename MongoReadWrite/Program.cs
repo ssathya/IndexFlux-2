@@ -28,6 +28,7 @@ namespace MongoReadWrite
 			var services = new ServiceCollection();
 			SetupDependencies(services);
 			AutoMapperConfig.Start();
+			
 			var handleCompList = Provider.GetService<HandleCompanyList>();
 
 			var handleFin = Provider.GetService<HandleFinacials>();
@@ -38,15 +39,22 @@ namespace MongoReadWrite
 			}
 			Console.WriteLine("Obtained list of companies");
 
-			UpdateDataFromExternalFeed(compDetailsLst);
+			//UpdateDataFromExternalFeed(compDetailsLst);
+			
+			var analyzeFin = Provider.GetService<AnalyzeFinancial>();
 			var selectedFirms = new string[] { "MSFT", "GE", "BBY", "KO", "CAT", "DOV", "CW" };
+			Stopwatch stopWatch = new Stopwatch();
 			foreach (var selectedFirm in selectedFirms)
 			{
 				var cd = compDetailsLst.FirstOrDefault(c => c.Ticker == selectedFirm);
 				if (cd != null)
 				{
-					Console.WriteLine($"Printing financial values for {cd.Name}");
-					var compFinLst = handleFin.ReadFinanceValues(cd.SimId, cd.IndustryTemplate);
+					stopWatch.Reset();
+					stopWatch.Start();
+					Console.WriteLine($"Printing financial values for {cd.Name}");					
+					var compFinLst = analyzeFin.ReadFinanceValues(cd.SimId);
+					stopWatch.Stop();
+					DisplayTimeTaken(stopWatch, $"was the time to parse {cd.Name}'s finance");
 				}
 				else
 				{
@@ -91,7 +99,7 @@ namespace MongoReadWrite
 				var msg = company.Name + " took ";
 				DisplayTimeTaken(stopWatch, msg);
 				downloadCount += stopWatch.Elapsed.Seconds > 4 ? 1 : 0;
-				var limit = 3;
+				var limit = 40;
 				if (downloadCount >= limit)
 				{
 					Console.WriteLine($"Obtained data for more than {limit} companies. Terminating this run.");

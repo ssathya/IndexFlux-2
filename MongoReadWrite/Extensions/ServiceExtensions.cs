@@ -25,14 +25,17 @@ namespace MongoReadWrite.Extensions
 			services.AddSingleton<ILoggerFactory>(loggerFactory);
 			services.AddLogging();
 
+			services.AddScoped<IDBConnectionHandler<CompanyDetailMd>, DBConnectionHandler<CompanyDetailMd>>();
+			services.AddScoped<IDBConnectionHandler<CompanyFinancialsMd>, DBConnectionHandler<CompanyFinancialsMd>>();
+
 			services.AddScoped<HandleCompanyList, HandleCompanyList>();
 			services.AddScoped<DownloadListedFirms, DownloadListedFirms>();
 			services.AddScoped<HandleFinacials, HandleFinacials>();
 			services.AddScoped<ListOfStatements, ListOfStatements>();
 			services.AddScoped<DownloadReportableItems, DownloadReportableItems>();
+			services.AddScoped<AnalyzeFinancial, AnalyzeFinancial>();
 
-			services.AddSingleton<IDBConnectionHandler<CompanyDetailMd>, DBConnectionHandler<CompanyDetailMd>>();
-			services.AddSingleton<IDBConnectionHandler<CompanyFinancialsMd>, DBConnectionHandler<CompanyFinancialsMd>>();
+			
 		}
 		internal static string[] GetListOfSnP500Companines()
 		{
