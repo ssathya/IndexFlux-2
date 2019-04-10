@@ -24,5 +24,9 @@ namespace Models
 		public int? Fyear { get; set; }
 		public long? Value { get; set; }
 	}
+	public class OutstandingSharesMd : OutstandingShares, IBaseModel
+	{
+		public string Id { get; set; }
+	}
 
 }
