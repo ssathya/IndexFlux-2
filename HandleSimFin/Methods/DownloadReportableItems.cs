@@ -16,6 +16,7 @@ namespace HandleSimFin.Methods
 		#region Private Fields
 
 		private const string UrlTemplate = @"https://simfin.com/api/v1/companies/id/{companyId}/statements/standardised?api-key={API-KEY}&stype={statementType}&ptype={periodType}&fyear={financialYear}";
+		private const int ReportableItemsCount = 7;
 		private readonly ILogger<DownloadReportableItems> _logger;
 
 		#endregion Private Fields
@@ -46,9 +47,11 @@ namespace HandleSimFin.Methods
 
 			//get balance sheets
 			var statementType = "bs";
-			var reportingList = statementList.Bs.OrderByDescending(b => b.Fyear).Take(5);
+			var lastStatmentYear = statementList.Bs.Max(sl => sl.Fyear);
+			var reportingList = statementList.Bs.OrderByDescending(b => b.Fyear).Distinct().Take(ReportableItemsCount);
 			foreach (var bs in reportingList)
 			{
+				bs.Period = bs.Fyear == lastStatmentYear ? "TTM" : bs.Period;
 				var bsToAdd = await ObtainReportedNumbers(companyId, apiKey, statementType, bs);
 				if (bsToAdd != null)
 				{
@@ -59,9 +62,11 @@ namespace HandleSimFin.Methods
 			
 			// get profit and loss
 			statementType = "pl";
-			reportingList = statementList.Pl.OrderByDescending(b => b.Fyear).Take(5);
+			lastStatmentYear = statementList.Pl.Max(sl => sl.Fyear);
+			reportingList = statementList.Pl.OrderByDescending(b => b.Fyear).Take(ReportableItemsCount);
 			foreach (StatementDetails pl in reportingList)
 			{
+				pl.Period = pl.Fyear == lastStatmentYear ? "TTM" : pl.Period;
 				var plToAdd = await ObtainReportedNumbers(companyId, apiKey, statementType, pl);
 				if (plToAdd != null)
 				{
@@ -72,9 +77,10 @@ namespace HandleSimFin.Methods
 			
 			//get cash flow
 			statementType = "cf";
-			reportingList = statementList.Cf.OrderByDescending(b => b.Fyear).Take(5);
+			reportingList = statementList.Cf.OrderByDescending(b => b.Fyear).Take(ReportableItemsCount);
 			foreach (var cf in reportingList)
 			{
+				cf.Period = cf.Fyear == lastStatmentYear ? "TTM" : cf.Period;
 				var cfToAdd = await ObtainReportedNumbers(companyId, apiKey, statementType, cf);
 				if (cfToAdd != null)
 				{
@@ -98,9 +104,10 @@ namespace HandleSimFin.Methods
 			cfToAdd.CompanyId = companyId;
 		}
 
-		private  async Task<CompanyFinancials> ObtainReportedNumbers(string companyId, string apiKey, string statementType, StatementDetails bs)
+		private  async Task<CompanyFinancials> ObtainReportedNumbers(string companyId, string apiKey, string statementType, StatementDetails sd)
 		{
 			CompanyFinancials cfToAdd;
+			
 			try
 			{
 				using (var wc = new WebClient())
@@ -108,8 +115,8 @@ namespace HandleSimFin.Methods
 					var urlToUse = UrlTemplate.Replace(@"{API-KEY}", apiKey)
 						.Replace(@"{companyId}", companyId)
 						.Replace(@"{statementType}", statementType)
-						.Replace(@"{periodType}", bs.Period)
-						.Replace(@"{financialYear}", bs.Fyear.ToString());
+						.Replace(@"{periodType}", sd.Period)
+						.Replace(@"{financialYear}", sd.Fyear.ToString());
 					string data = "";
 					data = await wc.DownloadStringTaskAsync(urlToUse);
 					cfToAdd = JsonConvert.DeserializeObject<CompanyFinancials>(data);

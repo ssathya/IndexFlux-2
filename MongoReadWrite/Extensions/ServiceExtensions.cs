@@ -27,13 +27,16 @@ namespace MongoReadWrite.Extensions
 
 			services.AddScoped<IDBConnectionHandler<CompanyDetailMd>, DBConnectionHandler<CompanyDetailMd>>();
 			services.AddScoped<IDBConnectionHandler<CompanyFinancialsMd>, DBConnectionHandler<CompanyFinancialsMd>>();
+			services.AddScoped<IDBConnectionHandler<OutstandingSharesMd>, DBConnectionHandler<OutstandingSharesMd>>();			
 
-			services.AddScoped<HandleCompanyList, HandleCompanyList>();
-			services.AddScoped<DownloadListedFirms, DownloadListedFirms>();
-			services.AddScoped<HandleFinacials, HandleFinacials>();
-			services.AddScoped<ListOfStatements, ListOfStatements>();
-			services.AddScoped<DownloadReportableItems, DownloadReportableItems>();
-			services.AddScoped<AnalyzeFinancial, AnalyzeFinancial>();
+			services.AddScoped<AnalyzeFinancial>();
+			services.AddScoped<DownloadListedFirms>();
+			services.AddScoped<DownloadReportableItems>();
+			services.AddScoped<HandleCompanyList>();
+			services.AddScoped<HandleFinacials>();
+			services.AddScoped<HandleSharesOutStanding>();
+			services.AddScoped<IDownloadOutstandingShares, DownloadOutstandingShares>();
+			services.AddScoped<ListOfStatements>();
 
 			
 		}

@@ -11,8 +11,8 @@ using System.Threading.Tasks;
 
 namespace HandleSimFin.Methods
 {
-    public class DownloadOutstandingShares
-    {
+	public class DownloadOutstandingShares : IDownloadOutstandingShares
+	{
 		private readonly ILogger<DownloadOutstandingShares> _logger;
 		private const string UrlTemplate = @"https://simfin.com/api/v1/companies/id/{companyId}/shares/aggregated?api-key={API-KEY}";
 
@@ -32,6 +32,12 @@ namespace HandleSimFin.Methods
 				_logger.LogError("Did not find API key; calls will fail");
 				return null;
 			}
+			await HandleGettingData(simId, outstandingShares, apiKey);
+			return outstandingShares;
+		}
+
+		private async Task HandleGettingData(string simId, OutstandingShares outstandingShares, string apiKey)
+		{
 			try
 			{
 				using (var wc = new WebClient())
@@ -41,10 +47,25 @@ namespace HandleSimFin.Methods
 					string data = "";
 					data = await wc.DownloadStringTaskAsync(urlToUse);
 					var fullOutstandingList = JsonConvert.DeserializeObject<IEnumerable<OutstandingValue>>(data);
+					var avgList = fullOutstandingList.Where(f => f.Figure.Equals("common-outstanding-diluted"));
+					avgList = avgList.Select(al => new OutstandingValue
+					{
+						Figure = al.Figure,
+						Type = al.Type,
+						Measure = al.Measure,
+						Date = null,
+						Period = al.Period,
+						Fyear = al.Fyear,
+						Value = al.Value
+					});
+
+								  
+								 
+
 					outstandingShares.OutstandingValues = fullOutstandingList
-						.Where(os => os.Period == "FY" && os.Figure.Equals("common-outstanding-diluted"))
+						.Where(os => (os.Period == "FY" || os.Period=="TTM" ) && os.Figure.Equals("common-outstanding-diluted"))
 						.OrderByDescending(os => os.Fyear)
-						.Take(4)
+						.Take(10)
 						.ToList();
 				}
 			}
@@ -56,8 +77,6 @@ namespace HandleSimFin.Methods
 					_logger.LogCritical(ex.InnerException.Message);
 				}
 			}
-			return outstandingShares;
 		}
-
-    }
+	}
 }

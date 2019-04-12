@@ -22,16 +22,17 @@ namespace MongoReadWrite.BusLogic
 		private readonly HandleCompanyList _hcl;
 		private readonly ListOfStatements _los;
 		private readonly DownloadReportableItems _dri;
+		private const int ReportableItemsCount = 7;
 
 		/// <summary>
 		/// Get statements from data provider and insert it to database.
 		/// </summary>
 		/// <param name="simId">The sim identifier.</param>
 		/// <returns></returns>
-		public HandleFinacials(IDBConnectionHandler<CompanyFinancialsMd> dbconCompany, 
-			ILogger<HandleFinacials> logger, 
-			HandleCompanyList hcl, 
-			ListOfStatements los, 
+		public HandleFinacials(IDBConnectionHandler<CompanyFinancialsMd> dbconCompany,
+			ILogger<HandleFinacials> logger,
+			HandleCompanyList hcl,
+			ListOfStatements los,
 			DownloadReportableItems dri)
 		{
 			_dbconCompany = dbconCompany;
@@ -42,9 +43,9 @@ namespace MongoReadWrite.BusLogic
 			_dri = dri;
 		}
 
-		
 
-		
+
+
 		/// <summary>
 		/// Get statements from data provider and insert it to database.
 		/// </summary>
@@ -56,7 +57,7 @@ namespace MongoReadWrite.BusLogic
 			{
 				return false;
 			}
-			
+
 			var cd = _hcl.GetCompanyDetails(simId);
 			if (cd.LastUpdate != null && ((TimeSpan)(DateTime.Now - cd.LastUpdate)).Days < 30)
 			{
@@ -70,7 +71,7 @@ namespace MongoReadWrite.BusLogic
 			}
 			var cfMdl = new List<CompanyFinancialsMd>();
 			var oldcfML = _dbconCompany.Get(o => o.CompanyId.Equals(simId)).ToList();
-			
+
 			foreach (var (companyFinancial, oldcf) in from companyFinancial in companyFinancials
 													  let oldcf = oldcfML.Where(o => o.CompanyId.Equals(companyFinancial.CompanyId)
 															&& o.FYear == companyFinancial.FYear
@@ -109,7 +110,7 @@ namespace MongoReadWrite.BusLogic
 		/// <param name="simId">The SIM identifier.</param>
 		/// <returns></returns>
 		private async Task<List<CompanyFinancials>> ObtainCompanyFinancilasAsync(string simId)
-		{			
+		{
 			StatementList statementList = await _los.FetchStatementList(simId, IdentifyerType.SimFinId);
 			statementList = _los.ExtractYearEndReports(statementList);
 			if (statementList.Bs.Count == 0 || statementList.Cf.Count == 0
@@ -117,16 +118,26 @@ namespace MongoReadWrite.BusLogic
 			{
 				return null;
 			}
-			statementList.Bs = statementList.Bs.OrderByDescending(b => b.Fyear).Take(4).ToList();
-			statementList.Cf = statementList.Cf.OrderByDescending(c => c.Fyear).Take(4).ToList();
-			statementList.Pl = statementList.Pl.OrderByDescending(p => p.Fyear).Take(4).ToList();
-			if (statementList.Bs.Count() != 4
-				|| statementList.Cf.Count() != 4
-				|| statementList.Pl.Count() != 4)
+
+			statementList.Bs = statementList.Bs.OrderByDescending(b => b.Fyear)
+				.GroupBy(o => new { o.Fyear })
+				.Select(o => o.FirstOrDefault())
+				.Take(ReportableItemsCount).ToList();
+			statementList.Cf = statementList.Cf.OrderByDescending(c => c.Fyear)
+				.GroupBy(o => new { o.Fyear })
+				.Select(o => o.FirstOrDefault())
+				.Take(ReportableItemsCount).ToList();
+			statementList.Pl = statementList.Pl.OrderByDescending(p => p.Fyear)
+				.GroupBy(o => new { o.Fyear })
+				.Select(o => o.FirstOrDefault())
+				.Take(ReportableItemsCount).ToList();
+			if (statementList.Bs.Count() != ReportableItemsCount
+				|| statementList.Cf.Count() != ReportableItemsCount
+				|| statementList.Pl.Count() != ReportableItemsCount)
 			{
-				Console.WriteLine("Something is wrong");
+				Console.WriteLine("Lesser or no data to download");
 			}
-			
+
 			var companyFinancials = await _dri.DownloadFinancialsAsync(statementList);
 			return companyFinancials;
 		}

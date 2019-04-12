@@ -10,6 +10,7 @@ namespace Models
 	{
 		public string SimId { get; set; }
 		public List<OutstandingValue> OutstandingValues { get; set; }
+		public DateTime? LastUpdateDate { get; set; }
 	}
 
 	

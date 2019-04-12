@@ -79,9 +79,10 @@ namespace HandleSimFin.Methods
 			}
 			var returnValue = new StatementList
 			{
-				Bs = statement.Bs.Where(bs => !bs.Period.Contains("TTM-")).ToList(),
-				Cf = statement.Cf.Where(cf => !cf.Period.Contains("TTM-")).ToList(),
-				Pl = statement.Pl.Where(pl => !pl.Period.Contains("TTM-")).ToList()
+				Bs = statement.Bs.Where(bs => bs.Period.Equals("Q4") || bs.Period.Equals("TTM")).ToList(),
+				Cf = statement.Cf.Where(cf => cf.Period.Equals("TTM") || cf.Period.Equals("FY")).ToList(),
+				Pl = statement.Pl.Where(pl => pl.Period.Equals("TTM") || pl.Period.Equals("FY")).ToList(),
+				CompanyId = statement.CompanyId
 			};
 			return returnValue;
 		}
@@ -122,6 +123,7 @@ namespace HandleSimFin.Methods
 				}
 				statementList = JsonConvert.DeserializeObject<StatementList>(data);
 				statementList.CompanyId = companyId;
+				statementList = RemovePastTTMs(statementList);
 				return statementList;
 			}
 			catch (Exception ex)

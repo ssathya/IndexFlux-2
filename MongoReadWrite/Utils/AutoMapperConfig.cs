@@ -3,7 +3,7 @@ using Models;
 
 namespace MongoReadWrite.Utils
 {
-	public  class AutoMapperConfig : Profile
+	public class AutoMapperConfig : Profile
 	{
 		public AutoMapperConfig()
 		{
@@ -21,20 +21,17 @@ namespace MongoReadWrite.Utils
 			Mapper.Initialize(cfg =>
 			{
 				cfg.CreateMap<CompanyFinancials, CompanyFinancialsMd>()
-				.ForMember(d => d.Id, t => t.Ignore())
-				.ReverseMap();
+					.ForMember(d => d.Id, t => t.Ignore())
+					.ReverseMap();
 				cfg.CreateMap<CompanyDetail, CompanyDetailMd>()
-				.ForMember(d => d.Id, t => t.Ignore())
-				.ReverseMap();
+					.ForMember(d => d.Id, t => t.Ignore())
+					.ReverseMap();
+				cfg.CreateMap<OutstandingShares, OutstandingSharesMd>()
+					.ForMember(d => d.Id, t => t.Ignore())
+					.ReverseMap();
 			});
 
-			//Mapper.Initialize(cf => cf.CreateMap<CompanyFinancials, CompanyFinancialsMd>()
-			//	.ForMember(d => d.Id, t => t.Ignore())
-			//	.ReverseMap());
 
-			//Mapper.Initialize(cd => cd.CreateMap<CompanyDetail, CompanyDetailMd>()
-			//	.ForMember(d => d.Id, t => t.Ignore())
-			//	.ReverseMap());
 		}
 
 	}

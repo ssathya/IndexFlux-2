@@ -33,22 +33,22 @@ namespace MongoReadWrite
 
 			var handleFin = Provider.GetService<HandleFinacials>();
 			var compDetailsLst = handleCompList.GetAllCompaniesFromDbAsync().Result;
-			if (compDetailsLst == null || compDetailsLst.Count < 2400)
+			if (compDetailsLst == null || compDetailsLst.Count < 2357)
 			{
 				compDetailsLst = handleCompList.GetAllCompaniesAsync().Result;
 			}
 			Console.WriteLine("Obtained list of companies");
 
-			//UpdateDataFromExternalFeed(compDetailsLst);
+			UpdateDataFromExternalFeed(compDetailsLst);
 			
-			var analyzeFin = Provider.GetService<AnalyzeFinancial>();
+			var analyzeFin = Provider.GetService<AnalyzeFinancial>();			
 			var selectedFirms = new string[] { "MSFT", "GE", "BBY", "KO", "CAT", "DOV", "CW" };
 			Stopwatch stopWatch = new Stopwatch();
 			foreach (var selectedFirm in selectedFirms)
 			{
-				var cd = compDetailsLst.FirstOrDefault(c => c.Ticker == selectedFirm);
+				var cd = compDetailsLst.FirstOrDefault(c => c.Ticker == selectedFirm);				
 				if (cd != null)
-				{
+				{					
 					stopWatch.Reset();
 					stopWatch.Start();
 					Console.WriteLine($"Printing financial values for {cd.Name}");					
@@ -99,7 +99,7 @@ namespace MongoReadWrite
 				var msg = company.Name + " took ";
 				DisplayTimeTaken(stopWatch, msg);
 				downloadCount += stopWatch.Elapsed.Seconds > 4 ? 1 : 0;
-				var limit = 40;
+				var limit = 53;
 				if (downloadCount >= limit)
 				{
 					Console.WriteLine($"Obtained data for more than {limit} companies. Terminating this run.");

@@ -3,7 +3,7 @@
     "MongoReadWrite": {
       "commandName": "Project",
       "environmentVariables": {
-        "MongoUri": "mongodb://loadit:pass123@ds044989.mlab.com:44989/simfin",
+        "MongoUri": "mongodb://loadit:pass123@3.19.116.136:27017/simfin",
         "SimFinKey": "nRzxBRIv37Ywg7c1LTsyqloX6gMGzSiM",
         "DbName": "simfin"
       }
