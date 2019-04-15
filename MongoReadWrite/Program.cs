@@ -39,10 +39,10 @@ namespace MongoReadWrite
 			}
 			Console.WriteLine("Obtained list of companies");
 
-			UpdateDataFromExternalFeed(compDetailsLst);
+			//UpdateDataFromExternalFeed(compDetailsLst);
 			
 			var analyzeFin = Provider.GetService<AnalyzeFinancial>();			
-			var selectedFirms = new string[] { "MSFT", "GE", "BBY", "KO", "CAT", "DOV", "CW" };
+			var selectedFirms = new string[] { "MSFT", "GE", "BBY", "KO", "CAT", "DOV", "CW", "WMT", "BBBY", "DE" };
 			Stopwatch stopWatch = new Stopwatch();
 			foreach (var selectedFirm in selectedFirms)
 			{

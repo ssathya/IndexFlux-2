@@ -57,10 +57,12 @@ namespace MongoReadWrite.BusLogic
 					returnValue = null;
 					break;
 			}
+			Console.WriteLine($"Computed EBITDA for {companyBasicInfo.Name} is as follows:");
 			foreach (var ebitd in ebitdaLst.OrderByDescending(a=>a.Key))
 			{
-				Console.WriteLine($"EBITDA for {companyBasicInfo.Name} for year {ebitd.Key} is {ebitd.Value}");
+				Console.WriteLine($"EBITDA for year {ebitd.Key} is {ebitd.Value}");
 			}
+			Console.WriteLine();
 			foreach (var pietroskiScore in pietroskiScores.OrderByDescending(a=>a.Key))
 			{
 				Console.WriteLine($"Piotroski score for {companyBasicInfo.Name} for year {pietroskiScore.Key} is {pietroskiScore.Value}");
@@ -203,6 +205,8 @@ namespace MongoReadWrite.BusLogic
 
 		private void ComputePietroskiScore(Dictionary<int, Dictionary<string, long>> normalizedFin, Dictionary<int, int> pietroskiScores, string simId)
 		{
+			//sorted Normalized Fin by year			
+			normalizedFin = normalizedFin.OrderByDescending(a1 => a1.Key).ToDictionary(pair=>pair.Key, pair=>pair.Value);
 			foreach (var year in normalizedFin.Keys)
 			{
 				var totalScore = 0;
@@ -210,17 +214,21 @@ namespace MongoReadWrite.BusLogic
 				var doWeHavePreviousYear = normalizedFin.ContainsKey(year - 1);
 				var normalizedFinForPrevYear = doWeHavePreviousYear ? normalizedFin[year - 1] : normalizedFin[year];
 				var normalizedFinForTwoPrevYear = normalizedFin.ContainsKey(year - 2) ? normalizedFin[year - 2] : normalizedFinForPrevYear;
+				//Check profitability
 				totalScore += RetrunOnAssets(normalizedFinForYear);
 				totalScore += OperatingCashFlow(normalizedFinForYear);
 				totalScore += ChangeInReturnOfAssets(normalizedFinForYear, normalizedFinForPrevYear);
 				totalScore += Accruals(normalizedFinForYear, normalizedFinForPrevYear);
+				// Test on Leverage, Liquidity and source of finds
 				totalScore += ChangeInLeverage(normalizedFinForYear, normalizedFinForPrevYear);
 				totalScore += ChangeInCurrentRatio(normalizedFinForYear, normalizedFinForPrevYear);
 				totalScore += ChangeInNumberOfShares(normalizedFinForYear, normalizedFinForPrevYear, simId: simId, year: year, prevYear: doWeHavePreviousYear ? year - 1 : year);
+				// Operating Efficiency
 				totalScore += ChangeInGrossMargin(normalizedFinForYear, normalizedFinForPrevYear);
 				totalScore += ChangeInAssetTurnoverRatio(normalizedFinForYear, normalizedFinForPrevYear, normalizedFinForTwoPrevYear);
 				pietroskiScores.Add(year, totalScore);
-			}			
+			}
+			
 		}
 		private string[] ExtractKeys(IEnumerable<CompanyFinancialsMd> firstYearData, StatementType statementType)
 		{
