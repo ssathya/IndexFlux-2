@@ -62,12 +62,18 @@ namespace MongoReadWrite.BusLogic
 			Console.WriteLine($"Computed EBITDA for {companyBasicInfo.Name} is as follows:");
 			foreach (var ebitd in ebitdaLst.OrderByDescending(a => a.Key))
 			{
-				Console.WriteLine($"EBITDA for year {ebitd.Key} is {((decimal)ebitd.Value).ToKMB()}");
+				Console.WriteLine($"{ebitd.Key} => {((decimal)ebitd.Value).ToKMB()}");
 			}
 			Console.WriteLine();
+			Console.WriteLine("Piotroski f scores");
 			foreach (var pietroskiScore in pietroskiScores.OrderByDescending(a => a.Key))
 			{
-				Console.WriteLine($"Piotroski score for {companyBasicInfo.Name} for year {pietroskiScore.Key} is {pietroskiScore.Value}");
+				Console.WriteLine($"{pietroskiScore.Key} => {pietroskiScore.Value}");
+			}
+			Console.WriteLine($"Profitability Ratios for {companyBasicInfo.Name}");
+			foreach (var key in profitablityRatios)
+			{
+				Console.WriteLine($"{key.Key} => {key.Value}%");
 			}
 			return returnValue;
 		}
