@@ -70,10 +70,10 @@ namespace MongoReadWrite.BusLogic
 				return false;
 			}
 			var cfMdl = new List<CompanyFinancialsMd>();
-			var oldcfML = _dbconCompany.Get(o => o.CompanyId.Equals(simId)).ToList();
+			var oldcfML = _dbconCompany.Get(o => o.SimId.Equals(simId)).ToList();
 
 			foreach (var (companyFinancial, oldcf) in from companyFinancial in companyFinancials
-													  let oldcf = oldcfML.Where(o => o.CompanyId.Equals(companyFinancial.CompanyId)
+													  let oldcf = oldcfML.Where(o => o.SimId.Equals(companyFinancial.SimId)
 															&& o.FYear == companyFinancial.FYear
 															&& o.Statement == companyFinancial.Statement).FirstOrDefault()
 													  select (companyFinancial, oldcf))

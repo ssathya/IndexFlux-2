@@ -101,7 +101,7 @@ namespace HandleSimFin.Methods
 		{
 			cfToAdd.Statement = st;
 			cfToAdd.FYear = bs.Fyear;
-			cfToAdd.CompanyId = companyId;
+			cfToAdd.SimId = companyId;
 		}
 
 		private  async Task<CompanyFinancials> ObtainReportedNumbers(string companyId, string apiKey, string statementType, StatementDetails sd)

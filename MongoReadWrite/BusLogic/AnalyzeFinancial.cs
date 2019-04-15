@@ -37,7 +37,7 @@ namespace MongoReadWrite.BusLogic
 				return null;
 			}
 			var industryTemplate = companyBasicInfo.IndustryTemplate;
-			var financial = _dbconCompany.Get(cf => cf.CompanyId.Equals(simId)).ToList();
+			var financial = _dbconCompany.Get(cf => cf.SimId.Equals(simId)).ToList();
 			if (financial == null || !financial.Any())
 			{
 				_logger.LogWarning($"Financial values for {companyBasicInfo.Name} is not stored in database yet ");
@@ -46,11 +46,13 @@ namespace MongoReadWrite.BusLogic
 			var returnValue = FlattenData(financial);
 			var ebitdaLst = new Dictionary<int, long>();
 			var pietroskiScores = new Dictionary<int, int>();
+			var profitablityRatios = new Dictionary<string, decimal>();
 			switch (companyBasicInfo.IndustryTemplate)
 			{
 				case "general":
 					ComputeEBITDA(returnValue, ebitdaLst);
 					ComputePietroskiScore(returnValue, pietroskiScores, simId);
+					ComputeProfitablity(returnValue, profitablityRatios);
 					break;
 
 				default:
@@ -58,12 +60,12 @@ namespace MongoReadWrite.BusLogic
 					break;
 			}
 			Console.WriteLine($"Computed EBITDA for {companyBasicInfo.Name} is as follows:");
-			foreach (var ebitd in ebitdaLst.OrderByDescending(a=>a.Key))
+			foreach (var ebitd in ebitdaLst.OrderByDescending(a => a.Key))
 			{
-				Console.WriteLine($"EBITDA for year {ebitd.Key} is {ebitd.Value}");
+				Console.WriteLine($"EBITDA for year {ebitd.Key} is {((decimal)ebitd.Value).ToKMB()}");
 			}
 			Console.WriteLine();
-			foreach (var pietroskiScore in pietroskiScores.OrderByDescending(a=>a.Key))
+			foreach (var pietroskiScore in pietroskiScores.OrderByDescending(a => a.Key))
 			{
 				Console.WriteLine($"Piotroski score for {companyBasicInfo.Name} for year {pietroskiScore.Key} is {pietroskiScore.Value}");
 			}
@@ -170,7 +172,7 @@ namespace MongoReadWrite.BusLogic
 			long? currentYearValue =
 			outstandingShares.OutstandingValues.Where(o => o.Fyear == year).FirstOrDefault() != null ?
 				outstandingShares.OutstandingValues.Where(o => o.Fyear == year).FirstOrDefault().Value : prevYearValue;
-			
+
 			if (currentYearValue == null || prevYearValue == null)
 			{
 				return 0;
@@ -205,8 +207,8 @@ namespace MongoReadWrite.BusLogic
 
 		private void ComputePietroskiScore(Dictionary<int, Dictionary<string, long>> normalizedFin, Dictionary<int, int> pietroskiScores, string simId)
 		{
-			//sorted Normalized Fin by year			
-			normalizedFin = normalizedFin.OrderByDescending(a1 => a1.Key).ToDictionary(pair=>pair.Key, pair=>pair.Value);
+			//sorted Normalized Fin by year
+			normalizedFin = normalizedFin.OrderByDescending(a1 => a1.Key).ToDictionary(pair => pair.Key, pair => pair.Value);
 			foreach (var year in normalizedFin.Keys)
 			{
 				var totalScore = 0;
@@ -228,7 +230,32 @@ namespace MongoReadWrite.BusLogic
 				totalScore += ChangeInAssetTurnoverRatio(normalizedFinForYear, normalizedFinForPrevYear, normalizedFinForTwoPrevYear);
 				pietroskiScores.Add(year, totalScore);
 			}
+		}
+
+		private void ComputeProfitablity(Dictionary<int, Dictionary<string, long>> normalizedFin, Dictionary<string, decimal> profitablityRatios)
+		{
 			
+			var normalizedFinForYear = normalizedFin[normalizedFin.Keys.Max()];
+			var grossProfit = (decimal)normalizedFinForYear[@"Gross Profit"];
+			var operatingIncome = (decimal)normalizedFinForYear[@"Operating Income (Loss)"];
+			var income = (decimal)normalizedFinForYear[@"Income (Loss) Including Minority Interest"];
+
+			var revenue = (decimal)normalizedFinForYear[@"Revenue"];
+			var totalEquity = (decimal)normalizedFinForYear[@"Total Equity"];
+			var totalAssets = (decimal)normalizedFinForYear[@"Total Assets"];
+
+			var grossMargin = Math.Round(100 * grossProfit / revenue,2);
+			var operatingMargin = Math.Round(100 * operatingIncome / revenue, 2);
+			var netProfitMargin = Math.Round(100 * income / revenue, 2);
+			var returnOnEquity = Math.Round(100 * income / totalEquity, 2);
+			var returnOnAssets = Math.Round(100 * income / totalAssets, 2);
+			profitablityRatios.Add("Gross Margin", grossMargin);
+			profitablityRatios.Add("Operating Margin", operatingMargin);
+			profitablityRatios.Add("Net Profit Margin", netProfitMargin);
+			profitablityRatios.Add("Return on Equity", returnOnEquity);
+			profitablityRatios.Add("Return on Assets", returnOnAssets);
+
+			return;
 		}
 		private string[] ExtractKeys(IEnumerable<CompanyFinancialsMd> firstYearData, StatementType statementType)
 		{

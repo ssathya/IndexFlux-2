@@ -28,7 +28,7 @@ namespace Models
 
 		public bool Calculated { get; set; }
 		public List<CalculationScheme> CalculationSchemes { get; set; }
-		public string CompanyId { get; set; }
+		public string SimId { get; set; }
 		public int FYear { get; set; }
 		public string IndustryTemplate { get; set; }
 		public DateTime? PeriodEndDate { get; set; }
@@ -48,7 +48,7 @@ namespace Models
 		{
 			Calculated = cf.Calculated;
 			CalculationSchemes = cf.CalculationSchemes;
-			CompanyId = cf.CompanyId;
+			SimId = cf.SimId;
 			FYear = cf.FYear;
 			IndustryTemplate = cf.IndustryTemplate;
 			Statement = cf.Statement;
