@@ -119,7 +119,8 @@ namespace HandleSimFin.Methods
 						.Replace(@"{financialYear}", sd.Fyear.ToString());
 					string data = "";
 					data = await wc.DownloadStringTaskAsync(urlToUse);
-					cfToAdd = JsonConvert.DeserializeObject<CompanyFinancials>(data);
+					cfToAdd = await Task.Run(() => JsonConvert.DeserializeObject<CompanyFinancials>(data));
+					//cfToAdd = JsonConvert.DeserializeObject<CompanyFinancials>(data);
 				}
 				return cfToAdd;
 			}

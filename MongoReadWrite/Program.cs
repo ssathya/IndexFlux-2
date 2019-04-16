@@ -12,7 +12,7 @@ namespace MongoReadWrite
 {
 	internal class Program
 	{
-
+		private const int financialDownloadLimit = 50;
 
 		#region Public Properties
 
@@ -42,7 +42,8 @@ namespace MongoReadWrite
 			UpdateDataFromExternalFeed(compDetailsLst);
 			
 			var analyzeFin = Provider.GetService<AnalyzeFinancial>();			
-			var selectedFirms = new string[] { "MSFT", "GE", "BBY", "KO", "CAT", "DOV", "CW", "WMT", "BBBY", "DE" };
+			var selectedFirms = new string[] { "AAPL"};
+
 			Stopwatch stopWatch = new Stopwatch();
 			foreach (var selectedFirm in selectedFirms)
 			{
@@ -51,10 +52,10 @@ namespace MongoReadWrite
 				{					
 					stopWatch.Reset();
 					stopWatch.Start();
-					Console.WriteLine($"Printing financial values for {cd.Name}");					
+					Console.WriteLine($"\nPrinting financial values for {cd.Name}");					
 					var compFinLst = analyzeFin.ReadFinanceValues(cd.SimId);
 					stopWatch.Stop();
-					DisplayTimeTaken(stopWatch, $"was the time to parse {cd.Name}'s finance");
+					//DisplayTimeTaken(stopWatch, $"was the time to parse {cd.Name}'s finance");
 				}
 				else
 				{
@@ -99,15 +100,15 @@ namespace MongoReadWrite
 				var msg = company.Name + " took ";
 				DisplayTimeTaken(stopWatch, msg);
 				downloadCount += stopWatch.Elapsed.Seconds > 4 ? 1 : 0;
-				var limit = 53;
-				if (downloadCount >= limit)
+				//var limit = financialDownloadLimit;
+				if (downloadCount >= financialDownloadLimit)
 				{
-					Console.WriteLine($"Obtained data for more than {limit} companies. Terminating this run.");
+					Console.WriteLine($"Obtained data for more than {financialDownloadLimit} companies. Terminating this run.");
 					break;
 				}
 				else
 				{
-					Console.WriteLine($"Downloaded {downloadCount} against allocated quota of {limit} for this run");
+					Console.WriteLine($"Downloaded {downloadCount} against allocated quota of {financialDownloadLimit} for this run");
 				}
 			}
 		}
@@ -127,6 +128,15 @@ namespace MongoReadWrite
 		{
 			compDetailsLst = compDetailsLst.Where(cd => cd.Ticker != null).ToList();
 			compDetailsLst = compDetailsLst.Where(cd => cd.Ticker != "").ToList();
+			var yesterday = DateTime.Now.AddDays(-1);
+			var downloadCount = compDetailsLst.FindAll(cd => cd.LastUpdate >= yesterday).Count;
+			if (downloadCount >= financialDownloadLimit)
+			{
+				Console.WriteLine($"Already exceeded today's download limit of {financialDownloadLimit}; " +
+					$"today's count is {downloadCount}" +
+					$"\n Not downloading anymore today....");
+				return;
+			}
 
 			var miniCompDetails = compDetailsLst.Where(cd => (ServiceExtensions.GetListOfSnP500Companines())
 				.Contains(cd.Ticker))
