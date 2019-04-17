@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Models;
 using MongoReadWrite.BusLogic;
 using MongoReadWrite.Extensions;
@@ -12,7 +13,7 @@ namespace MongoReadWrite
 {
 	internal class Program
 	{
-		private const int financialDownloadLimit = 50;
+		private const int financialDownloadLimit = 83;
 
 		#region Public Properties
 
@@ -28,7 +29,13 @@ namespace MongoReadWrite
 			var services = new ServiceCollection();
 			SetupDependencies(services);
 			AutoMapperConfig.Start();
-			
+			//var logger = Provider.GetService<ILogger<Program>>();
+			//logger.LogTrace("Trace");
+			//logger.LogDebug("Debug");
+			//logger.LogInformation("Information");
+			//logger.LogWarning("Warning");
+			//logger.LogError("Error");
+			//logger.LogCritical("Critical");
 			var handleCompList = Provider.GetService<HandleCompanyList>();
 
 			var handleFin = Provider.GetService<HandleFinacials>();
@@ -42,7 +49,7 @@ namespace MongoReadWrite
 			UpdateDataFromExternalFeed(compDetailsLst);
 			
 			var analyzeFin = Provider.GetService<AnalyzeFinancial>();			
-			var selectedFirms = new string[] { "AAPL"};
+			var selectedFirms = new string[] { "MSFT","AAPL"};
 
 			Stopwatch stopWatch = new Stopwatch();
 			foreach (var selectedFirm in selectedFirms)
@@ -81,11 +88,11 @@ namespace MongoReadWrite
 			Console.WriteLine($"\n{msg} {elapsedTime}");
 		}
 
-		private static void DownloadFinancialData(System.Collections.Generic.List<CompanyDetail> miniCompDetails)
+		private static void DownloadFinancialData(System.Collections.Generic.List<CompanyDetail> miniCompDetails, int downloadStart)
 		{
 			Stopwatch stopWatch = new Stopwatch();
 			int counter = 0;
-			int downloadCount = 0;
+			int downloadCount = downloadStart;
 			var handleFinancials = Provider.GetService<HandleFinacials>();
 			var listCount = miniCompDetails.Count();
 			foreach (var company in miniCompDetails)
@@ -114,12 +121,10 @@ namespace MongoReadWrite
 		}
 		private static void SetupDependencies(IServiceCollection services)
 		{
-			var configurationBuilder = ServiceExtensions.BuildConfigurationBuilder();
-
+			var configurationBuilder = ServiceExtensions.BuildConfigurationBuilder();			
 			var configuration = configurationBuilder.Build();
-			services.AddSingleton<IConfiguration>(configuration);
-
-			ServiceExtensions.RegisterDependencyInjections(services);
+			services.AddSingleton<IConfiguration>(configuration);			
+			ServiceExtensions.RegisterDependencyInjections(services, configuration);
 
 			Provider = services.BuildServiceProvider();
 		}
@@ -145,7 +150,7 @@ namespace MongoReadWrite
 
 			var listCount = miniCompDetails.Count();
 			Console.WriteLine($"Obtaining for {listCount} companies");
-			DownloadFinancialData(miniCompDetails);
+			DownloadFinancialData(miniCompDetails, downloadCount);
 		}
 
 		#endregion Private Methods

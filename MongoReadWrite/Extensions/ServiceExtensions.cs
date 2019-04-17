@@ -5,7 +5,9 @@ using Microsoft.Extensions.Logging;
 using Models;
 using MongoReadWrite.BusLogic;
 using MongoReadWrite.Utils;
+using NLog.Extensions.Logging;
 using System.Linq;
+
 
 namespace MongoReadWrite.Extensions
 {
@@ -14,16 +16,23 @@ namespace MongoReadWrite.Extensions
 		internal static IConfigurationBuilder BuildConfigurationBuilder()
 		{
 			IConfigurationBuilder configurationBuilder = new ConfigurationBuilder();
-			configurationBuilder.AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
-				.AddEnvironmentVariables();
+			configurationBuilder.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+				.AddEnvironmentVariables();			
 			return configurationBuilder;
 		}
-		internal static void RegisterDependencyInjections(this IServiceCollection services)
+		internal static void RegisterDependencyInjections(this IServiceCollection services, IConfigurationRoot configuration)
 		{
-			var loggerFactory = new LoggerFactory();
 
+			var loggerFactory = new LoggerFactory();	
+			loggerFactory.AddNLog();
 			services.AddSingleton<ILoggerFactory>(loggerFactory);
-			services.AddLogging();
+			var logSection = configuration.GetSection("Logging");
+			services.AddLogging(builder =>
+			{
+				builder.AddConfiguration(configuration.GetSection("Logging"))
+				.AddConsole();
+			});
+			
 
 			services.AddScoped<IDBConnectionHandler<CompanyDetailMd>, DBConnectionHandler<CompanyDetailMd>>();
 			services.AddScoped<IDBConnectionHandler<CompanyFinancialsMd>, DBConnectionHandler<CompanyFinancialsMd>>();

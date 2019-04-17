@@ -118,8 +118,10 @@ namespace HandleSimFin.Methods
 						.Replace(@"{periodType}", sd.Period)
 						.Replace(@"{financialYear}", sd.Fyear.ToString());
 					string data = "";
+					_logger.LogTrace($"Starting to fetch {sd} for {companyId}");
 					data = await wc.DownloadStringTaskAsync(urlToUse);
 					cfToAdd = await Task.Run(() => JsonConvert.DeserializeObject<CompanyFinancials>(data));
+					_logger.LogTrace($"Completed data download for {sd} => {companyId}; Number of records {cfToAdd.Values.Count}");
 					//cfToAdd = JsonConvert.DeserializeObject<CompanyFinancials>(data);
 				}
 				return cfToAdd;

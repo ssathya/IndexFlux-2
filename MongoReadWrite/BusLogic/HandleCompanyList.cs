@@ -85,6 +85,7 @@ namespace MongoReadWrite.BusLogic
 
 		public async Task<List<CompanyDetail>> GetAllCompaniesFromDbAsync()
 		{
+			_logger.LogTrace("Starting GetAllCompaniesFromDbAsync ");
 			List<CompanyDetail> compDetailList;
 			var savedValue = _dbconCompany.Get().ToList();
 			if (savedValue.Count <= 10)
@@ -93,6 +94,7 @@ namespace MongoReadWrite.BusLogic
 				return compDetailList;
 			}
 			compDetailList = Mapper.Map<List<CompanyDetailMd>, List<CompanyDetail>>(savedValue);
+			_logger.LogTrace("Exiting GetAllCompaniesFromDbAsync");
 			return compDetailList;
 		}
 

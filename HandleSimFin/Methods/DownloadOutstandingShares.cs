@@ -32,7 +32,9 @@ namespace HandleSimFin.Methods
 				_logger.LogError("Did not find API key; calls will fail");
 				return null;
 			}
+			_logger.LogInformation($"Starting getting Outstanding share count for {simId}");
 			await HandleGettingData(simId, outstandingShares, apiKey);
+			_logger.LogInformation($"Completed download of Outstanding shares for {simId}");
 			return outstandingShares;
 		}
 
