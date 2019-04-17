@@ -15,10 +15,7 @@ namespace StockReporter
 	{
 		public static void Main(string[] args)
 		{
-			var logger = NLog.Web.NLogBuilder.ConfigureNLog("nlog.config").GetCurrentClassLogger();
-			logger.Debug("In main");
-			CreateWebHostBuilder(args).Build().Run();
-			logger.Debug("Exiting application");
+			CreateWebHostBuilder(args).Build().Run();			
 		}
 
 		public static IWebHostBuilder CreateWebHostBuilder(string[] args) =>
