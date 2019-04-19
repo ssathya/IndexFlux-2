@@ -2,7 +2,11 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Amazon;
 using Microsoft.AspNetCore.Mvc;
+using Models;
+using Newtonsoft.Json;
+using StockReporter.Helpers;
 
 namespace StockReporter.Controllers
 {
@@ -10,14 +14,42 @@ namespace StockReporter.Controllers
 	[ApiController]
 	public class ValuesController : ControllerBase
 	{
-		// GET api/values
+		private readonly List<EntityKeys> _keysToServices;
+
+		public ValuesController()
+		{
+			var readS3Objs = new ReadS3Objects(@"talk2control-1", RegionEndpoint.USEast1);
+
+			_keysToServices = JsonConvert
+				.DeserializeObject<List<EntityKeys>>(readS3Objs
+					.GetDataFromS3("Random.txt")
+				.Result);
+
+		}
+		// GET api/values		
+		/// <summary>
+		/// Gets all values as  strings.
+		/// </summary>
+		/// <returns></returns>
 		[HttpGet]
 		public ActionResult<IEnumerable<string>> Get()
 		{
-			return new string[] { "value1", "value2" };
+			var displayString = new List<string>();
+			foreach (var services in _keysToServices)
+			{
+				displayString.Add(services.Entity);
+				displayString.Add(services.Key);
+			}
+			displayString.Clear();
+			return displayString.ToArray();
 		}
 
-		// GET api/values/5
+		// GET api/values/5		
+		/// <summary>
+		/// Gets the values associated to the specified identifier.
+		/// </summary>
+		/// <param name="id">The identifier.</param>
+		/// <returns></returns>
 		[HttpGet("{id}")]
 		public ActionResult<string> Get(int id)
 		{

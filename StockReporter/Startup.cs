@@ -10,6 +10,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Swashbuckle.AspNetCore.Swagger;
 
 namespace StockReporter
 {
@@ -26,6 +27,16 @@ namespace StockReporter
 		public void ConfigureServices(IServiceCollection services)
 		{
 			services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
+			services.AddSwaggerGen(c =>
+			{
+				c.SwaggerDoc("v1", new Info
+				{
+					Title = "Stock Reporter",
+					Description = "Will be used along with Index Flux",
+					TermsOfService = "Use it at your own risk"
+				});
+				//var xmlPath = AppDomain.CurrentDomain.BaseDirectory + @"StockReporter.xml";				
+			});
 		}
 
 		// This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -43,6 +54,12 @@ namespace StockReporter
 
 			app.UseHttpsRedirection();
 			app.UseMvc();
+			app.UseSwagger();
+			app.UseSwaggerUI(c =>
+			{				
+				c.SwaggerEndpoint("/swagger/v1/swagger.json", "Core API");				
+			});
+			
 		}
 	}
 }
