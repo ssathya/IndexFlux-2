@@ -19,6 +19,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\HandleSimFin\HandleSimFin.csproj" />
     <ProjectReference Include="..\Models\Models.csproj" />
   </ItemGroup>
 

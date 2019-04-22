@@ -1,19 +1,17 @@
 ﻿using Amazon;
+using HandleSimFin.Methods;
 using Microsoft.Extensions.DependencyInjection;
 using Models;
 using Newtonsoft.Json;
 using StockReporter.Helpers;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace StockReporter.Extensions
 {
-    public static class ServiceExtensions
-    {
-        internal static void AddKeysToEnvironment(this IServiceCollection services)
+	public static class ServiceExtensions
+	{
+		internal static void AddKeysToEnvironment(this IServiceCollection services)
 		{
 			var readS3Objs = new ReadS3Objects(@"talk2control-1", RegionEndpoint.USEast1);
 
@@ -23,8 +21,15 @@ namespace StockReporter.Extensions
 				.Result);
 			foreach (var entityKeys in keysToServices)
 			{
-				Environment.SetEnvironmentVariable(entityKeys.Entity, entityKeys.Key);
+				if (!string.IsNullOrEmpty(entityKeys.Entity)
+					&& !string.IsNullOrEmpty(entityKeys.Key))
+					Environment.SetEnvironmentVariable(entityKeys.Entity, entityKeys.Key);
 			}
 		}
-    }
+
+		internal static void SetupDependencyInjection(this IServiceCollection services)
+		{
+			services.AddTransient<IDownloadMarketSummary, DownloadMarketSummary>();
+		}
+	}
 }

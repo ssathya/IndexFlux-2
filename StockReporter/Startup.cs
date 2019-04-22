@@ -1,15 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Builder;
+﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using StockReporter.Extensions;
 using Swashbuckle.AspNetCore.Swagger;
 
@@ -36,9 +29,10 @@ namespace StockReporter
 					Description = "Will be used along with Index Flux",
 					TermsOfService = "Use it at your own risk"
 				});
-				//var xmlPath = AppDomain.CurrentDomain.BaseDirectory + @"StockReporter.xml";				
+				//var xmlPath = AppDomain.CurrentDomain.BaseDirectory + @"StockReporter.xml";
 			});
 			services.AddKeysToEnvironment();
+			services.SetupDependencyInjection();
 		}
 
 		// This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -58,10 +52,9 @@ namespace StockReporter
 			app.UseMvc();
 			app.UseSwagger();
 			app.UseSwaggerUI(c =>
-			{				
-				c.SwaggerEndpoint("/swagger/v1/swagger.json", "Core API");				
+			{
+				c.SwaggerEndpoint("/swagger/v1/swagger.json", "Core API");
 			});
-			
 		}
 	}
 }
