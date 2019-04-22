@@ -12,11 +12,15 @@ namespace StockReporter.Controllers
 	{
 		private readonly ILogger<IndexFluxController> _logger;
 		private readonly IDownloadMarketSummary _downloadMarketSummary;
+		private readonly IDownloadStockQuote _downloadStockQuote;
 
-		public IndexFluxController(ILogger<IndexFluxController> logger, IDownloadMarketSummary downloadMarketSummary)
+		public IndexFluxController(ILogger<IndexFluxController> logger, 
+			IDownloadMarketSummary downloadMarketSummary,
+			IDownloadStockQuote downloadStockQuote)
 		{
 			_logger = logger;
 			_downloadMarketSummary = downloadMarketSummary;
+			_downloadStockQuote = downloadStockQuote;
 		}
 
 		// GET: IndexFlux
@@ -25,9 +29,16 @@ namespace StockReporter.Controllers
 			var indeData = await _downloadMarketSummary.GetIndexValues();
 			if (indeData == null)
 			{
+				_logger.LogError("Error while downloading index values");
 				return StatusCode(500, "Error while downloading index values");
 			}
-			return Ok(indeData);
+			var quote = await _downloadStockQuote.DownloadQuote("BBY");
+			if (quote == null)
+			{
+				_logger.LogError("Error while downloading Quotes");
+				return StatusCode(500, "Error while downloading Quotes");
+			}
+			return Ok(quote);
 		}
 
 		// POST: IndexFlux/Create

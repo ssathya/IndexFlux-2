@@ -30,6 +30,7 @@ namespace StockReporter.Extensions
 		internal static void SetupDependencyInjection(this IServiceCollection services)
 		{
 			services.AddTransient<IDownloadMarketSummary, DownloadMarketSummary>();
+			services.AddTransient<IDownloadStockQuote, DownloadStockQuote>();
 		}
 	}
 }
