@@ -5,6 +5,12 @@ namespace Models
 {
 	public class StatementList
 	{
+		public StatementList()
+		{
+			Pl = new List<StatementDetails>();
+			Bs = new List<StatementDetails>();
+			Cf = new List<StatementDetails>();
+		}
 		public List<StatementDetails> Pl { get; set; }
 		public List<StatementDetails> Bs { get; set; }
 		public List<StatementDetails> Cf { get; set; }

@@ -47,6 +47,18 @@ namespace HandleSimFin.Methods
 			{
 				statement = statementList;
 			}
+			var latestBS = statement.Bs.Count > 0 ? statement.Bs.Max(b => b.Fyear) : 1990;
+			var currentYear = DateTime.Now.Year;
+			if (currentYear - 2 >= latestBS 
+				|| statement.Cf.Count == 0 
+				|| statement.Pl.Count == 0)
+			{
+				statementList = new StatementList
+				{
+					CompanyId = statement.CompanyId
+				};
+				return statementList;
+			}
 			var returnValue = new StatementList
 			{
 				Bs = statement.Bs.Where(bs => bs.Period.Equals("TTM") || bs.Period.Contains("FY") || (bs.Period.Equals("Q4") && bs.Calculated == false)).ToList(),

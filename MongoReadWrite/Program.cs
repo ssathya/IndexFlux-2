@@ -13,7 +13,7 @@ namespace MongoReadWrite
 {
 	internal class Program
 	{
-		private const int financialDownloadLimit = 83;
+		private const int financialDownloadLimit = 80;
 
 		#region Public Properties
 
@@ -29,13 +29,7 @@ namespace MongoReadWrite
 			var services = new ServiceCollection();
 			SetupDependencies(services);
 			AutoMapperConfig.Start();
-			//var logger = Provider.GetService<ILogger<Program>>();
-			//logger.LogTrace("Trace");
-			//logger.LogDebug("Debug");
-			//logger.LogInformation("Information");
-			//logger.LogWarning("Warning");
-			//logger.LogError("Error");
-			//logger.LogCritical("Critical");
+
 			var handleCompList = Provider.GetService<HandleCompanyList>();
 
 			var handleFin = Provider.GetService<HandleFinacials>();
@@ -143,10 +137,11 @@ namespace MongoReadWrite
 				return;
 			}
 
-			var miniCompDetails = compDetailsLst.Where(cd => (ServiceExtensions.GetListOfSnP500Companines())
-				.Contains(cd.Ticker))
-				.OrderByDescending(cd => cd.Name)
-				.ToList();
+			//var miniCompDetails = compDetailsLst.Where(cd => (ServiceExtensions.GetListOfSnP500Companines())
+			//	.Contains(cd.Ticker))
+			//	.OrderByDescending(cd => cd.Name)
+			//	.ToList();
+			var miniCompDetails = compDetailsLst.OrderByDescending(cd => cd.Name).ToList();
 
 			var listCount = miniCompDetails.Count();
 			Console.WriteLine($"Obtaining for {listCount} companies");
