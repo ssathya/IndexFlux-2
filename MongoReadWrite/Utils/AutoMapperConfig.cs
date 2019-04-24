@@ -29,9 +29,10 @@ namespace MongoReadWrite.Utils
 				cfg.CreateMap<OutstandingShares, OutstandingSharesMd>()
 					.ForMember(d => d.Id, t => t.Ignore())
 					.ReverseMap();
+				cfg.CreateMap<PiotroskiScore, PiotroskiScoreMd>()
+					.ForMember(d => d.Id, t => t.Ignore())
+					.ReverseMap();
 			});
-
-
 		}
 
 	}

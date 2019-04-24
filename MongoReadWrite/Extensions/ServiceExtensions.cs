@@ -37,6 +37,7 @@ namespace MongoReadWrite.Extensions
 			services.AddScoped<IDBConnectionHandler<CompanyDetailMd>, DBConnectionHandler<CompanyDetailMd>>();
 			services.AddScoped<IDBConnectionHandler<CompanyFinancialsMd>, DBConnectionHandler<CompanyFinancialsMd>>();
 			services.AddScoped<IDBConnectionHandler<OutstandingSharesMd>, DBConnectionHandler<OutstandingSharesMd>>();			
+			services.AddScoped<IDBConnectionHandler<PiotroskiScoreMd>, DBConnectionHandler<PiotroskiScoreMd>>();
 
 			services.AddScoped<AnalyzeFinancial>();
 			services.AddScoped<DownloadListedFirms>();

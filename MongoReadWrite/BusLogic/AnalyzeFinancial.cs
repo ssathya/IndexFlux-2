@@ -1,62 +1,112 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using AutoMapper;
+using Microsoft.Extensions.Logging;
 using Models;
+using MongoDB.Driver;
 using MongoReadWrite.Extensions;
 using MongoReadWrite.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace MongoReadWrite.BusLogic
 {
 	public class AnalyzeFinancial
 	{
 
-		private readonly IDBConnectionHandler<CompanyFinancialsMd> _dbconCompany;
+		#region Private Fields
 
+		private readonly IDBConnectionHandler<CompanyFinancialsMd> _dbconCompany;
+		private readonly IDBConnectionHandler<PiotroskiScoreMd> _dbpiScore;
+		private readonly IMongoCollection<PiotroskiScoreMd> _dbpiScoreConnection;
 		private readonly HandleCompanyList _hcl;
 		private readonly HandleSharesOutStanding _hos;
 		private readonly ILogger<AnalyzeFinancial> _logger;
+		private readonly IMongoCollection<CompanyFinancialsMd> _statementConnection;
+
+		#endregion Private Fields
+
+
+		#region Public Constructors
 
 		public AnalyzeFinancial(IDBConnectionHandler<CompanyFinancialsMd> dbconCompany,
+			IDBConnectionHandler<PiotroskiScoreMd> dbpiScore,
 			ILogger<AnalyzeFinancial> logger,
 			HandleCompanyList hcl,
 			HandleSharesOutStanding hos)
 		{
 			_dbconCompany = dbconCompany;
+			_statementConnection = _dbconCompany.ConnectToDatabase("CompanyFinancials");
+
+			_dbpiScore = dbpiScore;
+			_dbpiScoreConnection = _dbpiScore.ConnectToDatabase("PiotroskiScore");
+
 			_logger = logger;
 			_hcl = hcl;
 			_hos = hos;
 		}
 
-		public Dictionary<int, Dictionary<string, long>> ReadFinanceValues(string simId)
+		#endregion Public Constructors
+
+
+		#region Public Methods
+
+		public async Task<bool> ComputeScoresAsync(string simId)
 		{
 			var companyBasicInfo = _hcl.GetCompanyDetails(simId);
 			if (companyBasicInfo == null)
 			{
 				_logger.LogError("Basic information about the requested firm is not available.");
-				return null;
+				return false;
+			}
+			if (companyBasicInfo.LastUpdate > DateTime.Now)
+			{
+				_logger.LogError($"Data for {companyBasicInfo.SimId} cannot be evaluated now");
+				return false;
+
+			}
+			var oldComputeValues = _dbpiScore.Get(r => r.SimId.Equals(simId)).ToList();
+			if (oldComputeValues.Any())
+			{
+				var firstOldCompute = oldComputeValues.OrderByDescending(a => a.LastUpdate).FirstOrDefault();
+				if (firstOldCompute.LastUpdate > companyBasicInfo.LastUpdate)
+				{
+					_logger.LogInformation($"{simId} already evaluated");
+					return true;
+				}
 			}
 			var industryTemplate = companyBasicInfo.IndustryTemplate;
 			var financial = _dbconCompany.Get(cf => cf.SimId.Equals(simId)).ToList();
 			if (financial == null || !financial.Any())
 			{
 				_logger.LogWarning($"Financial values for {companyBasicInfo.Name} is not stored in database yet ");
-				return null;
+				return false;
 			}
-			var returnValue = FlattenData(financial);
+			if (EvaluateStoredValues(companyBasicInfo, financial) == false)
+			{
+				await DeleteFinancialAsync(financial);
+				await MarkFinacialsNotObtainedAsync(companyBasicInfo);
+				return false;
+			}
+			var flattendData = FlattenData(financial);
+			if (flattendData == null)
+			{
+				return false;
+			}
 			var ebitdaLst = new Dictionary<int, long>();
 			var pietroskiScores = new Dictionary<int, int>();
 			var profitablityRatios = new Dictionary<string, decimal>();
 			switch (companyBasicInfo.IndustryTemplate)
 			{
 				case "general":
-					ComputeEBITDA(returnValue, ebitdaLst);
-					ComputePietroskiScore(returnValue, pietroskiScores, simId);
-					ComputeProfitablity(returnValue, profitablityRatios);
+					ComputeEBITDA(flattendData, ebitdaLst);
+					ComputePietroskiScore(flattendData, pietroskiScores, simId);
+					ComputeProfitablity(flattendData, profitablityRatios);
+					var v = await StoreComputedValuesAsync(simId, ebitdaLst, pietroskiScores, profitablityRatios);
 					break;
 
 				default:
-					returnValue = null;
+					flattendData = null;
 					break;
 			}
 			Console.WriteLine($"Computed EBITDA for {companyBasicInfo.Name} is as follows:");
@@ -75,8 +125,13 @@ namespace MongoReadWrite.BusLogic
 			{
 				Console.WriteLine($"{key.Key} => {key.Value}%");
 			}
-			return returnValue;
+			return true;
 		}
+
+		#endregion Public Methods
+
+
+		#region Private Methods
 
 		private static long ExtractChosenValue(List<CompanyFinancialsMd> financial, int year, string key, StatementType statementType, int tid = 0)
 		{
@@ -240,7 +295,6 @@ namespace MongoReadWrite.BusLogic
 
 		private void ComputeProfitablity(Dictionary<int, Dictionary<string, long>> normalizedFin, Dictionary<string, decimal> profitablityRatios)
 		{
-			
 			var normalizedFinForYear = normalizedFin[normalizedFin.Keys.Max()];
 			var grossProfit = (decimal)normalizedFinForYear[@"Gross Profit"];
 			var operatingIncome = (decimal)normalizedFinForYear[@"Operating Income (Loss)"];
@@ -250,11 +304,11 @@ namespace MongoReadWrite.BusLogic
 			var totalEquity = (decimal)normalizedFinForYear[@"Total Equity"];
 			var totalAssets = (decimal)normalizedFinForYear[@"Total Assets"];
 
-			var grossMargin = Math.Round(100 * grossProfit / revenue,2);
-			var operatingMargin = Math.Round(100 * operatingIncome / revenue, 2);
-			var netProfitMargin = Math.Round(100 * income / revenue, 2);
-			var returnOnEquity = Math.Round(100 * income / totalEquity, 2);
-			var returnOnAssets = Math.Round(100 * income / totalAssets, 2);
+			var grossMargin = revenue == 0 ? 0 : Math.Round(100 * grossProfit / revenue, 2);
+			var operatingMargin = revenue == 0 ? 0 : Math.Round(100 * operatingIncome / revenue, 2);
+			var netProfitMargin = revenue == 0 ? 0 : Math.Round(100 * income / revenue, 2);
+			var returnOnEquity = totalEquity == 0 ? 0 : Math.Round(100 * income / totalEquity, 2);
+			var returnOnAssets = totalAssets == 0 ? 0 : Math.Round(100 * income / totalAssets, 2);
 			profitablityRatios.Add("Gross Margin", grossMargin);
 			profitablityRatios.Add("Operating Margin", operatingMargin);
 			profitablityRatios.Add("Net Profit Margin", netProfitMargin);
@@ -263,17 +317,77 @@ namespace MongoReadWrite.BusLogic
 
 			return;
 		}
+
+		private async Task DeleteFinancialAsync(List<CompanyFinancialsMd> financial)
+		{
+			foreach (var financialsMd in financial)
+			{
+				await _dbconCompany.Remove(financialsMd.Id);
+			}
+		}
+
+		private bool EvaluateStoredValues(CompanyDetail companyBasicInfo, List<CompanyFinancialsMd> financial)
+		{
+			if (companyBasicInfo == null)
+			{
+				_logger.LogError("Basic information about the requested firm is not available.");
+
+				return false;
+			}
+			var latestYear = financial.Select(x => x.FYear).Max();
+			var simId = financial.First().SimId;
+			var currentYear = DateTime.Now.Year;
+			if (currentYear - 1 > latestYear)
+			{
+				_logger.LogError($"Data not updated too long for {simId}");
+				return false;
+			}
+			
+
+			var latestBS = financial.Where(x => x.Statement == StatementType.BalanceSheet).Select(x => x.FYear).Max();
+			var latestCF = financial.Where(x => x.Statement == StatementType.CashFlow).Select(x => x.FYear).Max();
+			var latestPL = financial.Where(x => x.Statement == StatementType.ProfitLoss).Select(x => x.FYear).Max();
+			if (latestYear != latestBS
+				|| latestYear != latestCF
+				|| latestYear != latestPL)
+			{
+				_logger.LogError($"Inconstant last reporting date  for {simId}");
+				return false;
+			}
+			var earliestBS = financial.Where(x => x.Statement == StatementType.BalanceSheet).Select(x => x.FYear).Min();
+			var earliestCF = financial.Where(x => x.Statement == StatementType.CashFlow).Select(x => x.FYear).Min();
+			var earliestPL = financial.Where(x => x.Statement == StatementType.ProfitLoss).Select(x => x.FYear).Min();
+			var earliestYear = financial.Select(x => x.FYear).Min();
+			if (earliestYear != earliestBS
+				|| earliestYear != earliestCF
+				|| earliestYear != earliestPL)
+			{
+				_logger.LogError($"Inconstant early reporting data  for {simId}");
+				return false;
+			}
+			return true;
+		}
+
 		private string[] ExtractKeys(IEnumerable<CompanyFinancialsMd> firstYearData, StatementType statementType)
 		{
-			var records = firstYearData.Where(st => st.Statement == statementType).FirstOrDefault().Values;
-			if (records == null || !records.Any())
+			try
 			{
-				_logger.LogCritical("Extract Keys is not able to identify keys; Reload database");
+				var records = firstYearData.Where(st => st.Statement == statementType).FirstOrDefault().Values;
+				if (records == null || !records.Any())
+				{
+					_logger.LogCritical("Extract Keys is not able to identify keys; Reload database");
+					return null;
+				}
+				var returnStrArray = (from record in records
+									  select record.StandardisedName);
+				return returnStrArray.ToArray();
+			}
+			catch (Exception ex)
+			{
+				_logger.LogError($"Error in extracting keys for SimId:{firstYearData.First().SimId}");
+				_logger.LogError(ex.Message);
 				return null;
 			}
-			var returnStrArray = (from record in records
-								  select record.StandardisedName);
-			return returnStrArray.ToArray();
 		}
 
 		private Dictionary<int, Dictionary<string, long>> FlattenData(List<CompanyFinancialsMd> financial)
@@ -284,6 +398,10 @@ namespace MongoReadWrite.BusLogic
 			string[] bsKeys = ExtractKeys(firstYearData, StatementType.BalanceSheet);
 			string[] cfKeys = ExtractKeys(firstYearData, StatementType.CashFlow);
 			string[] plKeys = ExtractKeys(firstYearData, StatementType.ProfitLoss);
+			if (bsKeys == null || cfKeys == null || plKeys == null)
+			{
+				return null;
+			}
 			foreach (var year in years)
 			{
 				valueRef.Add(year, new Dictionary<string, long>());
@@ -303,6 +421,11 @@ namespace MongoReadWrite.BusLogic
 			return valueRef;
 		}
 
+		private async Task MarkFinacialsNotObtainedAsync(CompanyDetail companyBasicInfo)
+		{
+			//Don't think about checking this record for another 60 days.
+			await _hcl.UpdateCompanyDetailAsync(companyBasicInfo.SimId, companyBasicInfo.IndustryTemplate, DateTime.Now.AddDays(30));
+		}
 		private int OperatingCashFlow(Dictionary<string, long> normalizedFinForYear)
 		{
 			var cashFromOperatingActivities = (float)normalizedFinForYear[@"Cash from Operating Activities"];
@@ -349,5 +472,65 @@ namespace MongoReadWrite.BusLogic
 			return income / totalAssets > 0 ? 1 : 0;
 		}
 
+		private async Task<bool> StoreComputedValuesAsync(string simId, Dictionary<int, long> ebitdaLst, Dictionary<int, int> pietroskiScores, Dictionary<string, decimal> profitablityRatios)
+		{
+			var oldValues = _dbpiScore.Get(r => r.SimId == simId).ToList();
+			if (oldValues == null)
+			{
+				oldValues = new List<PiotroskiScoreMd>();
+			}
+			//compDetailList = Mapper.Map<List<CompanyDetailMd>, List<CompanyDetail>>(savedValue);
+			var newValues = (from fYear in pietroskiScores.Keys
+							 select new PiotroskiScore
+							 {
+								 SimId = simId,
+								 FYear = fYear,
+								 Rating = pietroskiScores[fYear],
+								 ProfitablityRatios = profitablityRatios,
+								 EBITDA = ebitdaLst[fYear],
+								 LastUpdate = DateTime.Now
+							 }).ToList();
+			var valuesToStoreInDb = new List<PiotroskiScoreMd>();
+			foreach (var (piotroskiScore, oldValue) in from piotroskiScore in newValues
+													   let oldValue = oldValues.Find(a => a.SimId == piotroskiScore.SimId && a.FYear == piotroskiScore.FYear)
+													   select (piotroskiScore, oldValue))
+			{
+				if (oldValue == null)
+				{
+					valuesToStoreInDb.Add(Mapper.Map<PiotroskiScoreMd>(piotroskiScore));
+				}
+				else
+				{
+					var oldId = oldValue.Id;
+					valuesToStoreInDb.Add(Mapper.Map<PiotroskiScoreMd>(piotroskiScore));
+					valuesToStoreInDb.Last().Id = oldId;
+				}
+			}
+			try
+			{
+				foreach (var oldValue in from oldValue in oldValues
+										 let updated = valuesToStoreInDb.Find(o => o.Id == oldValue.Id)
+										 where updated == null
+										 select oldValue)
+				{
+					await _dbconCompany.Remove(oldValue.Id);
+				}
+				var returnValue = await _dbpiScore.UpdateMultiple(valuesToStoreInDb);
+
+				return returnValue;
+			}
+			catch (Exception ex)
+			{
+				_logger.LogError("Could not update scores");
+				_logger.LogError(ex.Message);
+				if (ex.InnerException != null)
+				{
+					_logger.LogError(ex.InnerException.Message);
+				}
+			}
+			return false;
+		}
+
+		#endregion Private Methods
 	}
 }

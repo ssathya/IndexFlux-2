@@ -1,10 +1,7 @@
-﻿using AutoMapper;
-using HandleSimFin.Methods;
-using Microsoft.Extensions.DependencyInjection;
+﻿using HandleSimFin.Methods;
 using Microsoft.Extensions.Logging;
 using Models;
 using MongoDB.Driver;
-using MongoReadWrite.BusLogic;
 using MongoReadWrite.Extensions;
 using MongoReadWrite.Utils;
 using System;
@@ -16,13 +13,20 @@ namespace MongoReadWrite.BusLogic
 {
 	public class HandleFinacials
 	{
-		private readonly IDBConnectionHandler<CompanyFinancialsMd> _dbconCompany;
-		private readonly IMongoCollection<CompanyFinancialsMd> _statementConnection;
-		private readonly ILogger<HandleFinacials> _logger;
-		private readonly HandleCompanyList _hcl;
-		private readonly ListOfStatements _los;
-		private readonly DownloadReportableItems _dri;
+
+		#region Private Fields
+
 		private const int ReportableItemsCount = 7;
+		private readonly IDBConnectionHandler<CompanyFinancialsMd> _dbconCompany;
+		private readonly DownloadReportableItems _dri;
+		private readonly HandleCompanyList _hcl;
+		private readonly ILogger<HandleFinacials> _logger;
+		private readonly ListOfStatements _los;
+		private readonly IMongoCollection<CompanyFinancialsMd> _statementConnection;
+
+		#endregion Private Fields
+
+		#region Public Constructors
 
 		/// <summary>
 		/// Get statements from data provider and insert it to database.
@@ -43,8 +47,9 @@ namespace MongoReadWrite.BusLogic
 			_dri = dri;
 		}
 
+		#endregion Public Constructors
 
-
+		#region Public Methods
 
 		/// <summary>
 		/// Get statements from data provider and insert it to database.
@@ -103,6 +108,10 @@ namespace MongoReadWrite.BusLogic
 				return false;
 			}
 		}
+
+		#endregion Public Methods
+
+		#region Private Methods
 
 		/// <summary>
 		/// Obtains the company financial asynchronous.
@@ -165,5 +174,7 @@ namespace MongoReadWrite.BusLogic
 				}
 			} while (recordsToBeDeleted != null);
 		}
+
+		#endregion Private Methods
 	}
 }

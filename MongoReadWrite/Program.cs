@@ -8,12 +8,13 @@ using MongoReadWrite.Utils;
 using System;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace MongoReadWrite
 {
 	internal class Program
 	{
-		private const int financialDownloadLimit = 80;
+		private const int financialDownloadLimit = 60;
 
 		#region Public Properties
 
@@ -41,29 +42,29 @@ namespace MongoReadWrite
 			Console.WriteLine("Obtained list of companies");
 
 			UpdateDataFromExternalFeed(compDetailsLst);
-			
+
 			var analyzeFin = Provider.GetService<AnalyzeFinancial>();			
-			var selectedFirms = new string[] { "MSFT","AAPL"};
 
 			Stopwatch stopWatch = new Stopwatch();
-			foreach (var selectedFirm in selectedFirms)
+			compDetailsLst.Shuffle();
+			foreach (var companyDetail in compDetailsLst.Where(c => c.LastUpdate != null))
 			{
-				var cd = compDetailsLst.FirstOrDefault(c => c.Ticker == selectedFirm);				
-				if (cd != null)
-				{					
-					stopWatch.Reset();
-					stopWatch.Start();
-					Console.WriteLine($"\nPrinting financial values for {cd.Name}");					
-					var compFinLst = analyzeFin.ReadFinanceValues(cd.SimId);
-					stopWatch.Stop();
-					//DisplayTimeTaken(stopWatch, $"was the time to parse {cd.Name}'s finance");
-				}
-				else
-				{
-					Console.WriteLine($"Did not find a record for {selectedFirm}");
-				}
+				var cd = companyDetail;
+				stopWatch.Reset();
+				stopWatch.Start();
+				Console.WriteLine($"\nPrinting financial values for {cd.Name}");
+				//if (cd.SimId.Equals("338660"))
+				//{
+				//	Console.WriteLine("Stop");
+				//}
+				var compFinLst = analyzeFin.ComputeScoresAsync(cd.SimId).Result;
+				stopWatch.Stop();
+				Task.WaitAll();
+				//DisplayTimeTaken(stopWatch, $"was the time to parse {cd.Name}'s finance");
+
+
 			}
-			
+
 			Console.WriteLine("Done");
 			//Provider.GetService()
 		}
@@ -115,9 +116,9 @@ namespace MongoReadWrite
 		}
 		private static void SetupDependencies(IServiceCollection services)
 		{
-			var configurationBuilder = ServiceExtensions.BuildConfigurationBuilder();			
+			var configurationBuilder = ServiceExtensions.BuildConfigurationBuilder();
 			var configuration = configurationBuilder.Build();
-			services.AddSingleton<IConfiguration>(configuration);			
+			services.AddSingleton<IConfiguration>(configuration);
 			ServiceExtensions.RegisterDependencyInjections(services, configuration);
 
 			Provider = services.BuildServiceProvider();
@@ -128,7 +129,7 @@ namespace MongoReadWrite
 			compDetailsLst = compDetailsLst.Where(cd => cd.Ticker != null).ToList();
 			compDetailsLst = compDetailsLst.Where(cd => cd.Ticker != "").ToList();
 			var yesterday = DateTime.Now.AddDays(-1);
-			var downloadCount = compDetailsLst.FindAll(cd => cd.LastUpdate >= yesterday).Count;
+			var downloadCount = compDetailsLst.FindAll(cd => cd.LastUpdate >= yesterday && cd.LastUpdate <= DateTime.Now).Count;
 			if (downloadCount >= financialDownloadLimit)
 			{
 				Console.WriteLine($"Already exceeded today's download limit of {financialDownloadLimit}; " +
@@ -137,13 +138,11 @@ namespace MongoReadWrite
 				return;
 			}
 
-			//var miniCompDetails = compDetailsLst.Where(cd => (ServiceExtensions.GetListOfSnP500Companines())
-			//	.Contains(cd.Ticker))
-			//	.OrderByDescending(cd => cd.Name)
-			//	.ToList();
+
 			var miniCompDetails = compDetailsLst.OrderByDescending(cd => cd.Name).ToList();
 
 			var listCount = miniCompDetails.Count();
+			miniCompDetails.Shuffle();
 			Console.WriteLine($"Obtaining for {listCount} companies");
 			DownloadFinancialData(miniCompDetails, downloadCount);
 		}
