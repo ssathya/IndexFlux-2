@@ -85,7 +85,6 @@ namespace MongoReadWrite.BusLogic
 			if (EvaluateStoredValues(companyBasicInfo, financial) == false)
 			{
 				await DeleteFinancialAsync(financial);
-				await MarkFinacialsNotObtainedAsync(companyBasicInfo);
 				return false;
 			}
 			var flattendData = FlattenData(financial);
@@ -421,11 +420,7 @@ namespace MongoReadWrite.BusLogic
 			return valueRef;
 		}
 
-		private async Task MarkFinacialsNotObtainedAsync(CompanyDetail companyBasicInfo)
-		{
-			//Don't think about checking this record for another 60 days.
-			await _hcl.UpdateCompanyDetailAsync(companyBasicInfo.SimId, companyBasicInfo.IndustryTemplate, DateTime.Now.AddDays(30));
-		}
+		
 		private int OperatingCashFlow(Dictionary<string, long> normalizedFinForYear)
 		{
 			var cashFromOperatingActivities = (float)normalizedFinForYear[@"Cash from Operating Activities"];

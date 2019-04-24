@@ -47,16 +47,12 @@ namespace MongoReadWrite
 
 			Stopwatch stopWatch = new Stopwatch();
 			compDetailsLst.Shuffle();
-			foreach (var companyDetail in compDetailsLst.Where(c => c.LastUpdate != null))
+			foreach (var companyDetail in compDetailsLst.Where(c => c.LastUpdate != null).Take(400))
 			{
 				var cd = companyDetail;
 				stopWatch.Reset();
 				stopWatch.Start();
 				Console.WriteLine($"\nPrinting financial values for {cd.Name}");
-				//if (cd.SimId.Equals("338660"))
-				//{
-				//	Console.WriteLine("Stop");
-				//}
 				var compFinLst = analyzeFin.ComputeScoresAsync(cd.SimId).Result;
 				stopWatch.Stop();
 				Task.WaitAll();
@@ -129,7 +125,10 @@ namespace MongoReadWrite
 			compDetailsLst = compDetailsLst.Where(cd => cd.Ticker != null).ToList();
 			compDetailsLst = compDetailsLst.Where(cd => cd.Ticker != "").ToList();
 			var yesterday = DateTime.Now.AddDays(-1);
-			var downloadCount = compDetailsLst.FindAll(cd => cd.LastUpdate >= yesterday && cd.LastUpdate <= DateTime.Now).Count;
+			compDetailsLst = compDetailsLst.FindAll(cd => cd.LastUpdate >= yesterday);
+			var ss = compDetailsLst.FindAll(cd => cd.LastUpdate >= DateTime.Today);
+			ss = compDetailsLst.FindAll(cd => cd.LastUpdate >= DateTime.Now);
+			var downloadCount = compDetailsLst.FindAll(cd => cd.LastUpdate >= yesterday).Count;
 			if (downloadCount >= financialDownloadLimit)
 			{
 				Console.WriteLine($"Already exceeded today's download limit of {financialDownloadLimit}; " +
