@@ -14,8 +14,8 @@ namespace MongoReadWrite
 {
 	internal class Program
 	{
-		private const int financialDownloadLimit = 60;
-
+		private const int financialDownloadLimit = 75;
+		private static  ILogger<Program> _logger;
 		#region Public Properties
 
 		private static IServiceProvider Provider;
@@ -34,6 +34,8 @@ namespace MongoReadWrite
 			var handleCompList = Provider.GetService<HandleCompanyList>();
 
 			var handleFin = Provider.GetService<HandleFinacials>();
+			_logger = Provider.GetService<ILogger<Program>>();
+			_logger.LogDebug("Application Started");
 			var compDetailsLst = handleCompList.GetAllCompaniesFromDbAsync().Result;
 			if (compDetailsLst == null || compDetailsLst.Count < 2357)
 			{
@@ -47,11 +49,12 @@ namespace MongoReadWrite
 
 			Stopwatch stopWatch = new Stopwatch();
 			compDetailsLst.Shuffle();
-			foreach (var companyDetail in compDetailsLst.Where(c => c.LastUpdate != null).Take(400))
+			foreach (var companyDetail in compDetailsLst.Where(c => c.LastUpdate != null))
 			{
 				var cd = companyDetail;
 				stopWatch.Reset();
 				stopWatch.Start();
+				
 				Console.WriteLine($"\nPrinting financial values for {cd.Name}");
 				var compFinLst = analyzeFin.ComputeScoresAsync(cd.SimId).Result;
 				stopWatch.Stop();
@@ -62,6 +65,7 @@ namespace MongoReadWrite
 			}
 
 			Console.WriteLine("Done");
+			_logger.LogDebug("Done");
 			//Provider.GetService()
 		}
 
@@ -125,6 +129,7 @@ namespace MongoReadWrite
 			compDetailsLst = compDetailsLst.Where(cd => cd.Ticker != null).ToList();
 			compDetailsLst = compDetailsLst.Where(cd => cd.Ticker != "").ToList();
 			var yesterday = DateTime.Now.AddDays(-1);
+			var miniCompDetails = compDetailsLst.OrderByDescending(cd => cd.Name).ToList();
 			compDetailsLst = compDetailsLst.FindAll(cd => cd.LastUpdate >= yesterday);
 			var ss = compDetailsLst.FindAll(cd => cd.LastUpdate >= DateTime.Today);
 			ss = compDetailsLst.FindAll(cd => cd.LastUpdate >= DateTime.Now);
@@ -138,12 +143,14 @@ namespace MongoReadWrite
 			}
 
 
-			var miniCompDetails = compDetailsLst.OrderByDescending(cd => cd.Name).ToList();
+			
 
 			var listCount = miniCompDetails.Count();
 			miniCompDetails.Shuffle();
 			Console.WriteLine($"Obtaining for {listCount} companies");
+			_logger.LogDebug("Starting to download financial data");
 			DownloadFinancialData(miniCompDetails, downloadCount);
+			_logger.LogDebug("Today's quota of financial data done");
 		}
 
 		#endregion Private Methods

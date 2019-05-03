@@ -17,12 +17,13 @@ namespace MongoReadWrite.BusLogic
 	public class HandleCompanyList
 	{
 
+
 		#region Private Fields
 
 		private readonly IMongoCollection<CompanyDetailMd> _companyConnection;
+		private readonly IDBConnectionHandler<CompanyDetailMd> _dbconCompany;
 		private readonly DownloadListedFirms _dlf;
 		private readonly ILogger<HandleCompanyList> _logger;
-		private readonly IDBConnectionHandler<CompanyDetailMd> _dbconCompany;
 		private List<CompanyDetailMd> allCompanies;
 
 		#endregion Private Fields
@@ -88,7 +89,8 @@ namespace MongoReadWrite.BusLogic
 			_logger.LogTrace("Starting GetAllCompaniesFromDbAsync ");
 			List<CompanyDetail> compDetailList;
 			var savedValue = _dbconCompany.Get().ToList();
-			if (savedValue.Count <= 10)
+			//refresh list if it has too little data or at least once a month
+			if (savedValue.Count <= 1000 || TodayIsFirstSaturday())
 			{
 				compDetailList = await GetAllCompaniesAsync();
 				return compDetailList;
@@ -129,5 +131,20 @@ namespace MongoReadWrite.BusLogic
 		}
 
 		#endregion Public Methods
+
+
+		#region Private Methods
+
+		private bool TodayIsFirstSaturday()
+		{
+			var today = DateTime.Today;
+			if (today.DayOfWeek == DayOfWeek.Saturday && today.Day <= 7)
+			{
+				return true;
+			}
+			return false;
+		}
+
+		#endregion Private Methods
 	}
 }
