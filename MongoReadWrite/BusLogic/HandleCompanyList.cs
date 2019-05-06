@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using MongoReadWrite.Extensions;
 using Microsoft.Extensions.Configuration;
+using HandleSimFin.Helpers;
 
 namespace MongoReadWrite.BusLogic
 {

@@ -1,12 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Amazon;
+﻿using Amazon;
+using HandleSimFin.Helpers;
 using Microsoft.AspNetCore.Mvc;
 using Models;
 using Newtonsoft.Json;
-using StockReporter.Helpers;
+using System.Collections.Generic;
 
 namespace StockReporter.Controllers
 {
@@ -24,9 +21,9 @@ namespace StockReporter.Controllers
 				.DeserializeObject<List<EntityKeys>>(readS3Objs
 					.GetDataFromS3("Random.txt")
 				.Result);
-
 		}
-		// GET api/values		
+
+		// GET api/values
 		/// <summary>
 		/// Gets all values as  strings.
 		/// </summary>
@@ -44,7 +41,7 @@ namespace StockReporter.Controllers
 			return displayString.ToArray();
 		}
 
-		// GET api/values/5		
+		// GET api/values/5
 		/// <summary>
 		/// Gets the values associated to the specified identifier.
 		/// </summary>

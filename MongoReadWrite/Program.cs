@@ -27,7 +27,9 @@ namespace MongoReadWrite
 
 		public static void Main(string[] args)
 		{
+			
 			var services = new ServiceCollection();
+			ServiceExtensions.AddKeysToEnvironment(services);
 			SetupDependencies(services);
 			AutoMapperConfig.Start();
 
@@ -49,13 +51,12 @@ namespace MongoReadWrite
 
 			Stopwatch stopWatch = new Stopwatch();
 			compDetailsLst.Shuffle();
-			foreach (var companyDetail in compDetailsLst.Where(c => c.LastUpdate != null))
+			compDetailsLst = compDetailsLst.Where(c => c.LastUpdate != null).ToList();
+			foreach (var companyDetail in compDetailsLst)
 			{
 				var cd = companyDetail;
 				stopWatch.Reset();
-				stopWatch.Start();
-				
-				Console.WriteLine($"\nPrinting financial values for {cd.Name}");
+				stopWatch.Start();							
 				var compFinLst = analyzeFin.ComputeScoresAsync(cd.SimId).Result;
 				stopWatch.Stop();
 				Task.WaitAll();

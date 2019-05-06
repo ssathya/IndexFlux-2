@@ -1,4 +1,5 @@
-﻿using HandleSimFin.Methods;
+﻿using HandleSimFin.Helpers;
+using HandleSimFin.Methods;
 using Microsoft.Extensions.Logging;
 using Models;
 using MongoDB.Driver;

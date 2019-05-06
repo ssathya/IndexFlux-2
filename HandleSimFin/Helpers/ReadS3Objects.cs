@@ -1,20 +1,24 @@
 ﻿using Amazon;
 using Amazon.S3;
 using Amazon.S3.Model;
-using StockReporter.Extensions;
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
-namespace StockReporter.Helpers
+namespace HandleSimFin.Helpers
 {
-    public class ReadS3Objects
-    {
+	public class ReadS3Objects
+	{
+
+		#region Private Fields
+
 		private string _bucketName;
 		private RegionEndpoint _region;
+
+		#endregion Private Fields
+
+
+		#region Public Constructors
 
 		public ReadS3Objects(string bucketName, RegionEndpoint region)
 		{
@@ -27,8 +31,13 @@ namespace StockReporter.Helpers
 			{
 				_region = region;
 			}
-			
 		}
+
+		#endregion Public Constructors
+
+
+		#region Public Methods
+
 		public async Task<string> GetDataFromS3(string objectName)
 		{
 			var responseBody = "";
@@ -42,7 +51,7 @@ namespace StockReporter.Helpers
 				};
 				using (var response = await client.GetObjectAsync(request))
 				using (var responseStream = response.ResponseStream)
-					using(var reader = new StreamReader(responseStream))
+				using (var reader = new StreamReader(responseStream))
 				{
 					responseBody = await reader.ReadToEndAsync();
 				}
@@ -56,5 +65,7 @@ namespace StockReporter.Helpers
 				throw;
 			}
 		}
-    }
+
+		#endregion Public Methods
+	}
 }

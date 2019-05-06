@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using HandleSimFin.Helpers;
 using Microsoft.Extensions.Logging;
 using Models;
 using MongoDB.Driver;
@@ -23,7 +24,7 @@ namespace MongoReadWrite.BusLogic
 		private readonly HandleSharesOutStanding _hos;
 		private readonly ILogger<AnalyzeFinancial> _logger;
 		private readonly IMongoCollection<CompanyFinancialsMd> _statementConnection;
-
+		private int reportingCount;
 		#endregion Private Fields
 
 
@@ -44,6 +45,7 @@ namespace MongoReadWrite.BusLogic
 			_logger = logger;
 			_hcl = hcl;
 			_hos = hos;
+			reportingCount = 0;
 		}
 
 		#endregion Public Constructors
@@ -59,19 +61,28 @@ namespace MongoReadWrite.BusLogic
 				_logger.LogError("Basic information about the requested firm is not available.");
 				return false;
 			}
-			if (companyBasicInfo.LastUpdate > DateTime.Now)
-			{
-				_logger.LogError($"Data for {companyBasicInfo.SimId} cannot be evaluated now");
-				return false;
-
-			}
 			var oldComputeValues = _dbpiScore.Get(r => r.SimId.Equals(simId)).ToList();
+			var ebitdaLst = new Dictionary<int, long>();
+			var pietroskiScores = new Dictionary<int, int>();
+			var profitablityRatios = new Dictionary<string, decimal>();
 			if (oldComputeValues.Any())
 			{
+				
 				var firstOldCompute = oldComputeValues.OrderByDescending(a => a.LastUpdate).FirstOrDefault();
+				
 				if (firstOldCompute.LastUpdate > companyBasicInfo.LastUpdate)
 				{
+					foreach (var oldComputeValue in oldComputeValues)
+					{
+						ebitdaLst.Add(oldComputeValue.FYear, oldComputeValue.EBITDA);
+						pietroskiScores.Add(oldComputeValue.FYear, oldComputeValue.Rating);
+					}
+					foreach (var pr in firstOldCompute.ProfitablityRatios)
+					{
+						profitablityRatios.Add(pr.Key, pr.Value);
+					}
 					_logger.LogInformation($"{simId} already evaluated");
+					PrintComputedValues(companyBasicInfo, ebitdaLst, pietroskiScores, profitablityRatios);
 					return true;
 				}
 			}
@@ -92,9 +103,7 @@ namespace MongoReadWrite.BusLogic
 			{
 				return false;
 			}
-			var ebitdaLst = new Dictionary<int, long>();
-			var pietroskiScores = new Dictionary<int, int>();
-			var profitablityRatios = new Dictionary<string, decimal>();
+
 			switch (companyBasicInfo.IndustryTemplate)
 			{
 				case "general":
@@ -108,6 +117,14 @@ namespace MongoReadWrite.BusLogic
 					flattendData = null;
 					break;
 			}
+			PrintComputedValues(companyBasicInfo, ebitdaLst, pietroskiScores, profitablityRatios);
+			return true;
+		}
+
+		private  void PrintComputedValues(CompanyDetail companyBasicInfo, Dictionary<int, long> ebitdaLst, Dictionary<int, int> pietroskiScores, Dictionary<string, decimal> profitablityRatios)
+		{
+			
+			Console.WriteLine($"\n{++reportingCount}: Printing financial values for {companyBasicInfo.Name} =>  {companyBasicInfo.Ticker}");
 			Console.WriteLine($"Computed EBITDA for {companyBasicInfo.Name} is as follows:");
 			foreach (var ebitd in ebitdaLst.OrderByDescending(a => a.Key))
 			{
@@ -124,7 +141,6 @@ namespace MongoReadWrite.BusLogic
 			{
 				Console.WriteLine($"{key.Key} => {key.Value}%");
 			}
-			return true;
 		}
 
 		#endregion Public Methods

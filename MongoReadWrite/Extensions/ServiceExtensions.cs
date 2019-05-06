@@ -1,55 +1,49 @@
-﻿using HandleSimFin.Methods;
+﻿using Amazon;
+using HandleSimFin.Helpers;
+using HandleSimFin.Methods;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Models;
 using MongoReadWrite.BusLogic;
 using MongoReadWrite.Utils;
+using Newtonsoft.Json;
 using NLog.Extensions.Logging;
+using System;
+using System.Collections.Generic;
 using System.Linq;
-
 
 namespace MongoReadWrite.Extensions
 {
 	public static class ServiceExtensions
 	{
+
+		#region Internal Methods
+
+		internal static void AddKeysToEnvironment(this IServiceCollection services)
+		{
+			var readS3Objs = new ReadS3Objects(@"talk2control-1", RegionEndpoint.USEast1);
+
+			var keysToServices = JsonConvert
+				.DeserializeObject<List<EntityKeys>>(readS3Objs
+					.GetDataFromS3("Random.txt")
+				.Result);
+			foreach (var entityKeys in keysToServices)
+			{
+				if (!string.IsNullOrEmpty(entityKeys.Entity)
+					&& !string.IsNullOrEmpty(entityKeys.Key))
+					Environment.SetEnvironmentVariable(entityKeys.Entity, entityKeys.Key);
+			}
+		}
+
 		internal static IConfigurationBuilder BuildConfigurationBuilder()
 		{
 			IConfigurationBuilder configurationBuilder = new ConfigurationBuilder();
 			configurationBuilder.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-				.AddEnvironmentVariables();			
+				.AddEnvironmentVariables();
 			return configurationBuilder;
 		}
-		internal static void RegisterDependencyInjections(this IServiceCollection services, IConfigurationRoot configuration)
-		{
 
-			var loggerFactory = new LoggerFactory();	
-			loggerFactory.AddNLog();
-			services.AddSingleton<ILoggerFactory>(loggerFactory);
-			var logSection = configuration.GetSection("Logging");
-			services.AddLogging(builder =>
-			{
-				builder.AddConfiguration(configuration.GetSection("Logging"))
-				.AddConsole();
-			});
-			
-
-			services.AddScoped<IDBConnectionHandler<CompanyDetailMd>, DBConnectionHandler<CompanyDetailMd>>();
-			services.AddScoped<IDBConnectionHandler<CompanyFinancialsMd>, DBConnectionHandler<CompanyFinancialsMd>>();
-			services.AddScoped<IDBConnectionHandler<OutstandingSharesMd>, DBConnectionHandler<OutstandingSharesMd>>();			
-			services.AddScoped<IDBConnectionHandler<PiotroskiScoreMd>, DBConnectionHandler<PiotroskiScoreMd>>();
-
-			services.AddScoped<AnalyzeFinancial>();
-			services.AddScoped<DownloadListedFirms>();
-			services.AddScoped<DownloadReportableItems>();
-			services.AddScoped<HandleCompanyList>();
-			services.AddScoped<HandleFinacials>();
-			services.AddScoped<HandleSharesOutStanding>();
-			services.AddScoped<IDownloadOutstandingShares, DownloadOutstandingShares>();
-			services.AddScoped<ListOfStatements>();
-
-			
-		}
 		internal static string[] GetListOfSnP500Companines()
 		{
 			var snPList500 = new string[] {"RF", "VMC", "RSG", "MCHP", "FCX", "PNW", "WMT", "TSN", "JBHT", "RE", "ATVI", "EA", "GOOGL", "GOOG", "FB", "TWTR", "NFLX", "DIS", "GPS", "ROST", "EBAY", "MAT", "CLX", "MNST", "CVX", "OXY", "BEN", "V", "WFC", "SCHW", "FRC", "SIVB", "AMGN", "GILD", "MCK", "A", "EW", "ISRG", "RMD", "VAR", "ALGN", "COO", "ILMN", "NKTR", "JEC", "RHI", "ADBE", "ADSK", "CDNS", "ORCL", "SYMC", "SNPS", "ANET", "CSCO", "JNPR", "PYPL", "KEYS", "INTU", "NTAP", "CRM", "AMAT", "KLAC", "LRCX", "AMD", "AVGO", "INTC", "MXIM", "NVDA", "QCOM", "XLNX", "FTNT", "AAPL", "HPE", "HPQ", "WDC", "AVY", "HCP", "PLD", "ARE", "CBRE", "ESS", "MAC", "O", "DLR", "EQIX", "PSA", "EIX", "SRE", "DISH", "CMG", "TAP", "XEC", "DVA", "WU", "NEM",
@@ -66,5 +60,34 @@ namespace MongoReadWrite.Extensions
 
 			return combinedList;
 		}
+
+		internal static void RegisterDependencyInjections(this IServiceCollection services, IConfigurationRoot configuration)
+		{
+			var loggerFactory = new LoggerFactory();
+			loggerFactory.AddNLog();
+			services.AddSingleton<ILoggerFactory>(loggerFactory);
+			var logSection = configuration.GetSection("Logging");
+			services.AddLogging(builder =>
+			{
+				builder.AddConfiguration(configuration.GetSection("Logging"))
+				.AddConsole();
+			});
+
+			services.AddScoped<IDBConnectionHandler<CompanyDetailMd>, DBConnectionHandler<CompanyDetailMd>>();
+			services.AddScoped<IDBConnectionHandler<CompanyFinancialsMd>, DBConnectionHandler<CompanyFinancialsMd>>();
+			services.AddScoped<IDBConnectionHandler<OutstandingSharesMd>, DBConnectionHandler<OutstandingSharesMd>>();
+			services.AddScoped<IDBConnectionHandler<PiotroskiScoreMd>, DBConnectionHandler<PiotroskiScoreMd>>();
+
+			services.AddScoped<AnalyzeFinancial>();
+			services.AddScoped<DownloadListedFirms>();
+			services.AddScoped<DownloadReportableItems>();
+			services.AddScoped<HandleCompanyList>();
+			services.AddScoped<HandleFinacials>();
+			services.AddScoped<HandleSharesOutStanding>();
+			services.AddScoped<IDownloadOutstandingShares, DownloadOutstandingShares>();
+			services.AddScoped<ListOfStatements>();
+		}
+
+		#endregion Internal Methods
 	}
 }

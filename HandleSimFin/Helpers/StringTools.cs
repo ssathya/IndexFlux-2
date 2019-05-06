@@ -1,8 +1,9 @@
 ﻿using System;
+using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
 
-namespace StockReporter.Extensions
+namespace HandleSimFin.Helpers
 {
 	public static class StringTools
 	{
@@ -48,6 +49,42 @@ namespace StockReporter.Extensions
 				Console.WriteLine(ex.Message);
 			}
 			return null;
+		}
+
+		public static bool IsNullOrWhiteSpace(this string value)
+		{
+			return string.IsNullOrWhiteSpace(value);
+		}
+
+		public static string ReplaceFirst(this string text, string search, string replace)
+		{
+			int pos = text.IndexOf(search);
+			if (pos < 0)
+			{
+				return text;
+			}
+			return text.Substring(0, pos) + replace + text.Substring(pos + search.Length);
+		}
+		public static string ToKMB(this decimal num)
+		{
+			if (num > 999999999 || num < -999999999)
+			{
+				return num.ToString("0,,,.###B", CultureInfo.InvariantCulture);
+			}
+			else
+			if (num > 999999 || num < -999999)
+			{
+				return num.ToString("0,,.##M", CultureInfo.InvariantCulture);
+			}
+			else
+			if (num > 999 || num < -999)
+			{
+				return num.ToString("0,.#K", CultureInfo.InvariantCulture);
+			}
+			else
+			{
+				return num.ToString(CultureInfo.InvariantCulture);
+			}
 		}
 
 		#endregion Public Methods
