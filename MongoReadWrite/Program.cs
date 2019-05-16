@@ -129,6 +129,10 @@ namespace MongoReadWrite
 		{
 			compDetailsLst = compDetailsLst.Where(cd => cd.Ticker != null).ToList();
 			compDetailsLst = compDetailsLst.Where(cd => cd.Ticker != "").ToList();
+			var dow30Lst = from c in compDetailsLst
+						   where ServiceExtensions.dow30.Contains(c.Ticker)
+						   select c;
+			DownloadFinancialData(dow30Lst.ToList(), 0);
 			var yesterday = DateTime.Now.AddDays(-1);
 			var miniCompDetails = compDetailsLst.OrderByDescending(cd => cd.Name).ToList();
 			compDetailsLst = compDetailsLst.FindAll(cd => cd.LastUpdate >= yesterday);
