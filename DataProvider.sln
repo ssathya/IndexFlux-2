@@ -13,7 +13,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HandleSimFinTests", "Handle
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MongoReadWrite", "MongoReadWrite\MongoReadWrite.csproj", "{FFDEB360-8675-48FD-82E5-A4D272997531}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StockReporter", "StockReporter\StockReporter.csproj", "{6D1A8737-3A03-4938-9360-429348D2BD02}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "StockReporter", "StockReporter\StockReporter.csproj", "{6D1A8737-3A03-4938-9360-429348D2BD02}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpreadSheetReader", "SpreadSheetReader\SpreadSheetReader.csproj", "{EAA9D8A6-DE06-4CD4-8688-6955ADD72551}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -45,6 +47,10 @@ Global
 		{6D1A8737-3A03-4938-9360-429348D2BD02}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6D1A8737-3A03-4938-9360-429348D2BD02}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6D1A8737-3A03-4938-9360-429348D2BD02}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EAA9D8A6-DE06-4CD4-8688-6955ADD72551}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EAA9D8A6-DE06-4CD4-8688-6955ADD72551}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EAA9D8A6-DE06-4CD4-8688-6955ADD72551}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EAA9D8A6-DE06-4CD4-8688-6955ADD72551}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
