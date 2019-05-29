@@ -99,7 +99,8 @@ namespace MongoReadWrite.BusLogic
 					Rating = dc.PiotroskiScoreCurrent,
 					EBITDA = (long)dc.EbitdaCurrent,
 					LastUpdate = DateTime.Now,
-					ProfitablityRatios = ProfitablityRatios
+					ProfitablityRatios = ProfitablityRatios,
+					Ticker = dc.Ticker
 				};
 				newValues.Add(Mapper.Map<PiotroskiScoreMd>(newValue));
 				newValue.ProfitablityRatios.Clear();

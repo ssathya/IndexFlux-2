@@ -14,6 +14,7 @@ namespace Models
 		public Dictionary<string,decimal> ProfitablityRatios { get; set; }
 		public long EBITDA { get; set; }
 		public DateTime LastUpdate { get; set; }
+		public string Ticker { get; set; }
 	}
 	public class PiotroskiScoreMd : PiotroskiScore, IBaseModel
 	{
