@@ -9,6 +9,7 @@ using MongoReadWrite.BusLogic;
 using MongoReadWrite.Utils;
 using Newtonsoft.Json;
 using NLog.Extensions.Logging;
+using SpreadSheetReader.Reader;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,12 +18,13 @@ namespace MongoReadWrite.Extensions
 {
 	public static class ServiceExtensions
 	{
-
+		public static  string BucketName = @"talk2control-1";
+		public static RegionEndpoint Region = RegionEndpoint.USEast1;
 		#region Internal Methods
 
 		internal static void AddKeysToEnvironment(this IServiceCollection services)
 		{
-			var readS3Objs = new ReadS3Objects(@"talk2control-1", RegionEndpoint.USEast1);
+			var readS3Objs = new ReadS3Objects(BucketName, Region);
 
 			var keysToServices = JsonConvert
 				.DeserializeObject<List<EntityKeys>>(readS3Objs
@@ -86,6 +88,8 @@ namespace MongoReadWrite.Extensions
 			services.AddScoped<HandleSharesOutStanding>();
 			services.AddScoped<IDownloadOutstandingShares, DownloadOutstandingShares>();
 			services.AddScoped<ListOfStatements>();
+			services.AddScoped<DataFileReader>();
+			services.AddScoped<WriteAnalyzedValues>();
 		}
 
 		#endregion Internal Methods

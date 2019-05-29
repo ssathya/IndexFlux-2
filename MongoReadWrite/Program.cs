@@ -51,7 +51,7 @@ namespace MongoReadWrite
 
 			Stopwatch stopWatch = new Stopwatch();
 			compDetailsLst.Shuffle();
-			compDetailsLst = compDetailsLst.Where(c => c.LastUpdate != null).ToList();
+			compDetailsLst = compDetailsLst.Where(c => c.LastUpdate != null).Take(1).ToList();
 			foreach (var companyDetail in compDetailsLst)
 			{
 				var cd = companyDetail;
@@ -64,6 +64,9 @@ namespace MongoReadWrite
 
 
 			}
+			var wav = Provider.GetService<WriteAnalyzedValues>();
+			var wavResult = wav.UpdateAnalysis();
+			wavResult.Wait();
 
 			Console.WriteLine("Done");
 			_logger.LogDebug("Done");
@@ -142,10 +145,6 @@ namespace MongoReadWrite
 					$"\n Not downloading anymore today....");
 				return;
 			}
-
-
-			
-
 			var listCount = miniCompDetails.Count();
 			miniCompDetails.Shuffle();
 			Console.WriteLine($"Obtaining for {listCount} companies");
