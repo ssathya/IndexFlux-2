@@ -65,10 +65,12 @@ namespace MongoReadWrite.BusLogic
 				_logger.LogError($"Error while reading excel file\n{ex.Message}");
 				return;
 			}
+			var result = await _dbpiScore.RemoveAll();
 			_logger.LogDebug($"Excel file contains {_dfr.dataCollection.Count}");
 			List<DataCollection> dcl = _dfr.dataCollection;
 			List<CompanyDetail> allCompanies = await _hcl.GetAllCompaniesFromDbAsync();
 			var counter = 0;
+			var newValues = new List<PiotroskiScoreMd>();
 			foreach (var dc in dcl)
 			{
 				if (string.IsNullOrWhiteSpace(dc.CompanyName) || string.IsNullOrWhiteSpace(dc.Ticker))
@@ -82,12 +84,7 @@ namespace MongoReadWrite.BusLogic
 				{
 					continue;
 				}
-				var oldValues = _dbpiScore.Get(r => r.SimId == selected.SimId).ToList();
-				foreach (var oldValue in oldValues)
-				{
-					await _dbpiScore.Remove(oldValue.Id);
-				}
-				var newValues = new List<PiotroskiScoreMd>();
+				
 				var ProfitablityRatios = new Dictionary<string, decimal>();
 				ProfitablityRatios.Add("Gross Margin", (decimal)dc.GrossMargin);
 				ProfitablityRatios.Add("Operating Margin", (decimal)dc.OperatingMargin);
@@ -111,11 +108,18 @@ namespace MongoReadWrite.BusLogic
 				newValues.Add(Mapper.Map<PiotroskiScoreMd>(newValue));
 				UpdateAnalysis(newValue, DateTime.Now.Year - 3, dc.PiotroskiScore3YrAgo, dc.Ebitda3YrAgo);
 				newValues.Add(Mapper.Map<PiotroskiScoreMd>(newValue));
-				await _dbpiScore.Create(newValues);
-				if (++counter % 10 == 0)
+				
+				if (++counter % 500 == 0)
 				{
 					Console.WriteLine($"Updated {counter} firms");
+					await _dbpiScore.Create(newValues);
+					newValues.Clear();
 				}
+			}
+			if (newValues.Any())
+			{
+				Console.WriteLine($"Updated {counter} firms");
+				await _dbpiScore.Create(newValues);
 			}
 		}
 
