@@ -30,7 +30,7 @@ namespace ExcelConsoleWrapper
 					$"\n\tRating year ago : {results[i].PiotroskiScore1YrAgo} " +
 					$"\n\tRating two year ago : {results[i].PiotroskiScore2YrAgo} " +
 					$"\n\tRating three years ago : {results[i].PiotroskiScore3YrAgo} " +
-					$"\n\tEBITDA : {ToKMB((decimal)results[i].Ebitda)} " +
+					$"\n\tEBITDA : {ToKMB((decimal)results[i].EbitdaCurrent)} " +
 					$"\n\tRevenues :  {ToKMB((decimal)results[i].Revenue)}" +
 					$"\n\tNet Margin : {ToKMB((decimal)results[i].NetMargin)}%" +
 					$"\n\tGross Margin : {ToKMB((decimal)results[i].GrossMargin)}" +

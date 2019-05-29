@@ -8,26 +8,26 @@ using MongoReadWrite.Utils;
 using System;
 using System.Diagnostics;
 using System.Linq;
-using System.Threading.Tasks;
 
 namespace MongoReadWrite
 {
 	internal class Program
 	{
+
+		#region Private Fields
+
 		private const int financialDownloadLimit = 75;
-		private static  ILogger<Program> _logger;
-		#region Public Properties
+		private static ILogger<Program> _logger;
 
 		private static IServiceProvider Provider;
 
-		#endregion Public Properties
+		#endregion Private Fields
 
 
 		#region Public Methods
 
 		public static void Main(string[] args)
 		{
-			
 			var services = new ServiceCollection();
 			ServiceExtensions.AddKeysToEnvironment(services);
 			SetupDependencies(services);
@@ -47,23 +47,6 @@ namespace MongoReadWrite
 
 			UpdateDataFromExternalFeed(compDetailsLst);
 
-			var analyzeFin = Provider.GetService<AnalyzeFinancial>();			
-
-			Stopwatch stopWatch = new Stopwatch();
-			compDetailsLst.Shuffle();
-			compDetailsLst = compDetailsLst.Where(c => c.LastUpdate != null).Take(1).ToList();
-			foreach (var companyDetail in compDetailsLst)
-			{
-				var cd = companyDetail;
-				stopWatch.Reset();
-				stopWatch.Start();							
-				var compFinLst = analyzeFin.ComputeScoresAsync(cd.SimId).Result;
-				stopWatch.Stop();
-				Task.WaitAll();
-				//DisplayTimeTaken(stopWatch, $"was the time to parse {cd.Name}'s finance");
-
-
-			}
 			var wav = Provider.GetService<WriteAnalyzedValues>();
 			var wavResult = wav.UpdateAnalysis();
 			wavResult.Wait();
@@ -118,6 +101,7 @@ namespace MongoReadWrite
 				}
 			}
 		}
+
 		private static void SetupDependencies(IServiceCollection services)
 		{
 			var configurationBuilder = ServiceExtensions.BuildConfigurationBuilder();
@@ -132,10 +116,7 @@ namespace MongoReadWrite
 		{
 			compDetailsLst = compDetailsLst.Where(cd => cd.Ticker != null).ToList();
 			compDetailsLst = compDetailsLst.Where(cd => cd.Ticker != "").ToList();
-			var dow30Lst = from c in compDetailsLst
-						   where ServiceExtensions.dow30.Contains(c.Ticker)
-						   select c;
-			DownloadFinancialData(dow30Lst.ToList(), 0);
+
 			var yesterday = DateTime.Now.AddDays(-1);
 			var miniCompDetails = compDetailsLst.OrderByDescending(cd => cd.Name).ToList();
 			compDetailsLst = compDetailsLst.FindAll(cd => cd.LastUpdate >= yesterday);
@@ -158,6 +139,5 @@ namespace MongoReadWrite
 		}
 
 		#endregion Private Methods
-
 	}
 }

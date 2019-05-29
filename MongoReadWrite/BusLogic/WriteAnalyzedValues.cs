@@ -22,7 +22,7 @@ namespace MongoReadWrite.BusLogic
 		private readonly IMongoCollection<PiotroskiScoreMd> _dbpiScoreConnection;
 		private readonly DataFileReader _dfr;
 		private readonly HandleCompanyList _hcl;
-		private readonly ILogger<AnalyzeFinancial> _logger;
+		private readonly ILogger<WriteAnalyzedValues> _logger;
 		private readonly IMongoCollection<CompanyFinancialsMd> _statementConnection;
 
 		#endregion Private Fields
@@ -32,7 +32,7 @@ namespace MongoReadWrite.BusLogic
 
 		public WriteAnalyzedValues(IDBConnectionHandler<CompanyFinancialsMd> dbconCompany,
 			IDBConnectionHandler<PiotroskiScoreMd> dbpiScore,
-			ILogger<AnalyzeFinancial> logger,
+			ILogger<WriteAnalyzedValues> logger,
 			HandleCompanyList hcl,
 			DataFileReader dfr)
 		{
@@ -55,7 +55,7 @@ namespace MongoReadWrite.BusLogic
 		public async Task UpdateAnalysis()
 		{
 			var ac = await _hcl.GetAllCompaniesFromDbAsync();
-			
+
 			try
 			{
 				await _dfr.ParseKeyFinanceFromS3(ServiceExtensions.BucketName, ServiceExtensions.Region, "1. Key Ratios.xlsx");
@@ -71,6 +71,7 @@ namespace MongoReadWrite.BusLogic
 			List<CompanyDetail> allCompanies = await _hcl.GetAllCompaniesFromDbAsync();
 			var counter = 0;
 			var newValues = new List<PiotroskiScoreMd>();
+			var updateTime = DateTime.Now;
 			foreach (var dc in dcl)
 			{
 				if (string.IsNullOrWhiteSpace(dc.CompanyName) || string.IsNullOrWhiteSpace(dc.Ticker))
@@ -84,7 +85,7 @@ namespace MongoReadWrite.BusLogic
 				{
 					continue;
 				}
-				
+
 				var ProfitablityRatios = new Dictionary<string, decimal>();
 				ProfitablityRatios.Add("Gross Margin", (decimal)dc.GrossMargin);
 				ProfitablityRatios.Add("Operating Margin", (decimal)dc.OperatingMargin);
@@ -108,7 +109,8 @@ namespace MongoReadWrite.BusLogic
 				newValues.Add(Mapper.Map<PiotroskiScoreMd>(newValue));
 				UpdateAnalysis(newValue, DateTime.Now.Year - 3, dc.PiotroskiScore3YrAgo, dc.Ebitda3YrAgo);
 				newValues.Add(Mapper.Map<PiotroskiScoreMd>(newValue));
-				
+				selected.LastUpdate = updateTime;
+				await _hcl.UpdateCompanyDetailAsync(selected.SimId, dc.Sector, updateTime);
 				if (++counter % 500 == 0)
 				{
 					Console.WriteLine($"Updated {counter} firms");

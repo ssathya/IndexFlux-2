@@ -80,7 +80,6 @@ namespace MongoReadWrite.Extensions
 			services.AddScoped<IDBConnectionHandler<OutstandingSharesMd>, DBConnectionHandler<OutstandingSharesMd>>();
 			services.AddScoped<IDBConnectionHandler<PiotroskiScoreMd>, DBConnectionHandler<PiotroskiScoreMd>>();
 
-			services.AddScoped<AnalyzeFinancial>();
 			services.AddScoped<DownloadListedFirms>();
 			services.AddScoped<DownloadReportableItems>();
 			services.AddScoped<HandleCompanyList>();
