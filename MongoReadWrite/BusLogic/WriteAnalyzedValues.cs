@@ -14,7 +14,6 @@ namespace MongoReadWrite.BusLogic
 {
 	public class WriteAnalyzedValues
 	{
-
 		#region Private Fields
 
 		private readonly IDBConnectionHandler<CompanyFinancialsMd> _dbconCompany;
@@ -26,7 +25,6 @@ namespace MongoReadWrite.BusLogic
 		private readonly IMongoCollection<CompanyFinancialsMd> _statementConnection;
 
 		#endregion Private Fields
-
 
 		#region Public Constructors
 
@@ -48,7 +46,6 @@ namespace MongoReadWrite.BusLogic
 		}
 
 		#endregion Public Constructors
-
 
 		#region Public Methods
 
@@ -76,6 +73,7 @@ namespace MongoReadWrite.BusLogic
 			{
 				if (string.IsNullOrWhiteSpace(dc.CompanyName) || string.IsNullOrWhiteSpace(dc.Ticker))
 				{
+					_logger.LogDebug($"Skipping {dc.CompanyName} => {dc.Ticker} due to missing details");
 					continue;
 				}
 				var selected = (from comp in allCompanies
@@ -83,15 +81,19 @@ namespace MongoReadWrite.BusLogic
 								select comp).FirstOrDefault();
 				if (selected == null)
 				{
+					_logger.LogDebug("Referential integrity error");
+					_logger.LogDebug($"Did not find {dc.CompanyName} => {dc.Ticker} in Company Details");
 					continue;
 				}
 
-				var ProfitablityRatios = new Dictionary<string, decimal>();
-				ProfitablityRatios.Add("Gross Margin", (decimal)dc.GrossMargin);
-				ProfitablityRatios.Add("Operating Margin", (decimal)dc.OperatingMargin);
-				ProfitablityRatios.Add("Net Profit Margin", (decimal)dc.NetMargin);
-				ProfitablityRatios.Add("Return on Equity", (decimal)dc.ReturnOnEquity);
-				ProfitablityRatios.Add("Return on Assets", (decimal)dc.ReturnOnAssets);
+				var ProfitablityRatios = new Dictionary<string, decimal>
+				{
+					{ "Gross Margin", (decimal)dc.GrossMargin },
+					{ "Operating Margin", (decimal)dc.OperatingMargin },
+					{ "Net Profit Margin", (decimal)dc.NetMargin },
+					{ "Return on Equity", (decimal)dc.ReturnOnEquity },
+					{ "Return on Assets", (decimal)dc.ReturnOnAssets }
+				};
 				var newValue = new PiotroskiScore
 				{
 					SimId = selected.SimId,
@@ -100,6 +102,7 @@ namespace MongoReadWrite.BusLogic
 					EBITDA = (long)dc.EbitdaCurrent,
 					LastUpdate = DateTime.Now,
 					ProfitablityRatios = ProfitablityRatios,
+					Revenue = dc.Revenue,
 					Ticker = dc.Ticker
 				};
 				newValues.Add(Mapper.Map<PiotroskiScoreMd>(newValue));
@@ -114,7 +117,8 @@ namespace MongoReadWrite.BusLogic
 				await _hcl.UpdateCompanyDetailAsync(selected.SimId, dc.Sector, updateTime);
 				if (++counter % 500 == 0)
 				{
-					Console.WriteLine($"Updated {counter} firms");
+					Console.WriteLine($"Updated {counter} firms {DateTime.Now}");
+					_logger.LogDebug($"Updated {counter} firms");
 					await _dbpiScore.Create(newValues);
 					newValues.Clear();
 				}
@@ -122,12 +126,12 @@ namespace MongoReadWrite.BusLogic
 			if (newValues.Any())
 			{
 				Console.WriteLine($"Updated {counter} firms");
+				_logger.LogDebug($"Updated {counter} firms");
 				await _dbpiScore.Create(newValues);
 			}
 		}
 
 		#endregion Public Methods
-
 
 		#region Private Methods
 
@@ -136,6 +140,7 @@ namespace MongoReadWrite.BusLogic
 			newValue.FYear = year;
 			newValue.Rating = rating;
 			newValue.EBITDA = (long)ebitda;
+			newValue.Revenue = null;
 		}
 
 		#endregion Private Methods

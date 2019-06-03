@@ -47,9 +47,16 @@ namespace MongoReadWrite
 
 			UpdateDataFromExternalFeed(compDetailsLst);
 
-			var wav = Provider.GetService<WriteAnalyzedValues>();
-			var wavResult = wav.UpdateAnalysis();
-			wavResult.Wait();
+			try
+			{
+				var wav = Provider.GetService<WriteAnalyzedValues>();
+				var wavResult = wav.UpdateAnalysis();
+				wavResult.Wait();
+			}
+			catch (Exception ex)
+			{
+				_logger.LogCritical($"Error parsing and writing s/s \n{ex.Message}");
+			}
 
 			Console.WriteLine("Done");
 			_logger.LogDebug("Done");
