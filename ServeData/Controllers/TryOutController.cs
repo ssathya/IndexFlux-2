@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using ServeData.MessageProcessors;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace ServeData.Controllers
 {
@@ -46,9 +47,9 @@ namespace ServeData.Controllers
 
 		// POST: api/TryOut
 		[HttpPost]
-		public IActionResult Post([FromBody] GoogleCloudDialogflowV2WebhookRequest value)
+		public async Task<IActionResult> Post([FromBody] GoogleCloudDialogflowV2WebhookRequest value)
 		{
-			return _processMessages.ProcessValuesFromIntents(value);
+			return await _processMessages.ProcessValuesFromIntents(value);
 		}
 
 		// PUT: api/TryOut/5

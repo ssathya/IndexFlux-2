@@ -39,10 +39,10 @@ namespace ServeData.Controllers
 
         // POST: api/IntendsHandler
         [HttpPost]
-		public IActionResult Post([FromBody] GoogleCloudDialogflowV2WebhookRequest value)
+		public async Task<IActionResult> Post([FromBody] GoogleCloudDialogflowV2WebhookRequest value)
 		{
 			
-			return _processMessages.ProcessValuesFromIntents(value);
+			return await _processMessages.ProcessValuesFromIntents(value);
 		}
 
 		// PUT: api/IntendsHandler/5

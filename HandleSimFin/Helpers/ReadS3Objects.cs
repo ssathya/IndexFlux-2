@@ -55,7 +55,8 @@ namespace HandleSimFin.Helpers
 				{
 					responseBody = await reader.ReadToEndAsync();
 				}
-				return responseBody.Derypt();
+				var tmp = responseBody.Derypt();
+				return tmp;
 			}
 			catch (Exception ex)
 			{

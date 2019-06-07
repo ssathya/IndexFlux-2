@@ -12,6 +12,8 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using ServeData.MessageProcessors;
 using ServeData.MiddleWare;
+using DataProvider.Extensions;
+using DataProvider.BusLogic;
 
 namespace ServeData
 {
@@ -28,7 +30,9 @@ namespace ServeData
 		public void ConfigureServices(IServiceCollection services)
 		{
 			services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
-			services.AddSingleton<ProcessMessages>();
+			services.AddScoped<ProcessMessages>();
+			services.SetupDependencies();
+			services.AddKeysToEnvironment();
 		}
 
 		// This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
