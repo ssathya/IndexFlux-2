@@ -34,6 +34,7 @@ namespace DataProvider.Extensions
 		{			
 			services.AddScoped<ObtainMarketSummary>();
 			services.AddScoped<ObtainTrenders>();
+			services.AddScoped<ObtainNews>();
 		}
 
 	}
