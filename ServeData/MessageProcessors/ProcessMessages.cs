@@ -15,6 +15,7 @@ namespace ServeData.MessageProcessors
 
 		private readonly ILogger<ProcessMessages> _log;
 		private readonly ObtainNews _obtainNews;
+		private readonly ObtainStockQuote _obtainStockQuote;
 		private readonly ObtainTrenders _obtainTrends;
 		private readonly ObtainMarketSummary _oms;
 
@@ -26,12 +27,14 @@ namespace ServeData.MessageProcessors
 		public ProcessMessages(ILogger<ProcessMessages> log,
 			ObtainMarketSummary oms,
 			ObtainTrenders obtainTrends,
-			ObtainNews obtainNews)
+			ObtainNews obtainNews,
+			ObtainStockQuote obtainStockQuote)
 		{
 			_log = log;
 			_oms = oms;
 			_obtainTrends = obtainTrends;
 			_obtainNews = obtainNews;
+			_obtainStockQuote = obtainStockQuote;
 		}
 
 		#endregion Public Constructors
@@ -76,6 +79,8 @@ namespace ServeData.MessageProcessors
 				case "newsFetch":
 					returnValue = await _obtainNews.GetExternalNews(intent);
 					break;
+				case "stockQuote":
+
 				default:
 					break;
 			}

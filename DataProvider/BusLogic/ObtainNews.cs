@@ -17,16 +17,19 @@ namespace DataProvider.BusLogic
 		#region Private Fields
 
 		private const string newsParameter = "newsSource";
+		private const string Provider = "NewsAPI";
 		private readonly ILogger<ObtainNews> _log;
+		private readonly EnvHandler _envHandler;
 
 		#endregion Private Fields
 
 
 		#region Public Constructors
 
-		public ObtainNews(ILogger<ObtainNews> log)
+		public ObtainNews(ILogger<ObtainNews> log, EnvHandler envHandler)
 		{
 			_log = log;
+			_envHandler = envHandler;
 		}
 
 		#endregion Public Constructors
@@ -91,7 +94,7 @@ namespace DataProvider.BusLogic
 					newsMedia = "country=us";
 					break;
 			}
-			string apiKey = GetApiKey();
+			string apiKey = _envHandler.GetApiKey(Provider);
 			var urlStr = $"https://newsapi.org/v2/top-headlines?{newsMedia}&apiKey={apiKey}";
 			return urlStr;
 		}
@@ -111,30 +114,7 @@ namespace DataProvider.BusLogic
 			return returnMsg.ToString();
 		}
 
-		private string GetApiKey()
-		{
-			var apiKey = Environment.GetEnvironmentVariable("NewsAPI", EnvironmentVariableTarget.Process);
-			if (string.IsNullOrWhiteSpace(apiKey))
-			{
-				_log.LogDebug("Did not find api key in process");
-				apiKey = Environment.GetEnvironmentVariable("NewsAPI", EnvironmentVariableTarget.Machine);
-			}
-			if (string.IsNullOrWhiteSpace(apiKey))
-			{
-				_log.LogDebug("Did not find api key in Machine");
-				apiKey = Environment.GetEnvironmentVariable("NewsAPI", EnvironmentVariableTarget.User);
-			}
-			if (string.IsNullOrWhiteSpace(apiKey))
-			{
-				_log.LogDebug("Did not find api key in Machine");
-				apiKey = Environment.GetEnvironmentVariable("NewsAPI");
-			}
-			if (string.IsNullOrWhiteSpace(apiKey))
-			{
-				_log.LogError("Did not find api key; calls will fail");
-			}
-			return apiKey;
-		}
+		
 
 		private async Task<NewsExtract> ObtainNewAPIDta(string urlToUse)
 		{
