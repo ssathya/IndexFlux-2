@@ -1,6 +1,7 @@
 ﻿using Amazon;
 using DataProvider.BusLogic;
 using HandleSimFin.Helpers;
+using HandleSimFin.Methods;
 using Microsoft.Extensions.DependencyInjection;
 using Models;
 using Newtonsoft.Json;
@@ -37,6 +38,7 @@ namespace DataProvider.Extensions
 			services.AddScoped<ObtainNews>();
 			services.AddScoped<ObtainStockQuote>();
 			services.AddScoped<EnvHandler>();
+			services.AddScoped<DownloadCompanyNames>();
 		}
 
 	}

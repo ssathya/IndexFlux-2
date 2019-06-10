@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Models
 {
-	public class IndexData
+	public class QuotesFromWorldTrading
 	{
 		public int Symbols_requested { get; set; }
 		public int Symbols_returned { get; set; }

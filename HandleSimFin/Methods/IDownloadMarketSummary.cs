@@ -5,6 +5,6 @@ namespace HandleSimFin.Methods
 {
 	public interface IDownloadMarketSummary
 	{
-		Task<IndexData> GetIndexValues();
+		Task<QuotesFromWorldTrading> GetIndexValues();
 	}
 }

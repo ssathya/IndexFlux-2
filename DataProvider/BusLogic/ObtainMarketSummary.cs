@@ -1,4 +1,5 @@
-﻿using Google.Cloud.Dialogflow.V2;
+﻿using DataProvider.Extensions;
+using Google.Cloud.Dialogflow.V2;
 using Kevsoft.Ssml;
 using Microsoft.Extensions.Logging;
 using Models;
@@ -17,15 +18,17 @@ namespace DataProvider.BusLogic
 		#region Private Fields
 
 		private readonly ILogger<ObtainMarketSummary> _log;
+		private readonly EnvHandler _envHandler;
 
 		#endregion Private Fields
 
 
 		#region Public Constructors
 
-		public ObtainMarketSummary(ILogger<ObtainMarketSummary> log)
+		public ObtainMarketSummary(ILogger<ObtainMarketSummary> log, EnvHandler envHandler)
 		{
 			_log = log;
+			_envHandler = envHandler;
 		}
 
 		#endregion Public Constructors
@@ -44,7 +47,7 @@ namespace DataProvider.BusLogic
 			var tmpStr = new StringBuilder();
 			tmpStr.AppendJoin(',', tickers);
 
-			IndexData indexData = await ObtainFromWorldTrading(tmpStr.ToString());
+			QuotesFromWorldTrading indexData = await _envHandler.ObtainFromWorldTrading(tmpStr.ToString());
 
 			WebhookResponse returnValue = await BuildOutputMessage(indexData);
 			return returnValue;
@@ -55,7 +58,7 @@ namespace DataProvider.BusLogic
 
 		#region Private Methods
 
-		private async Task<WebhookResponse> BuildOutputMessage(IndexData indexData)
+		private async Task<WebhookResponse> BuildOutputMessage(QuotesFromWorldTrading indexData)
 		{
 			StringBuilder tmpStr = new StringBuilder();
 			if (indexData.Data.Length >= 1)
@@ -97,37 +100,7 @@ namespace DataProvider.BusLogic
 			return returnValue;
 		}
 
-		private async Task<IndexData> ObtainFromWorldTrading(string tickersToUse)
-		{
-			var apiKey = Environment.GetEnvironmentVariable("WorldTradingDataKey", EnvironmentVariableTarget.Process);
-			if (string.IsNullOrWhiteSpace(apiKey))
-			{
-				_log.LogDebug("Did not find api key in process");
-				apiKey = Environment.GetEnvironmentVariable("WorldTradingDataKey", EnvironmentVariableTarget.Machine);
-			}
-			if (string.IsNullOrWhiteSpace(apiKey))
-			{
-				_log.LogDebug("Did not find api key in Machine");
-				apiKey = Environment.GetEnvironmentVariable("WorldTradingDataKey", EnvironmentVariableTarget.User);
-			}
-			if (string.IsNullOrWhiteSpace(apiKey))
-			{
-				_log.LogDebug("Did not find api key in Machine");
-				apiKey = Environment.GetEnvironmentVariable("WorldTradingDataKey");
-			}
-			if (string.IsNullOrWhiteSpace(apiKey))
-			{
-				_log.LogError("Did not find api key; calls will fail");
-			}
-			string urlStr = $@"https://www.worldtradingdata.com/api/v1/stock?symbol={tickersToUse}&api_token={apiKey}";
-			string data = "{}";
-			using (var wc = new WebClient())
-			{
-				data = await wc.DownloadStringTaskAsync(urlStr);
-			}
-			var indexData = JsonConvert.DeserializeObject<IndexData>(data);
-			return indexData;
-		}
+		
 
 		#endregion Private Methods
 	}

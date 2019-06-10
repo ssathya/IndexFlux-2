@@ -19,7 +19,7 @@ namespace HandleSimFin.Methods
 			_logger = logger;
 		}
 
-		public async Task<IndexData> GetIndexValues()
+		public async Task<QuotesFromWorldTrading> GetIndexValues()
 		{
 			var indeces = @"^DJI,^INX,^IXIC"; //Dow30, S&P 500, and NASDAQ 100
 			var apiKey = Environment.GetEnvironmentVariable("WorldTradingDataKey");
@@ -39,7 +39,7 @@ namespace HandleSimFin.Methods
 					data = await wc.DownloadStringTaskAsync(urlToUse);
 				}
 				_logger.LogInformation("Completed downloading data from World Trading");
-				var indexData = JsonConvert.DeserializeObject<IndexData>(data);
+				var indexData = JsonConvert.DeserializeObject<QuotesFromWorldTrading>(data);
 				return indexData;
 
 			}

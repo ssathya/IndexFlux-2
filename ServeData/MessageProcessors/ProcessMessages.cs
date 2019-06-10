@@ -80,7 +80,8 @@ namespace ServeData.MessageProcessors
 					returnValue = await _obtainNews.GetExternalNews(intent);
 					break;
 				case "stockQuote":
-
+					returnValue = await _obtainStockQuote.GetMarketData(intent);
+					break;
 				default:
 					break;
 			}

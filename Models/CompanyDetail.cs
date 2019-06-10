@@ -26,4 +26,5 @@ namespace Models
 		}
 		public string Id { get; set; }
 	}
+
 }
