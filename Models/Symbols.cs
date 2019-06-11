@@ -8,7 +8,7 @@ namespace Models
 {
 	public class Symbols
 	{
-		public SecuritySymbol[] Property1 { get; set; }
+		public SecuritySymbol[] SymobalList { get; set; }
 	}
 
 	

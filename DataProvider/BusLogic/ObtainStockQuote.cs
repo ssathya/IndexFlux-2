@@ -55,14 +55,18 @@ namespace DataProvider.BusLogic
 				return "Could not resolve requested firm or ticker";
 			}
 			var tmpStr = new StringBuilder();
-			var dateToUse = quotes.Data[0].Last_trade_time;
+			DateTime dateToUse = quotes.Data[0].Last_trade_time != null ? (DateTime)quotes.Data[0].Last_trade_time : DateTime.Parse("01-01-2000");
+			
+
 			tmpStr.Append($"As of {dateToUse.ToString("MMMM dd, hh:mm tt")} EST ");
 			foreach (var quote in quotes.Data)
 			{
-				tmpStr.Append($"{quote.Name} with ticker {quote.Symbol} was traded at {Math.Round(quote.Price,2)}.");
-				tmpStr.Append(quote.Day_change > 0 ? " Up by " : "Down by ");
-				var changeNumber = string.Format("{0:0.00}", Math.Abs(quote.Day_change));
-				tmpStr.Append($"{changeNumber} points.\n\n ");
+				float price = quote.Price != null ? (float)quote.Price : 0;
+				string dayChange = (quote.Day_change == null ? 0 : Math.Round((float)quote.Day_change)).ToString("N");
+				
+				tmpStr.Append($"{quote.Name} with ticker {quote.Symbol} was traded at {price.ToString("N")}.");
+				tmpStr.Append(quote.Day_change > 0 ? " Up by " : " Down by ");				
+				tmpStr.Append($"{dayChange} points.\n\n ");
 			}
 			return tmpStr.ToString();
 		}

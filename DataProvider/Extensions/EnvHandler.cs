@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using Models;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -54,12 +55,24 @@ namespace DataProvider.Extensions
 			}
 			string urlStr = $@"https://www.worldtradingdata.com/api/v1/stock?symbol={tickersToUse}&api_token={apiKey}";
 			string data = "{}";
-			using (var wc = new WebClient())
+			try
 			{
-				data = await wc.DownloadStringTaskAsync(urlStr);
+				using (var wc = new WebClient())
+				{
+					data = await wc.DownloadStringTaskAsync(urlStr);
+				}
+				var parsedData = JObject.Parse(data);
+				var indexData = JsonConvert.DeserializeObject<QuotesFromWorldTrading>(data);
+				return indexData;
 			}
-			var indexData = JsonConvert.DeserializeObject<QuotesFromWorldTrading>(data);
-			return indexData;
+			catch (Exception ex)
+			{
+				_log.LogCritical($"Error processing data from World Trading.\n{ex.Message}");
+				return new QuotesFromWorldTrading
+				{
+					Data = new Datum[0]
+				};
+			}
 		}
 	}
 }

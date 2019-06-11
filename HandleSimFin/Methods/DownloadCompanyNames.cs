@@ -16,10 +16,18 @@ namespace HandleSimFin.Methods
 		private readonly ILogger<DownloadCompanyNames> _log;
 		private readonly string tickerSearch = @"https://simfin.com/api/v1/info/find-id/ticker/{ticker}?api-key={api-key}";
 		private readonly string nameSearch = @"https://simfin.com/api/v1/info/find-id/name-search/{name}?api-key={api-key}";
+		private readonly string iexSymbolListURL = @"https://api.iextrading.com/1.0/ref-data/symbols";
+		private static List<SecuritySymbol> symbols;
+		private static DateTime lastSymbolUpdate;
 
 		public DownloadCompanyNames(ILogger<DownloadCompanyNames> log)
 		{
-			_log = log;
+			_log = log;			
+			if (symbols == null)
+			{
+				symbols = new List<SecuritySymbol>();
+				lastSymbolUpdate = DateTime.Now.AddDays(-2);
+			}
 		}
 		public async Task<string> ResolveCompanyNameOrTicker(string companyName)
 		{
@@ -29,22 +37,59 @@ namespace HandleSimFin.Methods
 			tSearch = tSearch.Replace(@"{ticker}", companyName);
 			nSearch = nSearch.Replace(@"{name}", companyName);
 			var bcdL = new List<BasicCompanyDetails>();
-			var resolvedList1 = await ObtainValuesFromSimFin(tSearch);			
-			bcdL.AddRange(resolvedList1);
-
-			if (companyName.Length >= 4)
+			var tick = new List<string>();
+			if (companyName.Length <=4)
 			{
-				var resolvedList2 = await ObtainValuesFromSimFin(nSearch);
-				bcdL.AddRange(resolvedList2);
-			}			
-			var tickers = bcdL.Select(x => x.ticker).Distinct();
-			if (tickers.Count() == 0)
-			{
-				return "";
+				tick.Add(companyName.ToLower());
 			}
-			string returnString = tickers.Aggregate((i, j) => i + "," + j);
+			else
+			{
+				if (symbols.Count <= 5 || (DateTime.Now - lastSymbolUpdate).TotalDays > 1)
+				{
+					symbols = await ObtainSymbolsFromIeXAsync();
+					lastSymbolUpdate = DateTime.Now;
+				}
+				
+				tick = (from s in symbols
+						where s.name.ToLower().Contains(companyName.ToLower())
+						select s.symbol).Take(4).ToList();
+			}
+			
+			//var resolvedList1 = await ObtainValuesFromSimFin(tSearch);						
+			//if (companyName.Length >= 4)
+			//{
+			//	var resolvedList2 = await ObtainValuesFromSimFin(nSearch);
+			//	bcdL.AddRange(resolvedList2.Take(5));
+			//}
+			//bcdL.AddRange(resolvedList1);
+			//var tickers = bcdL.Select(x => x.ticker).Distinct();
+			//if (tickers.Count() == 0)
+			//{
+			//	return "";
+			//}
+			string returnString = tick.Aggregate((i, j) => i + "," + j);
 			return returnString;
 
+		}
+
+		private async Task<List<SecuritySymbol>> ObtainSymbolsFromIeXAsync()
+		{
+			try
+			{
+				using (var wc = new WebClient())
+				{
+					string data = "{}";
+					data = await wc.DownloadStringTaskAsync(iexSymbolListURL);
+					var symbols = JsonConvert.DeserializeObject<IEnumerable<SecuritySymbol>>(data).ToList();
+					return symbols;
+				}
+			}
+			catch (Exception ex)
+			{
+				_log.LogError("Error while getting data from IEX trading");
+				_log.LogError(ex.Message);
+				return new List<SecuritySymbol>();
+			}
 		}
 
 		private async Task<List<BasicCompanyDetails>> ObtainValuesFromSimFin(string tSearch)
