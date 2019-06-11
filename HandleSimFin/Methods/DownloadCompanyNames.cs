@@ -11,8 +11,8 @@ using System.Threading.Tasks;
 
 namespace HandleSimFin.Methods
 {
-    public class DownloadCompanyNames
-    {
+	public class DownloadCompanyNames
+	{
 		private readonly ILogger<DownloadCompanyNames> _log;
 		private readonly string tickerSearch = @"https://simfin.com/api/v1/info/find-id/ticker/{ticker}?api-key={api-key}";
 		private readonly string nameSearch = @"https://simfin.com/api/v1/info/find-id/name-search/{name}?api-key={api-key}";
@@ -22,7 +22,7 @@ namespace HandleSimFin.Methods
 
 		public DownloadCompanyNames(ILogger<DownloadCompanyNames> log)
 		{
-			_log = log;			
+			_log = log;
 			if (symbols == null)
 			{
 				symbols = new List<SecuritySymbol>();
@@ -38,23 +38,20 @@ namespace HandleSimFin.Methods
 			nSearch = nSearch.Replace(@"{name}", companyName);
 			var bcdL = new List<BasicCompanyDetails>();
 			var tick = new List<string>();
-			if (companyName.Length <=4)
+			if (companyName.Length <= 4)
 			{
 				tick.Add(companyName.ToLower());
 			}
 			else
 			{
-				if (symbols.Count <= 5 || (DateTime.Now - lastSymbolUpdate).TotalDays > 1)
-				{
-					symbols = await ObtainSymbolsFromIeXAsync();
-					lastSymbolUpdate = DateTime.Now;
-				}
-				
+
+				symbols = await ObtainSymbolsFromIeXAsync();
+				lastSymbolUpdate = DateTime.Now;
 				tick = (from s in symbols
 						where s.name.ToLower().Contains(companyName.ToLower())
-						select s.symbol).Take(4).ToList();
+						select s.symbol).Take(6).ToList();
 			}
-			
+
 			//var resolvedList1 = await ObtainValuesFromSimFin(tSearch);						
 			//if (companyName.Length >= 4)
 			//{
@@ -74,13 +71,17 @@ namespace HandleSimFin.Methods
 
 		private async Task<List<SecuritySymbol>> ObtainSymbolsFromIeXAsync()
 		{
+			if (symbols.Count >= 5 && (DateTime.Now - lastSymbolUpdate).TotalDays < 1)
+			{
+				return symbols;
+			}
 			try
 			{
 				using (var wc = new WebClient())
 				{
 					string data = "{}";
 					data = await wc.DownloadStringTaskAsync(iexSymbolListURL);
-					var symbols = JsonConvert.DeserializeObject<IEnumerable<SecuritySymbol>>(data).ToList();
+					symbols = JsonConvert.DeserializeObject<IEnumerable<SecuritySymbol>>(data).ToList();
 					return symbols;
 				}
 			}
@@ -100,7 +101,7 @@ namespace HandleSimFin.Methods
 				{
 					string data = "{}";
 					data = await wc.DownloadStringTaskAsync(tSearch);
-					var stockRTD = JsonConvert.DeserializeObject <IEnumerable<BasicCompanyDetails>>(data);
+					var stockRTD = JsonConvert.DeserializeObject<IEnumerable<BasicCompanyDetails>>(data);
 					return stockRTD.ToList();
 				}
 			}

@@ -61,12 +61,11 @@ namespace DataProvider.BusLogic
 			tmpStr.Append($"As of {dateToUse.ToString("MMMM dd, hh:mm tt")} EST ");
 			foreach (var quote in quotes.Data)
 			{
-				float price = quote.Price != null ? (float)quote.Price : 0;
-				string dayChange = (quote.Day_change == null ? 0 : Math.Round((float)quote.Day_change)).ToString("N");
-				
+				float price = quote.Price != null ? (float)quote.Price : 0;				
+				quote.Day_change = quote.Day_change == null ? 0 : quote.Day_change;
 				tmpStr.Append($"{quote.Name} with ticker {quote.Symbol} was traded at {price.ToString("N")}.");
 				tmpStr.Append(quote.Day_change > 0 ? " Up by " : " Down by ");				
-				tmpStr.Append($"{dayChange} points.\n\n ");
+				tmpStr.Append($"{((float)quote.Day_change).ToString("N")} points.\n\n ");
 			}
 			return tmpStr.ToString();
 		}
