@@ -4,6 +4,7 @@ using HandleSimFin.Helpers;
 using HandleSimFin.Methods;
 using Microsoft.Extensions.DependencyInjection;
 using Models;
+using MongoHandler.Utils;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -37,8 +38,10 @@ namespace DataProvider.Extensions
 			services.AddScoped<ObtainTrenders>();
 			services.AddScoped<ObtainNews>();
 			services.AddScoped<ObtainStockQuote>();
+			services.AddScoped<ObtainFundamentals>();
 			services.AddScoped<EnvHandler>();
 			services.AddScoped<DownloadCompanyNames>();
+			services.AddScoped<IDBConnectionHandler<PiotroskiScoreMd>, DBConnectionHandler<PiotroskiScoreMd>>();
 		}
 
 	}

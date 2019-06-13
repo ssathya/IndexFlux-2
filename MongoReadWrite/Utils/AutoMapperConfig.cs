@@ -14,6 +14,8 @@ namespace MongoReadWrite.Utils
 				.ForMember(d => d.Id, t => t.Ignore())
 				.ReverseMap();
 		}
+
+		[System.Obsolete]
 		public static void Start()
 		{
 			// CreateMap<CompanyFinancials, CompanyFinancialsMd>();

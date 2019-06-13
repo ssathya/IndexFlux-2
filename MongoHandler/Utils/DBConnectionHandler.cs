@@ -2,18 +2,16 @@
 using Microsoft.Extensions.Configuration;
 using Models;
 using MongoDB.Driver;
-using MongoReadWrite.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 
-namespace MongoReadWrite.Utils
+namespace MongoHandler.Utils
 {
 	public class DBConnectionHandler<T> : IDBConnectionHandler<T> where T : IBaseModel
 	{
-
 		#region Private Fields
 
 		private readonly IConfiguration _config;
@@ -24,8 +22,8 @@ namespace MongoReadWrite.Utils
 
 		#endregion Private Fields
 
+		#region Public Constructors
 
-		#region Public Constructors		
 		/// <summary>
 		/// Initializes a new instance of the <see cref="DBConnectionHandler{T}"/> class.
 		/// </summary>
@@ -33,9 +31,15 @@ namespace MongoReadWrite.Utils
 		public DBConnectionHandler(IConfiguration config)
 		{
 			_config = config;
-			_connectionString = _config["MongoUri"];
 
+			_connectionString = _config["MongoUri"];
 			_dbName = _config["DbName"];
+			
+			if (_connectionString.IsNullOrWhiteSpace() || _dbName.IsNullOrWhiteSpace())
+			{
+				_connectionString = Environment.GetEnvironmentVariable("MongoUri");
+				_dbName = Environment.GetEnvironmentVariable("DbName");
+			}
 			if (_dbName.IsNullOrWhiteSpace())
 			{
 				_dbName = "DropMe";
@@ -44,8 +48,8 @@ namespace MongoReadWrite.Utils
 
 		#endregion Public Constructors
 
+		#region Public Methods
 
-		#region Public Methods		
 		/// <summary>
 		/// Connects to database.
 		/// </summary>
@@ -75,9 +79,10 @@ namespace MongoReadWrite.Utils
 			catch (Exception ex)
 			{
 				Console.WriteLine($"Exception while inserting a new record\n{ex.Message}");
-				return default(T);
+				return default;
 			}
 		}
+
 		/// <summary>
 		/// Creates the specified records.
 		/// </summary>
@@ -105,6 +110,7 @@ namespace MongoReadWrite.Utils
 				return false;
 			}
 		}
+
 		/// <summary>
 		/// Gets Enumarable of all records.
 		/// </summary>
@@ -123,6 +129,7 @@ namespace MongoReadWrite.Utils
 		{
 			return Get(r => r.Id == id).FirstOrDefault();
 		}
+
 		/// <summary>
 		/// Gets the specified predicate.
 		/// </summary>
@@ -132,6 +139,7 @@ namespace MongoReadWrite.Utils
 		{
 			return collection.Find(predicate).ToEnumerable();
 		}
+
 		/// <summary>
 		/// Removes the record with specified identifier.
 		/// </summary>
@@ -151,6 +159,7 @@ namespace MongoReadWrite.Utils
 				return false;
 			}
 		}
+
 		/// <summary>
 		/// Removes all records.
 		/// </summary>
@@ -168,6 +177,7 @@ namespace MongoReadWrite.Utils
 				return false;
 			}
 		}
+
 		/// <summary>
 		/// Updates the specified identifier.
 		/// </summary>
@@ -188,6 +198,7 @@ namespace MongoReadWrite.Utils
 				return false;
 			}
 		}
+
 		/// <summary>
 		/// Updates the multiple.
 		/// </summary>
@@ -235,8 +246,8 @@ namespace MongoReadWrite.Utils
 
 		#endregion Public Methods
 
+		#region Private Methods
 
-		#region Private Methods		
 		/// <summary>
 		/// Extracts the identifier.
 		/// </summary>
@@ -248,6 +259,7 @@ namespace MongoReadWrite.Utils
 			serviceInterface = typeof(T);
 			id = (string)serviceInterface.GetProperty("Id").GetValue(newRecord, null);
 		}
+
 		/// <summary>
 		/// Updates the identifier if needed.
 		/// </summary>

@@ -16,6 +16,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="6.1.1" />
     <PackageReference Include="Google.Apis.Dialogflow.v2" Version="1.40.1.1600" />
     <PackageReference Include="Google.Cloud.Dialogflow.V2" Version="1.0.0-beta02" />
     <PackageReference Include="Microsoft.AspNetCore.App" />

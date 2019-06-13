@@ -3,7 +3,6 @@ using HandleSimFin.Methods;
 using Microsoft.Extensions.Logging;
 using Models;
 using MongoDB.Driver;
-using MongoReadWrite.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,6 +11,7 @@ using Microsoft.Extensions.DependencyInjection;
 using MongoReadWrite.Extensions;
 using Microsoft.Extensions.Configuration;
 using HandleSimFin.Helpers;
+using MongoHandler.Utils;
 
 namespace MongoReadWrite.BusLogic
 {

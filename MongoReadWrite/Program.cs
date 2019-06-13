@@ -2,6 +2,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Models;
+using MongoHandler.Extensions;
 using MongoReadWrite.BusLogic;
 using MongoReadWrite.Extensions;
 using MongoReadWrite.Utils;
@@ -31,7 +32,9 @@ namespace MongoReadWrite
 			var services = new ServiceCollection();
 			ServiceExtensions.AddKeysToEnvironment(services);
 			SetupDependencies(services);
+#pragma warning disable CS0612 // Type or member is obsolete
 			AutoMapperConfig.Start();
+#pragma warning restore CS0612 // Type or member is obsolete
 
 			var handleCompList = Provider.GetService<HandleCompanyList>();
 
@@ -83,7 +86,7 @@ namespace MongoReadWrite
 			int counter = 0;
 			int downloadCount = downloadStart;
 			var handleFinancials = Provider.GetService<HandleFinacials>();
-			var listCount = miniCompDetails.Count();
+			var listCount = miniCompDetails.Count();			
 			foreach (var company in miniCompDetails)
 			{
 				stopWatch.Reset();

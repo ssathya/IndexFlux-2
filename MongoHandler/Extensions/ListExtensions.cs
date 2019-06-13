@@ -1,14 +1,20 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace MongoReadWrite.Extensions
+namespace MongoHandler.Extensions
 {
-    public static class ListExtensions
-    {
+	public static class ListExtensions
+	{
+
+		#region Private Fields
+
 		private static readonly Random rng = new Random();
+
+		#endregion Private Fields
+
+
+		#region Public Methods
+
 		public static void Shuffle<T>(this IList<T> list)
 		{
 			int n = list.Count;
@@ -21,5 +27,7 @@ namespace MongoReadWrite.Extensions
 				list[n] = value;
 			}
 		}
-    }
+
+		#endregion Public Methods
+	}
 }

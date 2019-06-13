@@ -17,6 +17,7 @@ namespace HandleSimFin.Methods
 		private readonly string tickerSearch = @"https://simfin.com/api/v1/info/find-id/ticker/{ticker}?api-key={api-key}";
 		private readonly string nameSearch = @"https://simfin.com/api/v1/info/find-id/name-search/{name}?api-key={api-key}";
 		private readonly string iexSymbolListURL = @"https://api.iextrading.com/1.0/ref-data/symbols";
+		private readonly string iexCompanyDetailsURL = @"https://api.iextrading.com/1.0/stock/ticker/company";
 		private static List<SecuritySymbol> symbols;
 		private static DateTime lastSymbolUpdate;
 
@@ -114,6 +115,30 @@ namespace HandleSimFin.Methods
 					_log.LogError(ex.InnerException.Message);
 				}
 				return new List<BasicCompanyDetails>();
+			}
+		}
+		public async Task<CompanyOverview> ObtainCompanyOverview(string ticker)
+		{
+			var urlToUse = iexCompanyDetailsURL.Replace("ticker", ticker);
+			try
+			{
+				using(var wc = new WebClient())
+				{
+					string data = "{}";
+					data = await wc.DownloadStringTaskAsync(urlToUse);
+					var companyOverview = JsonConvert.DeserializeObject<CompanyOverview>(data);
+					return companyOverview;
+				}
+			}
+			catch (Exception ex)
+			{
+				_log.LogError("Error while getting data from IEX Trading");
+				_log.LogError(ex.Message);
+				if (ex.InnerException != null)
+				{
+					_log.LogError(ex.InnerException.Message);
+				}
+				return new CompanyOverview();
 			}
 		}
 	}

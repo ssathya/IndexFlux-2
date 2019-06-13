@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 
-namespace MongoReadWrite.Utils
+namespace MongoHandler.Utils
 {
 	public interface IDBConnectionHandler<T> where T : IBaseModel
 	{

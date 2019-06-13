@@ -1,19 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using DataProvider.Extensions;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using ServeData.MessageProcessors;
 using ServeData.MiddleWare;
-using DataProvider.Extensions;
-using DataProvider.BusLogic;
 
 namespace ServeData
 {
@@ -33,6 +25,9 @@ namespace ServeData
 			services.AddScoped<ProcessMessages>();
 			services.SetupDependencies();
 			services.AddKeysToEnvironment();
+#pragma warning disable CS0612 // Type or member is obsolete
+			services.SetupAutoMapper();
+#pragma warning restore CS0612 // Type or member is obsolete
 		}
 
 		// This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
