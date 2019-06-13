@@ -16,7 +16,6 @@ namespace DataProvider.BusLogic
 {
 	public class ObtainFundamentals
 	{
-
 		#region Private Fields
 
 		private readonly IDBConnectionHandler<PiotroskiScoreMd> _connectionHandlerCF;
@@ -25,7 +24,6 @@ namespace DataProvider.BusLogic
 		private string companyName = "CompanyName";
 
 		#endregion Private Fields
-
 
 		#region Public Constructors
 
@@ -40,7 +38,6 @@ namespace DataProvider.BusLogic
 		}
 
 		#endregion Public Constructors
-
 
 		#region Public Methods
 
@@ -62,14 +59,19 @@ namespace DataProvider.BusLogic
 			{
 				foreach (var ticker in tickersToUse.Split(','))
 				{
-					var computedRatings = _connectionHandlerCF.Get().Where(x => x.Ticker.ToLower().Equals(ticker.ToLower())).ToList();
-					PiotroskiScore computedRating = null;
-					if (computedRatings != null && computedRatings.Count() != 0)
+					var computedRatingMd = _connectionHandlerCF.Get().Where(x => x.Ticker.ToLower().Equals(ticker.ToLower()) &&
+						x.FYear == DateTime.Now.Year).FirstOrDefault();
+					if (computedRatingMd == null)
 					{
-						var cr = computedRatings.OrderByDescending(x => x.FYear).First();
-						computedRating = Mapper.Map<PiotroskiScore>(cr);
+						computedRatingMd = _connectionHandlerCF.Get().Where(x => x.Ticker.ToLower().Equals(ticker.ToLower()) &&
+						x.FYear == DateTime.Now.Year - 1).FirstOrDefault();
 					}
-					fulfillmentText.Append(await BuildCompanyProfile(ticker, computedRating));
+					PiotroskiScore computedRating = null;
+					if (computedRatingMd != null)
+					{
+						computedRating = Mapper.Map<PiotroskiScore>(computedRatingMd);
+					}
+					fulfillmentText.Append(await BuildCompanyProfile(ticker, null));
 				}
 			}
 			catch (Exception ex)
@@ -94,7 +96,6 @@ namespace DataProvider.BusLogic
 		}
 
 		#endregion Public Methods
-
 
 		#region Private Methods
 
