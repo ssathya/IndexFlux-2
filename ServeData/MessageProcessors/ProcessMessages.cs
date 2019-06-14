@@ -15,8 +15,7 @@ namespace ServeData.MessageProcessors
 
 		private readonly ILogger<ProcessMessages> _log;
 		private readonly ObtainNews _obtainNews;
-		private readonly ObtainStockQuote _obtainStockQuote;
-		private readonly ObtainFundamentals _obtainFundamentals;
+		private readonly ObtainStockQuote _obtainStockQuote;		
 		private readonly ObtainTrenders _obtainTrends;
 		private readonly ObtainMarketSummary _oms;
 
@@ -29,15 +28,14 @@ namespace ServeData.MessageProcessors
 			ObtainMarketSummary oms,
 			ObtainTrenders obtainTrends,
 			ObtainNews obtainNews,
-			ObtainStockQuote obtainStockQuote,
-			ObtainFundamentals obtainFundamentals)
+			ObtainStockQuote obtainStockQuote)
 		{
 			_log = log;
 			_oms = oms;
 			_obtainTrends = obtainTrends;
 			_obtainNews = obtainNews;
 			_obtainStockQuote = obtainStockQuote;
-			_obtainFundamentals = obtainFundamentals;
+			
 		}
 
 		#endregion Public Constructors
@@ -86,7 +84,6 @@ namespace ServeData.MessageProcessors
 					returnValue = await _obtainStockQuote.GetMarketData(intent);
 					break;
 				case "fundamentals":
-					returnValue = await _obtainFundamentals.GetCompanyRatings(intent);
 					break;
 				default:
 					break;
