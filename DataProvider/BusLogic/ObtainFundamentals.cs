@@ -19,20 +19,20 @@ namespace DataProvider.BusLogic
 		#region Private Fields
 
 		private readonly IDBConnectionHandler<PiotroskiScoreMd> _connectionHandlerCF;
-		private readonly DownloadCompanyNames _downloadCompanyNames;
+		private readonly ObtainCompanyDetails _obtainCompanyDetails;
 		private readonly ILogger<ObtainFundamentals> _log;
-		private string companyName = "CompanyName";
+		private readonly string companyName = "CompanyName";
 
 		#endregion Private Fields
 
 		#region Public Constructors
 
 		public ObtainFundamentals(ILogger<ObtainFundamentals> log,
-			DownloadCompanyNames downloadCompanyNames,
+			ObtainCompanyDetails obtainCompanyDetails,
 			IDBConnectionHandler<PiotroskiScoreMd> connectionHandlerCF)
 		{
 			_log = log;
-			_downloadCompanyNames = downloadCompanyNames;
+			_obtainCompanyDetails = obtainCompanyDetails;
 			_connectionHandlerCF = connectionHandlerCF;
 			_connectionHandlerCF.ConnectToDatabase("PiotroskiScore");
 		}
@@ -45,7 +45,7 @@ namespace DataProvider.BusLogic
 		{
 			_log.LogTrace("Start obtain fundamentals");
 			var companyNameToResolve = ratingsParameters.QueryResult.Parameters[companyName].ToString();
-			var tickersToUse = await _downloadCompanyNames.ResolveCompanyNameOrTicker(companyNameToResolve);
+			var tickersToUse = await _obtainCompanyDetails.ResolveCompanyNameOrTicker(companyNameToResolve);
 			if (string.IsNullOrWhiteSpace(tickersToUse))
 			{
 				return new WebhookResponse
@@ -57,6 +57,7 @@ namespace DataProvider.BusLogic
 			var fulfillmentText = new StringBuilder();
 			try
 			{
+				int counter = 0;
 				foreach (var ticker in tickersToUse.Split(','))
 				{
 					var computedRatingMd = _connectionHandlerCF.Get().Where(x => x.Ticker.ToLower().Equals(ticker.ToLower()) &&
@@ -71,7 +72,15 @@ namespace DataProvider.BusLogic
 					{
 						computedRating = Mapper.Map<PiotroskiScore>(computedRatingMd);
 					}
-					fulfillmentText.Append(await BuildCompanyProfile(ticker, null));
+					fulfillmentText.Append(await BuildCompanyProfile(ticker, computedRating));
+					if (++counter >= 2)
+					{
+						break;
+					}
+				}
+				if (counter >= 2)
+				{
+					fulfillmentText.Append($"Limiting result set as the search term {companyNameToResolve} resolved to too many results.\n");
 				}
 			}
 			catch (Exception ex)
@@ -101,7 +110,7 @@ namespace DataProvider.BusLogic
 
 		private async Task<string> BuildCompanyProfile(string ticker, PiotroskiScore computedRating)
 		{
-			var companyOverview = await _downloadCompanyNames.ObtainCompanyOverview(ticker);
+			var companyOverview = await _obtainCompanyDetails.ObtainCompanyOverview(ticker);
 			var returnText = new StringBuilder();
 			if (companyOverview == null || string.IsNullOrWhiteSpace(companyOverview.Symbol))
 			{
@@ -110,9 +119,49 @@ namespace DataProvider.BusLogic
 			else
 			{
 				returnText.Append($"Basic information about {companyOverview.CompanyName} trading with symbol {companyOverview.Symbol}.\n");
-				returnText.Append($" {companyOverview.Description}\n");
+				returnText.Append($" {(companyOverview.Description.IsNullOrWhiteSpace() ? "This information is not available now" : companyOverview.Description.TruncateAtWord(200))}\n");
+				if (companyOverview.Description.Length >= 201)
+				{
+					returnText.Append("\n\n..... more removed. ....\n\n");
+				}
 				returnText.Append($" Its industry sector is {companyOverview.Sector} and falls under {companyOverview.Industry}\n\n ");
 			}
+			switch (companyOverview.IssueType.ToLower())
+			{
+				case "cs":
+					returnText.Append(BuildCommonStockMessage(ticker, computedRating));
+					break;
+				case "ad":
+					returnText.Append($" {ticker} is an American Depositary Receipt: ADR");
+					break;
+				case "re":
+					returnText.Append($" {ticker} is a Real estate investment trust: REIT");
+					break;
+				case "ce":
+				case "cef":
+					returnText.Append($" {ticker} is a closed end fund");
+					break;
+				case "si":
+					returnText.Append($" {ticker} is a secondary issue");
+					break;
+				case "et":
+				case "etf":
+					returnText.Append($" {ticker} is a exchange traded fund; ETF");
+					break;
+				case "ps":
+				case "wt":
+					returnText.Append($" {ticker} is a preferred stock or warrant; individuals do not trade these!");
+					break;
+				default:
+					returnText.Append($" No additional information is available for {ticker}");
+					break;
+			}
+			return returnText.ToString();
+		}
+
+		private string BuildCommonStockMessage(string ticker, PiotroskiScore computedRating)
+		{
+			var returnText = new StringBuilder();
 			if (computedRating == null)
 			{
 				returnText.Append($" We do not have any additional details about {ticker} at this time.\n");

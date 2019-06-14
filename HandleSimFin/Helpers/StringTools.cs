@@ -19,23 +19,30 @@ namespace HandleSimFin.Helpers
 
 		public static string Crypt(this string text)
 		{
-			MD5CryptoServiceProvider objHashMD5 = new MD5CryptoServiceProvider();
-
-			var txtArray = Encoding.ASCII.GetBytes(text);
-			return Convert.ToBase64String(new TripleDESCryptoServiceProvider
+			
+			using (var objHashMD5 = new MD5CryptoServiceProvider())
 			{
-				Key = objHashMD5.ComputeHash(Encoding.ASCII.GetBytes(topSecret)),
-				Mode = CipherMode.ECB
-			}.CreateEncryptor()
-				.TransformFinalBlock(txtArray, 0, txtArray.Length));
+				var txtArray = Encoding.ASCII.GetBytes(text);
+				return Convert.ToBase64String(new TripleDESCryptoServiceProvider
+				{
+					Key = objHashMD5.ComputeHash(Encoding.ASCII.GetBytes(topSecret)),
+					Mode = CipherMode.ECB
+				}.CreateEncryptor()
+					.TransformFinalBlock(txtArray, 0, txtArray.Length));
+			}
+
 		}
 
 		public static string Derypt(this string text)
 		{
 			try
 			{
-				MD5CryptoServiceProvider objHashMD5 = new MD5CryptoServiceProvider();
-				var byteHash = objHashMD5.ComputeHash(Encoding.ASCII.GetBytes(topSecret));
+				byte[] byteHash;
+				using (var objHashMD5 = new MD5CryptoServiceProvider())
+				{
+					byteHash = objHashMD5.ComputeHash(Encoding.ASCII.GetBytes(topSecret));
+				}
+				
 
 				return Encoding.ASCII.GetString(new TripleDESCryptoServiceProvider
 				{
@@ -85,6 +92,13 @@ namespace HandleSimFin.Helpers
 			{
 				return num.ToString(CultureInfo.InvariantCulture);
 			}
+		}
+		public static string TruncateAtWord(this string value, int length)
+		{
+			if (value == null || value.Length < length || value.IndexOf(" ", length) == -1)
+				return value;
+
+			return value.Substring(0, value.IndexOf(" ", length));
 		}
 
 		#endregion Public Methods

@@ -11,16 +11,22 @@ namespace Models
 		public SecuritySymbol[] SymobalList { get; set; }
 	}
 
+
+
 	
 
 	public class SecuritySymbol
 	{
-		public string symbol { get; set; }
-		public string name { get; set; }
-		public string date { get; set; }
-		public bool isEnabled { get; set; }
-		public string type { get; set; }
-		public string iexId { get; set; }
+		public string Symbol { get; set; }
+		public string Exchange { get; set; }
+		public string Name { get; set; }
+		public DateTime Date { get; set; }
+		public string Type { get; set; }
+		public string IexId { get; set; }
+		public string Region { get; set; }
+		public string Currency { get; set; }
+		public bool IsEnabled { get; set; }
 	}
+
 
 }

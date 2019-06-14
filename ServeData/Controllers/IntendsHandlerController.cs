@@ -16,7 +16,7 @@ namespace ServeData.Controllers
     {
 		private readonly ILogger<IntendsHandlerController> _log;
 
-		public ProcessMessages _processMessages { get; }
+		private  ProcessMessages _processMessages { get; }
 
 		public IntendsHandlerController(ILogger<IntendsHandlerController> log, ProcessMessages processMessages)
 		{
@@ -41,7 +41,11 @@ namespace ServeData.Controllers
         [HttpPost]
 		public async Task<IActionResult> Post([FromBody] GoogleCloudDialogflowV2WebhookRequest value)
 		{
-			
+			string intendDisplayName = value.QueryResult.Intent.DisplayName;
+			if (intendDisplayName.Equals("RandomRecommendation"))
+			{
+				RedirectToAction()
+			}
 			return await _processMessages.ProcessValuesFromIntents(value);
 		}
 

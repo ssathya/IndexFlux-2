@@ -15,21 +15,21 @@ namespace DataProvider.BusLogic
 
 		#region Private Fields
 
-		private const string baseUrl = @"https://api.iextrading.com/1.0/stock/symbol/batch?types=quote";
-		private readonly DownloadCompanyNames _downloadCompanyNames;
+		
+		private readonly ObtainCompanyDetails _obtainCompanyDetails;
 		private readonly EnvHandler _envHandler;
 		private readonly ILogger<ObtainStockQuote> _log;
-		private string companyName = "CompanyName";
+		private readonly string companyName = "CompanyName";
 
 		#endregion Private Fields
 
 
 		#region Public Constructors
 
-		public ObtainStockQuote(ILogger<ObtainStockQuote> log, DownloadCompanyNames downloadCompanyNames, EnvHandler envHandler)
+		public ObtainStockQuote(ILogger<ObtainStockQuote> log, ObtainCompanyDetails obtainCompanyDetails, EnvHandler envHandler)
 		{
 			_log = log;
-			_downloadCompanyNames = downloadCompanyNames;
+			_obtainCompanyDetails = obtainCompanyDetails;
 			_envHandler = envHandler;
 		}
 
@@ -42,7 +42,7 @@ namespace DataProvider.BusLogic
 		{
 			_log.LogTrace("Starting to obtain quotes");
 			var companyNameToResolve = stockQuoteParameter.QueryResult.Parameters[companyName].ToString();
-			var tickersToUse = await _downloadCompanyNames.ResolveCompanyNameOrTicker(companyNameToResolve);
+			var tickersToUse = await _obtainCompanyDetails.ResolveCompanyNameOrTicker(companyNameToResolve);
 			if (string.IsNullOrWhiteSpace(tickersToUse))
 			{
 				return new WebhookResponse
