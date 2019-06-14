@@ -14,20 +14,19 @@ namespace ServeData.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class RecommendationsController : ControllerBase
+    public class StockQuoteController : ControllerBase
     {
-		private readonly ILogger<RecommendationsController> _log;
-		private readonly ObtainGoodInvestments _obtainGoodInvestments;
+		private readonly ILogger<StockQuoteController> _log;
+		private readonly ObtainStockQuote obtainStockQuote;
 
-		public RecommendationsController(ILogger<RecommendationsController> log, ObtainGoodInvestments obtainGoodInvestments)
+		public StockQuoteController(ILogger<StockQuoteController> log, ObtainStockQuote obtainStockQuote)
 		{
-			_log = log;
-			_obtainGoodInvestments = obtainGoodInvestments;
+			this._log = log;
+			this.obtainStockQuote = obtainStockQuote;
 		}
-		public IActionResult Post([FromBody] GoogleCloudDialogflowV2WebhookRequest intent)
+		public async Task<IActionResult> Post([FromBody] GoogleCloudDialogflowV2WebhookRequest intent)
 		{
-			WebhookResponse returnValue = null;
-			returnValue = _obtainGoodInvestments.SelectRandomGoodFirms();
+			WebhookResponse returnValue = await obtainStockQuote.GetMarketData(intent);
 			if (returnValue == null)
 			{
 				returnValue = new WebhookResponse
