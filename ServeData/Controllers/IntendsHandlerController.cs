@@ -40,12 +40,7 @@ namespace ServeData.Controllers
         // POST: api/IntendsHandler
         [HttpPost]
 		public async Task<IActionResult> Post([FromBody] GoogleCloudDialogflowV2WebhookRequest value)
-		{
-			string intendDisplayName = value.QueryResult.Intent.DisplayName;
-			if (intendDisplayName.Equals("RandomRecommendation"))
-			{
-				RedirectToAction()
-			}
+		{			
 			return await _processMessages.ProcessValuesFromIntents(value);
 		}
 
