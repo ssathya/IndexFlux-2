@@ -14,20 +14,22 @@ namespace ServeData.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class RecommendationsController : ControllerBase
+    public class MarketSummaryController : ControllerBase
     {
-		private readonly ILogger<RecommendationsController> _log;
-		private readonly ObtainGoodInvestments _obtainGoodInvestments;
+		private readonly ILogger<MarketSummaryController> _log;
+		private readonly ObtainMarketSummary _obtainMarketSummary;
 
-		public RecommendationsController(ILogger<RecommendationsController> log, ObtainGoodInvestments obtainGoodInvestments)
+		public MarketSummaryController(ILogger<MarketSummaryController> log, ObtainMarketSummary obtainMarketSummary)
 		{
 			_log = log;
-			_obtainGoodInvestments = obtainGoodInvestments;
+			_obtainMarketSummary = obtainMarketSummary;
 		}
-		public IActionResult Post([FromBody] GoogleCloudDialogflowV2WebhookRequest intent)
-		{
+        // POST: api/MarketSummary
+        [HttpPost]
+        public async Task<IActionResult> PostAsync(GoogleCloudDialogflowV2WebhookRequest value)
+        {
 			WebhookResponse returnValue = null;
-			returnValue = _obtainGoodInvestments.SelectRandomGoodFirms();
+			returnValue = await _obtainMarketSummary.GetIndicesValuesAsync();
 			if (returnValue == null)
 			{
 				returnValue = new WebhookResponse
@@ -49,5 +51,8 @@ namespace ServeData.Controllers
 				StatusCode = 200
 			};
 		}
-	}
+
+        // PUT: api/MarketSummary/5
+       
+    }
 }

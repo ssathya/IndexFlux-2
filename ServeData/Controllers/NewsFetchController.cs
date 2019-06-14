@@ -14,20 +14,21 @@ namespace ServeData.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class RecommendationsController : ControllerBase
+    public class NewsFetchController : ControllerBase
     {
-		private readonly ILogger<RecommendationsController> _log;
-		private readonly ObtainGoodInvestments _obtainGoodInvestments;
+		private readonly ObtainNews _obtainNews;
+		private readonly ILogger<NewsFetchController> _log;
 
-		public RecommendationsController(ILogger<RecommendationsController> log, ObtainGoodInvestments obtainGoodInvestments)
+		public NewsFetchController(ObtainNews obtainNews, ILogger<NewsFetchController> log)
 		{
-			_log = log;
-			_obtainGoodInvestments = obtainGoodInvestments;
+			this._obtainNews = obtainNews;
+			this._log = log;
 		}
-		public IActionResult Post([FromBody] GoogleCloudDialogflowV2WebhookRequest intent)
+        // POST: api/NewsFetch
+        [HttpPost]
+		public async Task<IActionResult> Post([FromBody] GoogleCloudDialogflowV2WebhookRequest intent)
 		{
-			WebhookResponse returnValue = null;
-			returnValue = _obtainGoodInvestments.SelectRandomGoodFirms();
+			WebhookResponse returnValue = await _obtainNews.GetExternalNews(intent);
 			if (returnValue == null)
 			{
 				returnValue = new WebhookResponse

@@ -14,10 +14,7 @@ namespace ServeData.MessageProcessors
 		#region Private Fields
 
 		private readonly ILogger<ProcessMessages> _log;
-		private readonly ObtainNews _obtainNews;
-		private readonly ObtainStockQuote _obtainStockQuote;		
 		private readonly ObtainTrenders _obtainTrends;
-		private readonly ObtainMarketSummary _oms;
 
 		#endregion Private Fields
 
@@ -25,16 +22,12 @@ namespace ServeData.MessageProcessors
 		#region Public Constructors
 
 		public ProcessMessages(ILogger<ProcessMessages> log,
-			ObtainMarketSummary oms,
-			ObtainTrenders obtainTrends,
-			ObtainNews obtainNews,
-			ObtainStockQuote obtainStockQuote)
+			
+			ObtainTrenders obtainTrends)
 		{
 			_log = log;
-			_oms = oms;
+			
 			_obtainTrends = obtainTrends;
-			_obtainNews = obtainNews;
-			_obtainStockQuote = obtainStockQuote;
 			
 		}
 
@@ -70,18 +63,12 @@ namespace ServeData.MessageProcessors
 			WebhookResponse returnValue = null;
 			switch (intendDisplayName)
 			{
-				case "marketSummary":
-					returnValue = await _oms.GetIndicesValuesAsync();
-					break;
-
 				case "marketTrends":
 					returnValue = await _obtainTrends.GetTrendingAsync(intent);
 					break;
-				case "newsFetch":
-					returnValue = await _obtainNews.GetExternalNews(intent);
+				case "newsFetch":					
 					break;
 				case "stockQuote":
-					returnValue = await _obtainStockQuote.GetMarketData(intent);
 					break;
 				case "fundamentals":
 					break;

@@ -1,52 +1,70 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using DataProvider.Extensions;
 using Google.Apis.Dialogflow.v2.Data;
-using Microsoft.AspNetCore.Http;
+using Google.Cloud.Dialogflow.V2;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using RestSharp;
 using ServeData.MessageProcessors;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace ServeData.Controllers
 {
-    [Route("api/[controller]")]
-    [ApiController]
-    public class IntendsHandlerController : ControllerBase
-    {
+	[Route("api/[controller]")]
+	[ApiController]
+	public class IntendsHandlerController : ControllerBase
+	{
+
+		#region Private Fields
+
 		private readonly ILogger<IntendsHandlerController> _log;
 
-		private  ProcessMessages _processMessages { get; }
+		#endregion Private Fields
+
+
+		#region Private Properties
+
+		private ProcessMessages _processMessages { get; }
+
+		#endregion Private Properties
+
+
+		#region Public Constructors
 
 		public IntendsHandlerController(ILogger<IntendsHandlerController> log, ProcessMessages processMessages)
 		{
 			_log = log;
 			_processMessages = processMessages;
 		}
-        // GET: api/IntendsHandler
-        [HttpGet]
-        public IEnumerable<string> Get()
-        {
-            return new string[] { "value1", "value2" };
-        }
 
-        // GET: api/IntendsHandler/5
-        [HttpGet("{id}", Name = "Get")]
-        public string Get(int id)
-        {
-            return "value";
-        }
+		#endregion Public Constructors
 
-        // POST: api/IntendsHandler
-        [HttpPost]
-		public async Task<IActionResult> Post([FromBody] GoogleCloudDialogflowV2WebhookRequest value)
-		{			
-			return await _processMessages.ProcessValuesFromIntents(value);
+		#region Public Methods
+
+		
+		// POST: api/IntendsHandler
+		[HttpPost]
+		public IActionResult Post([FromBody] GoogleCloudDialogflowV2WebhookRequest value)
+		{
+			return ExecuteKnownValues(value);
 		}
 
-		private string BuildActionMethod(string intendDisplayName)
+		
+
+		#endregion Public Methods
+
+
+		#region Private Methods
+
+		private static WebhookResponse StdErrorMessageGenerator()
+		{
+			return new WebhookResponse
+			{
+				FulfillmentText = Utilities.ErrorReturnMsg() + Utilities.EndOfCurrentRequest()
+			};
+		}
+
+		private static string BuildActionMethod(string intendDisplayName)
 		{
 			string returnString = "";
 			switch (intendDisplayName)
@@ -54,8 +72,19 @@ namespace ServeData.Controllers
 				case "fundamentals":
 					returnString = "/api/Fundamentals";
 					break;
+
 				case "recommend":
 					returnString = "/api/Recommendations";
+					break;
+
+				case "marketSummary":
+					returnString = "/api/MarketSummary";
+					break;
+				case "newsFetch":
+					returnString = "/api/NewsFetch";
+					break;
+				case "stockQuote":
+					returnString = "/api/StockQuote";
 					break;
 				default:
 					break;
@@ -63,16 +92,50 @@ namespace ServeData.Controllers
 			return returnString;
 		}
 
-		// PUT: api/IntendsHandler/5
-		[HttpPut("{id}")]
-        public void Put(int id, [FromBody] string value)
-        {
-        }
+		private IActionResult ExecuteKnownValues(GoogleCloudDialogflowV2WebhookRequest value)
+		{
+			WebhookResponse returnValue = null;
+			var baseURL = Request.Host.ToString();
+			var keyUsedToAccess = Request.Headers["key"].ToString();
 
-        // DELETE: api/ApiWithActions/5
-        [HttpDelete("{id}")]
-        public void Delete(int id)
-        {
-        }
-    }
+			string intendDisplayName = value.QueryResult.Intent.DisplayName;
+			var client = new RestClient("https://" + baseURL);
+			var actionLink = BuildActionMethod(intendDisplayName);
+			if (string.IsNullOrWhiteSpace(actionLink))
+			{
+				returnValue = StdErrorMessageGenerator();
+			}
+			else
+			{
+				var request = new RestRequest(actionLink, Method.POST);
+				request.AddHeader("key", keyUsedToAccess);
+				request.AddJsonBody(value);
+				var response = client.Execute(request);
+				if (response.IsSuccessful)
+				{
+					var returnMsg = response.Content;
+					return new ContentResult
+					{
+						Content = returnMsg,
+						ContentType = "application/json",
+						StatusCode = 200
+					};
+				}
+				else
+				{
+					returnValue = StdErrorMessageGenerator();
+				}
+			}
+			var responseString = returnValue.ToString();
+			_log.LogTrace("Completed processing request");
+			return new ContentResult
+			{
+				Content = responseString,
+				ContentType = "application/json",
+				StatusCode = 200
+			};
+		}
+
+		#endregion Private Methods
+	}
 }
