@@ -40,9 +40,10 @@ namespace DataProvider.Extensions
 			services.AddScoped<ObtainStockQuote>();
 			services.AddScoped<ObtainFundamentals>();
 			services.AddScoped<EnvHandler>();
-			//services.AddScoped<DownloadCompanyNames>();
+			services.AddScoped<ObtainGoodInvestments>();			
 			services.AddScoped<ObtainCompanyDetails>();
 			services.AddScoped<IDBConnectionHandler<PiotroskiScoreMd>, DBConnectionHandler<PiotroskiScoreMd>>();
+			services.AddScoped<IDBConnectionHandler<CompanyDetailMd>, DBConnectionHandler<CompanyDetailMd>>();
 		}
 
 	}
