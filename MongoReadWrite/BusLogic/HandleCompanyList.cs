@@ -91,7 +91,7 @@ namespace MongoReadWrite.BusLogic
 			List<CompanyDetail> compDetailList;
 			var savedValue = _dbconCompany.Get().ToList();
 			//refresh list if it has too little data or at least once a month
-			if (savedValue.Count <= 1000 || TodayIsFirstSaturday())
+			if (savedValue.Count <= 1000 || TodayIsFirstSaturday() || 1==1)
 			{
 				compDetailList = await GetAllCompaniesAsync();
 				return compDetailList;
