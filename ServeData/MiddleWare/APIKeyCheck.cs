@@ -10,8 +10,7 @@ namespace ServeData.MiddleWare
 {
 	public class APIKeyCheck
     {
-		private readonly RequestDelegate _next;
-		private const string apiKey = "8439E57A-79FD-4460-AA69-8B063B769D43";
+		private readonly RequestDelegate _next;		
 		private const string KeyName = "key";
 
 		public APIKeyCheck(RequestDelegate next)
@@ -20,9 +19,10 @@ namespace ServeData.MiddleWare
 		}
 		public async Task Invoke(HttpContext context)
 		{
+			var apiKey = Environment.GetEnvironmentVariable("AppMaster");			
 			bool validKey = false;
 			var checkApiKeyExists = context.Request.Headers.ContainsKey(KeyName);
-			if (checkApiKeyExists)
+			if (checkApiKeyExists && !string.IsNullOrWhiteSpace(apiKey))
 			{
 				if (context.Request.Headers[KeyName].Equals(apiKey))
 				{

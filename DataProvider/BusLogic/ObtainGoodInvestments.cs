@@ -52,6 +52,8 @@ namespace DataProvider.BusLogic
 						messageString.Append($"{companyName} with ticker {piotroskiScore.Ticker} scores {piotroskiScore.Rating}.\n");
 					}
 				}
+				messageString.Append($"Note: Recommendations are based on SEC filings. Market conditions will affect the company's performance.\n");
+				messageString.Append($"Further research needs to be done before you place your buy order.");
 				var returnResponse = new WebhookResponse
 				{
 					FulfillmentText = messageString.ToString()
