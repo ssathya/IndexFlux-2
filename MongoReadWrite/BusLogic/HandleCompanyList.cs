@@ -50,7 +50,7 @@ namespace MongoReadWrite.BusLogic
 		public async Task<List<CompanyDetail>> GetAllCompaniesAsync()
 		{
 						
-			var tmpList = await _dlf.GetCompanyList();
+			var tmpList = await _dlf.GetCompanyList();			
 			allCompanies = new List<CompanyDetailMd>();
 			var dbCompanies = _dbconCompany.Get().ToList();
 			if (dbCompanies.Count() < 100 || dbCompanies.Where(x => x.IndustryTemplate.IsNullOrWhiteSpace()).Count() < 20)
@@ -62,6 +62,11 @@ namespace MongoReadWrite.BusLogic
 				}
 			}
 			dbCompanies = _dbconCompany.Get().ToList();
+			if (tmpList == null)
+			{
+				
+				return Mapper.Map<List<CompanyDetailMd>, List<CompanyDetail>>(dbCompanies);
+			}
 			foreach (var company in tmpList)
 			{
 				var dbCompany = dbCompanies.Where(x => x.SimId == company.SimId).FirstOrDefault();
