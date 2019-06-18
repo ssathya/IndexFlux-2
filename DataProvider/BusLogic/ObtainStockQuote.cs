@@ -6,6 +6,7 @@ using Microsoft.Extensions.Logging;
 using Models;
 using System;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace DataProvider.BusLogic
@@ -78,9 +79,10 @@ namespace DataProvider.BusLogic
 			{
 				float price = quote.Price != null ? (float)quote.Price : 0;
 				quote.Day_change = quote.Day_change == null ? 0 : quote.Day_change;
-				tmpStr.Append($"{quote.Name} with ticker {quote.Symbol} was traded at {price.ToString("N")}.");
+				var symbol = Regex.Replace(quote.Symbol, ".{1}", "$0 ");
+				tmpStr.Append($"{quote.Name} with ticker {symbol} was traded at {price.ToString("c2")}.");
 				tmpStr.Append(quote.Day_change > 0 ? " Up by " : " Down by ");
-				tmpStr.Append($"{((float)quote.Day_change).ToString("N")} points.\n\n ");
+				tmpStr.Append($"{((float)quote.Day_change).ToString("n2")} points.\n\n ");
 			}
 			return tmpStr.ToString();
 		}
