@@ -24,10 +24,10 @@ namespace ServeData.Controllers
 			_log = log;
 			_obtainGoodInvestments = obtainGoodInvestments;
 		}
-		public IActionResult Post([FromBody] GoogleCloudDialogflowV2WebhookRequest intent)
+		public async Task<IActionResult> Post([FromBody] GoogleCloudDialogflowV2WebhookRequest intent)
 		{
 			WebhookResponse returnValue = null;
-			returnValue = _obtainGoodInvestments.SelectRandomGoodFirms();
+			returnValue = await _obtainGoodInvestments.SelectRandomGoodFirms();
 			if (returnValue == null)
 			{
 				returnValue = new WebhookResponse

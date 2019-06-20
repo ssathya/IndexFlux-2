@@ -8,6 +8,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using MongoHandler.Extensions;
+using DataProvider.Extensions;
+using System.Net;
+using Newtonsoft.Json;
+using HandleSimFin.Helpers;
 
 namespace DataProvider.BusLogic
 {
@@ -16,18 +20,24 @@ namespace DataProvider.BusLogic
 		private readonly ILogger<ObtainGoodInvestments> _log;
 		private readonly IDBConnectionHandler<PiotroskiScoreMd> _ratingsConnectionHandler;
 		private readonly IDBConnectionHandler<CompanyDetailMd> _dbconCompany;
+		private readonly EnvHandler _envHandler;
+		private const string iexTargetPrice = @"https://cloud.iexapis.com/stable/stock/{ticker}/price-target?token={api-key}";
+		private const string iexLastTradePrice = @"https://cloud.iexapis.com/stable/stock/{ticker}/price?token={api-key}";
+		private const string iexTradingProvider = "IEXTrading";
 
 		public ObtainGoodInvestments(ILogger<ObtainGoodInvestments> log,
 			IDBConnectionHandler<PiotroskiScoreMd> connectionHandlerCF,
-			IDBConnectionHandler<CompanyDetailMd> dbconCompany)
+			IDBConnectionHandler<CompanyDetailMd> dbconCompany,
+			EnvHandler envHandler)
 		{
 			_log = log;
 			_ratingsConnectionHandler = connectionHandlerCF;
 			_dbconCompany = dbconCompany;
+			_envHandler = envHandler;
 			_ratingsConnectionHandler.ConnectToDatabase("PiotroskiScore");
 			_dbconCompany.ConnectToDatabase("CompanyDetail");
 		}
-		public WebhookResponse SelectRandomGoodFirms()
+		public async Task<WebhookResponse> SelectRandomGoodFirms()
 		{
 			_log.LogTrace("Started to select better investments");
 			try
@@ -49,11 +59,17 @@ namespace DataProvider.BusLogic
 					var companyName = _dbconCompany.Get(r => r.SimId.Equals(piotroskiScore.SimId)).FirstOrDefault().Name;
 					if (!string.IsNullOrWhiteSpace(companyName))
 					{
+						string targetPrice = await GetTargetPriceAsync(piotroskiScore.Ticker);
 						messageString.Append($"{companyName} with ticker {piotroskiScore.Ticker} scores {piotroskiScore.Rating}.\n");
+						Task.WaitAll();
+						if (!targetPrice.IsNullOrWhiteSpace())
+						{
+							messageString.Append(targetPrice);
+						}
 					}
 				}
-				messageString.Append($"Note: Recommendations are based on SEC filings. Market conditions will affect the company's performance.\n");
-				messageString.Append($"Further research needs to be done before you place your buy order.");
+				messageString.Append($"\n Note: Recommendations are based on SEC filings. Market conditions will affect the company's performance.\n");
+				messageString.Append($"\n Further research needs to be done before you place your order.\n");
 				var returnResponse = new WebhookResponse
 				{
 					FulfillmentText = messageString.ToString()
@@ -66,5 +82,45 @@ namespace DataProvider.BusLogic
 				return new WebhookResponse();
 			}
 		}
-    }
+
+		private async Task<string> GetTargetPriceAsync(string ticker)
+		{
+			var urlToUseForTarget = iexTargetPrice.Replace(@"{ticker}", ticker)
+				.Replace(@"{api-key}", _envHandler.GetApiKey(iexTradingProvider));
+			var urlToUseForPrice = iexLastTradePrice.Replace(@"{ticker}", ticker)
+				.Replace(@"{api-key}", _envHandler.GetApiKey(iexTradingProvider));
+			try
+			{
+				using (var wc = new WebClient())
+				{
+					string data = "{}";
+					string lastTradePrice = "";
+					data = await wc.DownloadStringTaskAsync(urlToUseForTarget);
+					lastTradePrice = await wc.DownloadStringTaskAsync(urlToUseForPrice);
+					var targetPrice = JsonConvert.DeserializeObject<TargetPrice>(data);
+					if (targetPrice != null && !targetPrice.Symbol.IsNullOrWhiteSpace())
+					{
+						var returnString = $"\n As of {targetPrice.UpdatedDate.ToString("MMMM dd")} {targetPrice.NumberOfAnalysts} Analysts project {targetPrice.PriceTargetAverage.ToString("c2")} as target price \n";
+						returnString += $"The target ranges between {targetPrice.PriceTargetLow.ToString("c2")} to {targetPrice.PriceTargetHigh.ToString("c2")} \n";
+						if (!lastTradePrice.IsNullOrWhiteSpace())
+						{
+							returnString += $" It last traded at ${lastTradePrice}\n ";
+						}
+						return returnString;
+					}
+					return "";
+				}
+			}
+			catch (Exception ex)
+			{
+				_log.LogError("Error while getting data from IEX Trading");
+				_log.LogError(ex.Message);
+				if (ex.InnerException != null)
+				{
+					_log.LogError(ex.InnerException.Message);
+				}
+				return "";
+			}			
+		}
+	}
 }
