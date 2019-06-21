@@ -49,7 +49,14 @@ namespace DataProvider.BusLogic
 			{
 				tick.AddRange((from s in symbols
 							   where s.Name.ToLower().Contains(companyName.ToLower())
+							   && (s.Type.ToLower() == "cs" || s.Type.ToLower().Contains("et"))
 							   select s.Symbol).ToList());
+				if (!tick.Any())
+				{
+					tick.AddRange((from s in symbols
+								   where s.Name.ToLower().Contains(companyName.ToLower())								   
+								   select s.Symbol).ToList());
+				}
 				tick = tick.Distinct().Take(5).ToList();
 			}
 			string returnString = tick.Aggregate((i, j) => i + "," + j);

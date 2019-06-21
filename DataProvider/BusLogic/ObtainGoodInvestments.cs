@@ -59,9 +59,17 @@ namespace DataProvider.BusLogic
 					var companyName = _dbconCompany.Get(r => r.SimId.Equals(piotroskiScore.SimId)).FirstOrDefault().Name;
 					if (!string.IsNullOrWhiteSpace(companyName))
 					{
-						string targetPrice = await GetTargetPriceAsync(piotroskiScore.Ticker);
-						messageString.Append($"{companyName} with ticker {piotroskiScore.Ticker} scores {piotroskiScore.Rating}.\n");
-						Task.WaitAll();
+						string targetPrice;
+						if (betterScores.First() != piotroskiScore)
+						{
+							var a = await Task.Delay(100).ContinueWith(t => GetTargetPriceAsync(piotroskiScore.Ticker));
+							targetPrice = a.Result;
+						}
+						else
+						{
+							targetPrice = await GetTargetPriceAsync(piotroskiScore.Ticker);
+						}						
+						messageString.Append($"{companyName} with ticker {piotroskiScore.Ticker} scores {piotroskiScore.Rating}.\n");						
 						if (!targetPrice.IsNullOrWhiteSpace())
 						{
 							messageString.Append(targetPrice);
@@ -104,7 +112,7 @@ namespace DataProvider.BusLogic
 						returnString += $"The target ranges between {targetPrice.PriceTargetLow.ToString("c2")} to {targetPrice.PriceTargetHigh.ToString("c2")} \n";
 						if (!lastTradePrice.IsNullOrWhiteSpace())
 						{
-							returnString += $" It last traded at ${lastTradePrice}\n ";
+							returnString += $" It last traded at ${lastTradePrice}\n\n ";
 						}
 						return returnString;
 					}
