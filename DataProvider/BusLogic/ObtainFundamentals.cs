@@ -3,7 +3,6 @@ using DataProvider.Extensions;
 using Google.Apis.Dialogflow.v2.Data;
 using Google.Cloud.Dialogflow.V2;
 using HandleSimFin.Helpers;
-using HandleSimFin.Methods;
 using Microsoft.Extensions.Logging;
 using Models;
 using MongoHandler.Utils;
@@ -22,13 +21,13 @@ namespace DataProvider.BusLogic
 	{
 		#region Private Fields
 
-		private readonly IDBConnectionHandler<PiotroskiScoreMd> _connectionHandlerCF;
-		private readonly EnvHandler _envHandler;
-		private readonly ObtainCompanyDetails _obtainCompanyDetails;
-		private readonly ILogger<ObtainFundamentals> _log;
-		private readonly string companyName = "CompanyName";
 		private const string iexAnalystRatings = @"https://cloud.iexapis.com/stable/stock/{ticker}/recommendation-trends?token={api-key}";
 		private const string iexTradingProvider = "IEXTrading";
+		private readonly IDBConnectionHandler<PiotroskiScoreMd> _connectionHandlerCF;
+		private readonly EnvHandler _envHandler;
+		private readonly ILogger<ObtainFundamentals> _log;
+		private readonly ObtainCompanyDetails _obtainCompanyDetails;
+		private readonly string companyName = "CompanyName";
 		private string symbol;
 
 		#endregion Private Fields
@@ -118,66 +117,13 @@ namespace DataProvider.BusLogic
 
 		#region Private Methods
 
-		private async Task<string> BuildCompanyProfile(string ticker, PiotroskiScore computedRating)
-		{
-			symbol = Regex.Replace(ticker, ".{1}", "$0 ");
-			var companyOverview = await _obtainCompanyDetails.ObtainCompanyOverview(ticker);
-			var returnText = new StringBuilder();
-			if (companyOverview == null || string.IsNullOrWhiteSpace(companyOverview.Symbol))
-			{				
-				returnText.Append($" No basic information about {symbol} found at this time\n");
-			}
-			else
-			{
-				returnText.Append($"Basic information about {companyOverview.CompanyName} trading with symbol {symbol}.\n");
-				returnText.Append($" {(companyOverview.Description.IsNullOrWhiteSpace() ? "This information is not available now" : companyOverview.Description.TruncateAtWord(200))}\n");
-				if (companyOverview.Description.Length >= 201)
-				{
-					returnText.Append("\n\n..... more removed. ....\n\n");
-				}
-				returnText.Append($" Its industry sector is {companyOverview.Sector} and falls under {companyOverview.Industry}\n\n ");
-			}
-			switch (companyOverview.IssueType.ToLower())
-			{
-				case "cs":
-					returnText.Append(BuildCommonStockMessage(computedRating));
-					returnText.Append(await BuildAnalystsRatings(ticker));
-					break;
-				case "ad":
-					returnText.Append($" {symbol} is an American Depositary Receipt: ADR");
-					break;
-				case "re":
-					returnText.Append($" {symbol} is a Real estate investment trust: REIT");
-					break;
-				case "ce":
-				case "cef":
-					returnText.Append($" {symbol} is a closed end fund");
-					break;
-				case "si":
-					returnText.Append($" {symbol} is a secondary issue");
-					break;
-				case "et":
-				case "etf":
-					returnText.Append($" {symbol} is a exchange traded fund; ETF");
-					break;
-				case "ps":
-				case "wt":
-					returnText.Append($" {symbol} is a preferred stock or warrant; individuals do not trade these!");
-					break;
-				default:
-					returnText.Append($" No additional information is available for {symbol}");
-					break;
-			}
-			return returnText.ToString();
-		}
-
 		private async Task<string> BuildAnalystsRatings(string ticker)
 		{
 			var urlToUseForAnalystRating = iexAnalystRatings.Replace(@"{ticker}", ticker)
 				.Replace(@"{api-key}", _envHandler.GetApiKey(iexTradingProvider));
 			try
 			{
-				using(var wc = new WebClient())
+				using (var wc = new WebClient())
 				{
 					string data = "[]";
 					data = await wc.DownloadStringTaskAsync(urlToUseForAnalystRating);
@@ -196,35 +142,13 @@ namespace DataProvider.BusLogic
 					}
 					StringBuilder returnString = BuildRatingsMessage(ratingsToUse, totalRatings);
 					return returnString.ToString();
-
 				}
-
 			}
 			catch (Exception ex)
 			{
 				_log.LogError($"Error in BuildAnalystsRatings; message\n{ex.Message}\n ");
 				return "";
 			}
-		}
-
-		private  StringBuilder BuildRatingsMessage(Ratings ratingsToUse, int totalRatings)
-		{
-			var returnString = new StringBuilder();
-			returnString.Append($"\n\nOut of {totalRatings} Analysts ratings {symbol} has ");
-			returnString.Append(ratingsToUse.RatingBuy != 0 ?
-				$" {ratingsToUse.RatingBuy} Buy " : "");
-			returnString.Append(ratingsToUse.RatingOverweight != 0 ?
-				$" {ratingsToUse.RatingOverweight} Overweight " : "");
-			returnString.Append(ratingsToUse.RatingHold != 0 ?
-				$" {ratingsToUse.RatingHold} Hold " : "");
-			returnString.Append(ratingsToUse.RatingUnderweight != 0 ?
-				$" {ratingsToUse.RatingUnderweight} Underweight " : "");
-			returnString.Append(ratingsToUse.RatingSell != 0 ?
-				$" {ratingsToUse.RatingSell} Sell " : "");
-			returnString.Append(ratingsToUse.RatingNone != 0 ?
-				$" {ratingsToUse.RatingNone} Neutral " : "");
-			returnString.Append($" with an average rating of {ratingsToUse.RatingScaleMark.ToString("n1")}.\n\n 1 being strong buy 5 is a strong sell.\n\n");
-			return returnString;
 		}
 
 		private string BuildCommonStockMessage(PiotroskiScore computedRating)
@@ -250,6 +174,84 @@ namespace DataProvider.BusLogic
 			return returnText.ToString();
 		}
 
+		private async Task<string> BuildCompanyProfile(string ticker, PiotroskiScore computedRating)
+		{
+			symbol = Regex.Replace(ticker, ".{1}", "$0 ");
+			var companyOverview = await _obtainCompanyDetails.ObtainCompanyOverview(ticker);
+			var returnText = new StringBuilder();
+			if (companyOverview == null || string.IsNullOrWhiteSpace(companyOverview.Symbol))
+			{
+				returnText.Append($" No basic information about {symbol} found at this time\n");
+			}
+			else
+			{
+				returnText.Append($"Basic information about {companyOverview.CompanyName} trading with symbol {symbol}.\n");
+				returnText.Append($" {(companyOverview.Description.IsNullOrWhiteSpace() ? "This information is not available now" : companyOverview.Description.TruncateAtWord(200))}\n");
+				if (companyOverview.Description.Length >= 201)
+				{
+					returnText.Append("\n\n..... more removed. ....\n\n");
+				}
+				returnText.Append($" Its industry sector is {companyOverview.Sector} and falls under {companyOverview.Industry}\n\n ");
+			}
+			switch (companyOverview.IssueType.ToLower())
+			{
+				case "cs":
+					returnText.Append(BuildCommonStockMessage(computedRating));
+					returnText.Append(await BuildAnalystsRatings(ticker));
+					break;
+
+				case "ad":
+					returnText.Append($" {symbol} is an American Depositary Receipt: ADR");
+					break;
+
+				case "re":
+					returnText.Append($" {symbol} is a Real estate investment trust: REIT");
+					break;
+
+				case "ce":
+				case "cef":
+					returnText.Append($" {symbol} is a closed end fund");
+					break;
+
+				case "si":
+					returnText.Append($" {symbol} is a secondary issue");
+					break;
+
+				case "et":
+				case "etf":
+					returnText.Append($" {symbol} is a exchange traded fund; ETF");
+					break;
+
+				case "ps":
+				case "wt":
+					returnText.Append($" {symbol} is a preferred stock or warrant; individuals do not trade these!");
+					break;
+
+				default:
+					returnText.Append($" No additional information is available for {symbol}");
+					break;
+			}
+			return returnText.ToString();
+		}
+		private StringBuilder BuildRatingsMessage(Ratings ratingsToUse, int totalRatings)
+		{
+			var returnString = new StringBuilder();
+			returnString.Append($"\n\nOut of {totalRatings} Analysts ratings {symbol} has ");
+			returnString.Append(ratingsToUse.RatingBuy != 0 ?
+				$" {ratingsToUse.RatingBuy} Buy " : "");
+			returnString.Append(ratingsToUse.RatingOverweight != 0 ?
+				$" {ratingsToUse.RatingOverweight} Overweight " : "");
+			returnString.Append(ratingsToUse.RatingHold != 0 ?
+				$" {ratingsToUse.RatingHold} Hold " : "");
+			returnString.Append(ratingsToUse.RatingUnderweight != 0 ?
+				$" {ratingsToUse.RatingUnderweight} Underweight " : "");
+			returnString.Append(ratingsToUse.RatingSell != 0 ?
+				$" {ratingsToUse.RatingSell} Sell " : "");
+			returnString.Append(ratingsToUse.RatingNone != 0 ?
+				$" {ratingsToUse.RatingNone} Neutral " : "");
+			returnString.Append($" with an average rating of {ratingsToUse.RatingScaleMark.ToString("n1")}.\n\n 1 being strong buy 5 is a strong sell.\n\n");
+			return returnString;
+		}
 		#endregion Private Methods
 	}
 }
