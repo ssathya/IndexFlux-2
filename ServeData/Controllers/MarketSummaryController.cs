@@ -1,21 +1,17 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using DataProvider.BusLogic;
+﻿using DataProvider.BusLogic;
 using DataProvider.Extensions;
 using Google.Apis.Dialogflow.v2.Data;
 using Google.Cloud.Dialogflow.V2;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using System.Threading.Tasks;
 
 namespace ServeData.Controllers
 {
-    [Route("api/[controller]")]
-    [ApiController]
-    public class MarketSummaryController : ControllerBase
-    {
+	[Route("api/[controller]")]
+	[ApiController]
+	public class MarketSummaryController : ControllerBase
+	{
 		private readonly ILogger<MarketSummaryController> _log;
 		private readonly ObtainMarketSummary _obtainMarketSummary;
 
@@ -24,10 +20,11 @@ namespace ServeData.Controllers
 			_log = log;
 			_obtainMarketSummary = obtainMarketSummary;
 		}
-        // POST: api/MarketSummary
-        [HttpPost]
-        public async Task<IActionResult> PostAsync(GoogleCloudDialogflowV2WebhookRequest value)
-        {
+
+		// POST: api/MarketSummary
+		[HttpPost]
+		public async Task<IActionResult> PostAsync(GoogleCloudDialogflowV2WebhookRequest value)
+		{
 			WebhookResponse returnValue = null;
 			returnValue = await _obtainMarketSummary.GetIndicesValuesAsync();
 			if (returnValue == null)
@@ -52,7 +49,6 @@ namespace ServeData.Controllers
 			};
 		}
 
-        // PUT: api/MarketSummary/5
-       
-    }
+		// PUT: api/MarketSummary/5
+	}
 }

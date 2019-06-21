@@ -1,15 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Models
+﻿namespace Models
 {
 	public class MarketQuote
 	{
 		public Trend Quote { get; set; }
 	}
+
 	public class Trend
 	{
 		public string Symbol { get; set; }

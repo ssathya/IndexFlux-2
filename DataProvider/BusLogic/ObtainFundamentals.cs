@@ -233,6 +233,7 @@ namespace DataProvider.BusLogic
 			}
 			return returnText.ToString();
 		}
+
 		private StringBuilder BuildRatingsMessage(Ratings ratingsToUse, int totalRatings)
 		{
 			var returnString = new StringBuilder();
@@ -252,6 +253,7 @@ namespace DataProvider.BusLogic
 			returnString.Append($" with an average rating of {ratingsToUse.RatingScaleMark.ToString("n1")}.\n\n 1 being strong buy 5 is a strong sell.\n\n");
 			return returnString;
 		}
+
 		#endregion Private Methods
 	}
 }

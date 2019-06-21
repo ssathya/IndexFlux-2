@@ -9,7 +9,6 @@ namespace MongoHandler.Utils
 {
 	public interface IDBConnectionHandler<T> where T : IBaseModel
 	{
-
 		#region Public Methods
 
 		IMongoCollection<T> ConnectToDatabase(string collectionName);

@@ -68,6 +68,7 @@ namespace HandleSimFinTests.Methods
 			// Assert
 			Assert.True(result.Bs.Count != 0);
 		}
+
 		[Fact]
 		public async Task FetchStatementList_StateUnderTest_ExpectedBehaviorSimId()
 		{
@@ -84,6 +85,7 @@ namespace HandleSimFinTests.Methods
 			// Assert
 			Assert.True(result.Bs.Count != 0);
 		}
+
 		[Fact]
 		public async Task FetchStatementList_StateUnderTest_UnExpectedBehaviorSimId()
 		{
@@ -100,6 +102,7 @@ namespace HandleSimFinTests.Methods
 			// Assert
 			Assert.True(result == null || result.Bs.Count == 0);
 		}
+
 		[Fact]
 		public void FactStatementList_RemovePastTTMs_ExpectedBehavior()
 		{
@@ -109,7 +112,7 @@ namespace HandleSimFinTests.Methods
 			IdentifyerType identifyerType = IdentifyerType.SimFinId;
 
 			// Act
-			var result =  unitUnderTest.FetchStatementList(
+			var result = unitUnderTest.FetchStatementList(
 				identifyer,
 				identifyerType).Result;
 			if (result != null)
@@ -120,6 +123,7 @@ namespace HandleSimFinTests.Methods
 			//Assert
 			Assert.True(bs.Count == 0);
 		}
+
 		[Fact]
 		public void FactStatementList_ExtractYearEndReports_ExpectedBehavior()
 		{

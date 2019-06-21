@@ -12,7 +12,6 @@ namespace HandleSimFin.Methods
 {
 	public class GetSimId
 	{
-
 		#region Private Fields
 
 		private const string urlForCompanyNameToId = @"https://simfin.com/api/v1/info/find-id/name-search/{companyName}?api-key={API-KEY}";
@@ -20,13 +19,11 @@ namespace HandleSimFin.Methods
 
 		#endregion Private Fields
 
-
 		#region Public Properties
 
 		public ILogger _logger { get; }
 
 		#endregion Public Properties
-
 
 		#region Public Constructors
 
@@ -37,26 +34,23 @@ namespace HandleSimFin.Methods
 
 		#endregion Public Constructors
 
-
 		#region Public Methods
 
 		public async Task<string> GetSimIdByCompanyName(string companyName)
-		{			
-			var urlToUse = urlForCompanyNameToId.Replace(@"{companyName}", companyName.Trim());			
+		{
+			var urlToUse = urlForCompanyNameToId.Replace(@"{companyName}", companyName.Trim());
 			CompanyDetail firstDetail = await CallSimFinForSimId(urlToUse);
 			return firstDetail != null ? firstDetail.SimId : "";
 		}
 
 		public async Task<string> GetSimIdByTicker(string ticker)
 		{
-			
 			var urlToUse = urlForTickerToId.Replace(@"{tickerStr}", ticker.Trim());
 			CompanyDetail firstDetail = await CallSimFinForSimId(urlToUse);
 			return firstDetail != null ? firstDetail.SimId : "";
 		}
 
 		#endregion Public Methods
-
 
 		#region Private Methods
 
@@ -90,8 +84,6 @@ namespace HandleSimFin.Methods
 				return null;
 			}
 		}
-
-		
 
 		#endregion Private Methods
 	}

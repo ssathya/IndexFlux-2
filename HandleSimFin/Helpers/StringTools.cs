@@ -7,19 +7,16 @@ namespace HandleSimFin.Helpers
 {
 	public static class StringTools
 	{
-
 		#region Private Fields
 
 		private static readonly string topSecret = "My name is Bond; James Bond!";
 
 		#endregion Private Fields
 
-
 		#region Public Methods
 
 		public static string Crypt(this string text)
 		{
-			
 			using (var objHashMD5 = new MD5CryptoServiceProvider())
 			{
 				var txtArray = Encoding.ASCII.GetBytes(text);
@@ -30,7 +27,6 @@ namespace HandleSimFin.Helpers
 				}.CreateEncryptor()
 					.TransformFinalBlock(txtArray, 0, txtArray.Length));
 			}
-
 		}
 
 		public static string Derypt(this string text)
@@ -42,7 +38,6 @@ namespace HandleSimFin.Helpers
 				{
 					byteHash = objHashMD5.ComputeHash(Encoding.ASCII.GetBytes(topSecret));
 				}
-				
 
 				return Encoding.ASCII.GetString(new TripleDESCryptoServiceProvider
 				{
@@ -72,6 +67,7 @@ namespace HandleSimFin.Helpers
 			}
 			return text.Substring(0, pos) + replace + text.Substring(pos + search.Length);
 		}
+
 		public static string ToKMB(this decimal num)
 		{
 			if (num > 999999999 || num < -999999999)
@@ -93,6 +89,7 @@ namespace HandleSimFin.Helpers
 				return num.ToString(CultureInfo.InvariantCulture);
 			}
 		}
+
 		public static string TruncateAtWord(this string value, int length)
 		{
 			if (value == null || value.Length < length || value.IndexOf(" ", length) == -1)

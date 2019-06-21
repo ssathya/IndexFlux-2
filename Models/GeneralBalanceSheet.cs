@@ -4,6 +4,7 @@
 	{
 		//general
 		public bool Calculated { get; set; }
+
 		public string CompanyId { get; set; }
 		public int FYear { get; set; }
 		public string IndustryTemplate { get; set; }
@@ -93,6 +94,5 @@
 		public long? MinorityInterest_83 { get; set; }
 		public long? TotalEquity_84 { get; set; }
 		public long? TotalLiabilitiesEquity_85 { get; set; }
-
 	}
 }

@@ -3,50 +3,35 @@ using Models;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace DataProvider.Extensions
 {
-    public class EnvHandler
-    {
+	public class EnvHandler
+	{
+
+		#region Private Fields
+
 		private readonly ILogger<EnvHandler> _log;
+
+		#endregion Private Fields
+
+
+		#region Public Constructors
 
 		public EnvHandler(ILogger<EnvHandler> log)
 		{
 			_log = log;
 		}
-		internal string GetApiKey(string provider)
-		{
-			var apiKey = Environment.GetEnvironmentVariable(provider, EnvironmentVariableTarget.Process);
-			if (string.IsNullOrWhiteSpace(apiKey))
-			{
-				_log.LogDebug("Did not find api key in process");
-				apiKey = Environment.GetEnvironmentVariable(provider, EnvironmentVariableTarget.Machine);
-			}
-			if (string.IsNullOrWhiteSpace(apiKey))
-			{
-				_log.LogDebug("Did not find api key in Machine");
-				apiKey = Environment.GetEnvironmentVariable(provider, EnvironmentVariableTarget.User);
-			}
-			if (string.IsNullOrWhiteSpace(apiKey))
-			{
-				_log.LogDebug("Did not find api key in Machine");
-				apiKey = Environment.GetEnvironmentVariable("NewsAPI");
-			}
-			if (string.IsNullOrWhiteSpace(apiKey))
-			{
-				_log.LogError($"Did not find api key for {provider}; calls will fail");
-			}
-			return apiKey;
-		}
+
+		#endregion Public Constructors
+
+
+		#region Public Methods
+
 		public async Task<QuotesFromWorldTrading> ObtainFromWorldTrading(string tickersToUse)
 		{
-
-
 			var apiKey = GetApiKey("WorldTradingDataKey");
 
 			if (string.IsNullOrWhiteSpace(apiKey))
@@ -74,5 +59,37 @@ namespace DataProvider.Extensions
 				};
 			}
 		}
+
+		#endregion Public Methods
+
+
+		#region Internal Methods
+
+		internal string GetApiKey(string provider)
+		{
+			var apiKey = Environment.GetEnvironmentVariable(provider, EnvironmentVariableTarget.Process);
+			if (string.IsNullOrWhiteSpace(apiKey))
+			{
+				_log.LogDebug("Did not find api key in process");
+				apiKey = Environment.GetEnvironmentVariable(provider, EnvironmentVariableTarget.Machine);
+			}
+			if (string.IsNullOrWhiteSpace(apiKey))
+			{
+				_log.LogDebug("Did not find api key in Machine");
+				apiKey = Environment.GetEnvironmentVariable(provider, EnvironmentVariableTarget.User);
+			}
+			if (string.IsNullOrWhiteSpace(apiKey))
+			{
+				_log.LogDebug("Did not find api key in Machine");
+				apiKey = Environment.GetEnvironmentVariable("NewsAPI");
+			}
+			if (string.IsNullOrWhiteSpace(apiKey))
+			{
+				_log.LogError($"Did not find api key for {provider}; calls will fail");
+			}
+			return apiKey;
+		}
+
+		#endregion Internal Methods
 	}
 }

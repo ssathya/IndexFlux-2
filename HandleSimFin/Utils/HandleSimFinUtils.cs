@@ -1,14 +1,10 @@
 ﻿using Microsoft.Extensions.Logging;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace HandleSimFin.Utils
 {
-    internal static class HandleSimFinUtils 
-    {
+	internal static class HandleSimFinUtils
+	{
 		internal static string GetApiKey(ILogger _logger)
 		{
 			var apiKey = Environment.GetEnvironmentVariable("SimFinKey", EnvironmentVariableTarget.Process);

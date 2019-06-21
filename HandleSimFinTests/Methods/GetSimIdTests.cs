@@ -20,9 +20,8 @@ namespace HandleSimFinTests.Methods
 			this.mockRepository = new MockRepository(MockBehavior.Strict);
 
 			this.mockLogger = new Mock<ILogger>();
-			dynamic res = JsonConvert.DeserializeObject(File.ReadAllText("appsettings.json"));			
-			Environment.SetEnvironmentVariable("SimFinKey", (string)res.SimFinKey, EnvironmentVariableTarget.Process);			
-
+			dynamic res = JsonConvert.DeserializeObject(File.ReadAllText("appsettings.json"));
+			Environment.SetEnvironmentVariable("SimFinKey", (string)res.SimFinKey, EnvironmentVariableTarget.Process);
 		}
 
 		public void Dispose()
@@ -53,6 +52,7 @@ namespace HandleSimFinTests.Methods
 			Assert.Equal("89126", result);
 			Assert.Equal("71192", result1);
 		}
+
 		[Fact]
 		public async Task GetSimIdByCompanyName_StateUnderTest_ExpectedBehavior()
 		{

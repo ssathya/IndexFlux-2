@@ -19,7 +19,6 @@ namespace HandleSimFin.Methods
 
 	public class ListOfStatements
 	{
-
 		#region Private Fields
 
 		private const string urlForStatmentList = @"https://simfin.com/api/v1/companies/id/{companyId}/statements/list?api-key={API-KEY}";
@@ -27,7 +26,6 @@ namespace HandleSimFin.Methods
 		private StatementList statementList;
 
 		#endregion Private Fields
-
 
 		#region Public Constructors
 
@@ -37,7 +35,6 @@ namespace HandleSimFin.Methods
 		}
 
 		#endregion Public Constructors
-
 
 		#region Public Methods
 
@@ -49,8 +46,8 @@ namespace HandleSimFin.Methods
 			}
 			var latestBS = statement.Bs.Count > 0 ? statement.Bs.Max(b => b.Fyear) : 1990;
 			var currentYear = DateTime.Now.Year;
-			if (currentYear - 2 >= latestBS 
-				|| statement.Cf.Count == 0 
+			if (currentYear - 2 >= latestBS
+				|| statement.Cf.Count == 0
 				|| statement.Pl.Count == 0)
 			{
 				statementList = new StatementList
@@ -100,7 +97,6 @@ namespace HandleSimFin.Methods
 		}
 
 		#endregion Public Methods
-
 
 		#region Private Methods
 

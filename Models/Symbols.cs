@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Models
 {
@@ -10,10 +6,6 @@ namespace Models
 	{
 		public SecuritySymbol[] SymobalList { get; set; }
 	}
-
-
-
-	
 
 	public class SecuritySymbol
 	{
@@ -27,6 +19,4 @@ namespace Models
 		public string Currency { get; set; }
 		public bool IsEnabled { get; set; }
 	}
-
-
 }

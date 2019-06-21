@@ -9,14 +9,12 @@ namespace HandleSimFin.Helpers
 {
 	public class ReadS3Objects
 	{
-
 		#region Private Fields
 
 		private string _bucketName;
 		private RegionEndpoint _region;
 
 		#endregion Private Fields
-
 
 		#region Public Constructors
 
@@ -34,7 +32,6 @@ namespace HandleSimFin.Helpers
 		}
 
 		#endregion Public Constructors
-
 
 		#region Public Methods
 

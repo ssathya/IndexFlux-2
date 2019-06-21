@@ -36,6 +36,5 @@ namespace MongoReadWrite.Utils
 					.ReverseMap();
 			});
 		}
-
 	}
 }

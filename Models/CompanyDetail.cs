@@ -10,12 +10,13 @@ namespace Models
 		public string IndustryTemplate { get; set; }
 		public DateTime? LastUpdate { get; set; }
 	}
+
 	public class CompanyDetailMd : CompanyDetail, IBaseModel
 	{
 		public CompanyDetailMd()
 		{
-
 		}
+
 		public CompanyDetailMd(CompanyDetail cd)
 		{
 			SimId = cd.SimId;
@@ -24,7 +25,7 @@ namespace Models
 			IndustryTemplate = cd.IndustryTemplate;
 			LastUpdate = cd.LastUpdate;
 		}
+
 		public string Id { get; set; }
 	}
-
 }

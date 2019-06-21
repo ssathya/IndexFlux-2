@@ -1,22 +1,21 @@
-﻿using Google.Cloud.Dialogflow.V2;
+﻿using DataProvider.Extensions;
+using Google.Cloud.Dialogflow.V2;
+using HandleSimFin.Helpers;
 using Microsoft.Extensions.Logging;
 using Models;
+using MongoHandler.Extensions;
 using MongoHandler.Utils;
+using Newtonsoft.Json;
 using System;
-using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Threading.Tasks;
-using MongoHandler.Extensions;
-using DataProvider.Extensions;
-using System.Net;
-using Newtonsoft.Json;
-using HandleSimFin.Helpers;
 
 namespace DataProvider.BusLogic
 {
-    public class ObtainGoodInvestments
-    {
+	public class ObtainGoodInvestments
+	{
 		private readonly ILogger<ObtainGoodInvestments> _log;
 		private readonly IDBConnectionHandler<PiotroskiScoreMd> _ratingsConnectionHandler;
 		private readonly IDBConnectionHandler<CompanyDetailMd> _dbconCompany;
@@ -37,6 +36,7 @@ namespace DataProvider.BusLogic
 			_ratingsConnectionHandler.ConnectToDatabase("PiotroskiScore");
 			_dbconCompany.ConnectToDatabase("CompanyDetail");
 		}
+
 		public async Task<WebhookResponse> SelectRandomGoodFirms()
 		{
 			_log.LogTrace("Started to select better investments");
@@ -68,8 +68,8 @@ namespace DataProvider.BusLogic
 						else
 						{
 							targetPrice = await GetTargetPriceAsync(piotroskiScore.Ticker);
-						}						
-						messageString.Append($"{companyName} with ticker {piotroskiScore.Ticker} scores {piotroskiScore.Rating}.\n");						
+						}
+						messageString.Append($"{companyName} with ticker {piotroskiScore.Ticker} scores {piotroskiScore.Rating}.\n");
 						if (!targetPrice.IsNullOrWhiteSpace())
 						{
 							messageString.Append(targetPrice);
@@ -128,7 +128,7 @@ namespace DataProvider.BusLogic
 					_log.LogError(ex.InnerException.Message);
 				}
 				return "";
-			}			
+			}
 		}
 	}
 }

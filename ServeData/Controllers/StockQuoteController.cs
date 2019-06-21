@@ -1,21 +1,17 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using DataProvider.BusLogic;
+﻿using DataProvider.BusLogic;
 using DataProvider.Extensions;
 using Google.Apis.Dialogflow.v2.Data;
 using Google.Cloud.Dialogflow.V2;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using System.Threading.Tasks;
 
 namespace ServeData.Controllers
 {
-    [Route("api/[controller]")]
-    [ApiController]
-    public class StockQuoteController : ControllerBase
-    {
+	[Route("api/[controller]")]
+	[ApiController]
+	public class StockQuoteController : ControllerBase
+	{
 		private readonly ILogger<StockQuoteController> _log;
 		private readonly ObtainStockQuote obtainStockQuote;
 
@@ -24,6 +20,7 @@ namespace ServeData.Controllers
 			this._log = log;
 			this.obtainStockQuote = obtainStockQuote;
 		}
+
 		public async Task<IActionResult> Post([FromBody] GoogleCloudDialogflowV2WebhookRequest intent)
 		{
 			WebhookResponse returnValue = await obtainStockQuote.GetMarketData(intent);

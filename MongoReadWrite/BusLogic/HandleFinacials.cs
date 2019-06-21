@@ -4,7 +4,6 @@ using Microsoft.Extensions.Logging;
 using Models;
 using MongoDB.Driver;
 using MongoHandler.Utils;
-using MongoReadWrite.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,7 +13,6 @@ namespace MongoReadWrite.BusLogic
 {
 	public class HandleFinacials
 	{
-
 		#region Private Fields
 
 		private const int ReportableItemsCount = 7;

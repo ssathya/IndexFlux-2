@@ -6,19 +6,20 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace HandleSimFin.Methods
 {
-    public class DownloadListedFirms
-    {
+	public class DownloadListedFirms
+	{
 		private readonly ILogger<DownloadListedFirms> _logger;
 		private readonly string _allEntities = @"https://simfin.com/api/v1/info/all-entities?api-key={API-KEY}";
+
 		public DownloadListedFirms(ILogger<DownloadListedFirms> log)
 		{
 			_logger = log;
 		}
+
 		public async Task<List<CompanyDetail>> GetCompanyList()
 		{
 			string apiKey = HandleSimFinUtils.GetApiKey(_logger);
@@ -41,12 +42,12 @@ namespace HandleSimFin.Methods
 			catch (Exception ex)
 			{
 				_logger.LogError($"Error in DownloadListedFirms::GetCompanyList\n{ex.Message}");
-				if (ex.InnerException!=null)
+				if (ex.InnerException != null)
 				{
 					_logger.LogError(ex.InnerException.Message);
 				}
 				return null;
 			}
 		}
-    }
+	}
 }

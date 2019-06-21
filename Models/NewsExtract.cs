@@ -4,7 +4,6 @@ namespace Models
 {
 	public class Article
 	{
-
 		#region Public Properties
 
 		public string author { get; set; }
@@ -21,7 +20,6 @@ namespace Models
 
 	public class NewsExtract
 	{
-
 		#region Public Properties
 
 		public Article[] articles { get; set; }
@@ -30,9 +28,9 @@ namespace Models
 
 		#endregion Public Properties
 	}
+
 	public class Source
 	{
-
 		#region Public Properties
 
 		public string id { get; set; }

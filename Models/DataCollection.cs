@@ -1,13 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Models
+﻿namespace Models
 {
-    public class DataCollection
-    {
+	public class DataCollection
+	{
 		public string SimId { get; set; }
 		public string CompanyName { get; set; }
 		public string Sector { get; set; }
@@ -27,6 +21,5 @@ namespace Models
 		public float OperatingMargin { get; set; }
 		public float ReturnOnEquity { get; set; }
 		public float ReturnOnAssets { get; set; }
-
 	}
 }

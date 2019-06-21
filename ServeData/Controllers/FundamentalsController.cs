@@ -1,14 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using DataProvider.BusLogic;
+﻿using DataProvider.BusLogic;
 using DataProvider.Extensions;
 using Google.Apis.Dialogflow.v2.Data;
 using Google.Cloud.Dialogflow.V2;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using System.Threading.Tasks;
 
 namespace ServeData.Controllers
 {
@@ -24,6 +20,7 @@ namespace ServeData.Controllers
 			_log = log;
 			_obtainFundamentals = obtainFundamentals;
 		}
+
 		// POST: api/Fundamentals
 		[HttpPost]
 		public async Task<IActionResult> Post([FromBody] GoogleCloudDialogflowV2WebhookRequest intent)

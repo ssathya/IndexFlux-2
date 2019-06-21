@@ -14,7 +14,6 @@ namespace MongoReadWrite
 {
 	internal class Program
 	{
-
 		#region Private Fields
 
 		private const int financialDownloadLimit = 75;
@@ -23,7 +22,6 @@ namespace MongoReadWrite
 		private static IServiceProvider Provider;
 
 		#endregion Private Fields
-
 
 		#region Public Methods
 
@@ -68,7 +66,6 @@ namespace MongoReadWrite
 
 		#endregion Public Methods
 
-
 		#region Private Methods
 
 		private static void DisplayTimeTaken(Stopwatch stopWatch, string msg)
@@ -86,7 +83,7 @@ namespace MongoReadWrite
 			int counter = 0;
 			int downloadCount = downloadStart;
 			var handleFinancials = Provider.GetService<HandleFinacials>();
-			var listCount = miniCompDetails.Count();			
+			var listCount = miniCompDetails.Count();
 			foreach (var company in miniCompDetails)
 			{
 				stopWatch.Reset();

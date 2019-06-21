@@ -1,12 +1,9 @@
 ﻿using DataProvider.Extensions;
 using Google.Cloud.Dialogflow.V2;
-using Kevsoft.Ssml;
 using Microsoft.Extensions.Logging;
 using Models;
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
-using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -14,14 +11,12 @@ namespace DataProvider.BusLogic
 {
 	public class ObtainMarketSummary
 	{
-
 		#region Private Fields
 
 		private readonly ILogger<ObtainMarketSummary> _log;
 		private readonly EnvHandler _envHandler;
 
 		#endregion Private Fields
-
 
 		#region Public Constructors
 
@@ -32,7 +27,6 @@ namespace DataProvider.BusLogic
 		}
 
 		#endregion Public Constructors
-
 
 		#region Public Methods
 
@@ -55,7 +49,6 @@ namespace DataProvider.BusLogic
 
 		#endregion Public Methods
 
-
 		#region Private Methods
 
 		private WebhookResponse BuildOutputMessage(QuotesFromWorldTrading indexData)
@@ -71,7 +64,7 @@ namespace DataProvider.BusLogic
 			foreach (var idxData in indexData.Data)
 			{
 				float price = idxData.Price != null ? (float)idxData.Price : 0;
-				float dayChange = idxData.Day_change == null ? 0 : (float)idxData.Day_change;				
+				float dayChange = idxData.Day_change == null ? 0 : (float)idxData.Day_change;
 				tmpStr.Append($"{idxData.Name}  is at  {Math.Round(price, 0)}. ");
 				tmpStr.Append(idxData.Day_change > 0 ? " Up by " : "Down by ");
 				tmpStr.Append($"{Math.Abs(Math.Round(dayChange, 0))} points.\n\n ");
@@ -101,8 +94,6 @@ namespace DataProvider.BusLogic
 
 			return returnValue;
 		}
-
-		
 
 		#endregion Private Methods
 	}

@@ -81,6 +81,6 @@
 		public long? EquityBeforeMinorityInterest_71 { get; set; }
 		public long? MinorityInterest_72 { get; set; }
 		public long? TotalEquity_73 { get; set; }
-		public long? TotalLiabilitiesEquity_74 { get; set; }		
-}
+		public long? TotalLiabilitiesEquity_74 { get; set; }
+	}
 }

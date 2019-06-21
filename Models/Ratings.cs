@@ -2,7 +2,6 @@
 {
 	public class Ratings
 	{
-
 		#region Public Properties
 
 		public long? ConsensusEndDate { get; set; }

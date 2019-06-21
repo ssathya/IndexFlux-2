@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Models
 {
@@ -12,6 +8,7 @@ namespace Models
 		public int Symbols_returned { get; set; }
 		public Datum[] Data { get; set; }
 	}
+
 	public class Datum
 	{
 		public string Symbol { get; set; }

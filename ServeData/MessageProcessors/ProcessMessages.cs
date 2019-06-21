@@ -10,7 +10,6 @@ namespace ServeData.MessageProcessors
 {
 	public class ProcessMessages
 	{
-
 		#region Private Fields
 
 		private readonly ILogger<ProcessMessages> _log;
@@ -18,21 +17,18 @@ namespace ServeData.MessageProcessors
 
 		#endregion Private Fields
 
-
 		#region Public Constructors
 
 		public ProcessMessages(ILogger<ProcessMessages> log,
-			
+
 			ObtainTrenders obtainTrends)
 		{
 			_log = log;
-			
+
 			_obtainTrends = obtainTrends;
-			
 		}
 
 		#endregion Public Constructors
-
 
 		#region Internal Methods
 
@@ -54,7 +50,6 @@ namespace ServeData.MessageProcessors
 
 		#endregion Internal Methods
 
-
 		#region Private Methods
 
 		private async Task<WebhookResponse> ProcessIntent(GoogleCloudDialogflowV2WebhookRequest intent)
@@ -66,12 +61,16 @@ namespace ServeData.MessageProcessors
 				case "marketTrends":
 					returnValue = await _obtainTrends.GetTrendingAsync(intent);
 					break;
-				case "newsFetch":					
+
+				case "newsFetch":
 					break;
+
 				case "stockQuote":
 					break;
+
 				case "fundamentals":
 					break;
+
 				default:
 					break;
 			}

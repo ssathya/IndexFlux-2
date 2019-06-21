@@ -1,8 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Models
 {
@@ -12,8 +9,6 @@ namespace Models
 		public List<OutstandingValue> OutstandingValues { get; set; }
 		public DateTime? LastUpdateDate { get; set; }
 	}
-
-	
 
 	public class OutstandingValue
 	{
@@ -25,9 +20,9 @@ namespace Models
 		public int? Fyear { get; set; }
 		public long? Value { get; set; }
 	}
+
 	public class OutstandingSharesMd : OutstandingShares, IBaseModel
 	{
 		public string Id { get; set; }
 	}
-
 }

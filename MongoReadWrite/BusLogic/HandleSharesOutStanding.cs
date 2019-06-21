@@ -4,7 +4,6 @@ using HandleSimFin.Methods;
 using Microsoft.Extensions.Logging;
 using Models;
 using MongoHandler.Utils;
-using MongoReadWrite.Extensions;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
@@ -13,7 +12,6 @@ namespace MongoReadWrite.BusLogic
 {
 	public class HandleSharesOutStanding
 	{
-
 		#region Private Fields
 
 		private const int validityOfRecord = 1;
@@ -22,7 +20,6 @@ namespace MongoReadWrite.BusLogic
 		private readonly ILogger<HandleSharesOutStanding> _logger;
 
 		#endregion Private Fields
-
 
 		#region Public Constructors
 
@@ -43,7 +40,6 @@ namespace MongoReadWrite.BusLogic
 		}
 
 		#endregion Public Constructors
-
 
 		#region Public Methods
 

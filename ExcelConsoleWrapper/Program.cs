@@ -1,22 +1,21 @@
 ﻿using SpreadSheetReader.Reader;
 using System;
 using System.Globalization;
-using System.IO;
 using System.Linq;
 
 namespace ExcelConsoleWrapper
 {
-	class Program
+	internal class Program
 	{
-		static void Main(string[] args)
+		private static void Main(string[] args)
 		{
 			var dfr = new DataFileReader();
 			dfr.ParseKeyFinance(@"c:\users\sridh\Downloads\1. Key Ratios.xlsx");
 			var results = dfr.dataCollection.OrderByDescending(d => d.PiotroskiScoreCurrent)
-				.ThenByDescending(d=>d.PiotroskiScore1YrAgo)
-				.ThenByDescending(d=>d.PiotroskiScore2YrAgo)
-				.ThenByDescending(d=>d.PiotroskiScore3YrAgo)
-				.ThenByDescending(d=>d.Revenue)				
+				.ThenByDescending(d => d.PiotroskiScore1YrAgo)
+				.ThenByDescending(d => d.PiotroskiScore2YrAgo)
+				.ThenByDescending(d => d.PiotroskiScore3YrAgo)
+				.ThenByDescending(d => d.Revenue)
 				.ToArray();
 			Console.WriteLine("These are firms that have been doing well for the past 3 years");
 
@@ -36,10 +35,10 @@ namespace ExcelConsoleWrapper
 					$"\n\tGross Margin : {ToKMB((decimal)results[i].GrossMargin)}" +
 					$"\n\tOperating Margin : {ToKMB((decimal)results[i].OperatingMargin)}%" +
 					$"\n\tReturn on Equity : {ToKMB((decimal)results[i].ReturnOnEquity)}%" +
-					$"\n\tReturn on Assets : {ToKMB((decimal)results[i].ReturnOnAssets)}%\n"); 
+					$"\n\tReturn on Assets : {ToKMB((decimal)results[i].ReturnOnAssets)}%\n");
 			}
-
 		}
+
 		private static string ToKMB(decimal num)
 		{
 			if (num > 999999999 || num < -999999999)

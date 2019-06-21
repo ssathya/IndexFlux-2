@@ -1,24 +1,19 @@
 ﻿using AutoMapper;
+using HandleSimFin.Helpers;
 using HandleSimFin.Methods;
 using Microsoft.Extensions.Logging;
 using Models;
 using MongoDB.Driver;
+using MongoHandler.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.Extensions.DependencyInjection;
-using MongoReadWrite.Extensions;
-using Microsoft.Extensions.Configuration;
-using HandleSimFin.Helpers;
-using MongoHandler.Utils;
 
 namespace MongoReadWrite.BusLogic
 {
 	public class HandleCompanyList
 	{
-
-
 		#region Private Fields
 
 		private readonly IMongoCollection<CompanyDetailMd> _companyConnection;
@@ -29,11 +24,10 @@ namespace MongoReadWrite.BusLogic
 
 		#endregion Private Fields
 
-
 		#region Public Constructors
 
-		public HandleCompanyList(ILogger<HandleCompanyList> logger, 
-			IDBConnectionHandler<CompanyDetailMd> 
+		public HandleCompanyList(ILogger<HandleCompanyList> logger,
+			IDBConnectionHandler<CompanyDetailMd>
 			dbconCompany, DownloadListedFirms dlf)
 		{
 			_dbconCompany = dbconCompany;
@@ -44,13 +38,11 @@ namespace MongoReadWrite.BusLogic
 
 		#endregion Public Constructors
 
-
 		#region Public Methods
 
 		public async Task<List<CompanyDetail>> GetAllCompaniesAsync()
 		{
-						
-			var tmpList = await _dlf.GetCompanyList();			
+			var tmpList = await _dlf.GetCompanyList();
 			allCompanies = new List<CompanyDetailMd>();
 			var dbCompanies = _dbconCompany.Get().ToList();
 			if (dbCompanies.Count() < 100 || dbCompanies.Where(x => x.IndustryTemplate.IsNullOrWhiteSpace()).Count() < 20)
@@ -64,7 +56,6 @@ namespace MongoReadWrite.BusLogic
 			dbCompanies = _dbconCompany.Get().ToList();
 			if (tmpList == null)
 			{
-				
 				return Mapper.Map<List<CompanyDetailMd>, List<CompanyDetail>>(dbCompanies);
 			}
 			foreach (var company in tmpList)
@@ -96,7 +87,7 @@ namespace MongoReadWrite.BusLogic
 			List<CompanyDetail> compDetailList;
 			var savedValue = _dbconCompany.Get().ToList();
 			//refresh list if it has too little data or at least once a month
-			if (savedValue.Count <= 1000 || TodayIsFirstSaturday() || 1==1)
+			if (savedValue.Count <= 1000 || TodayIsFirstSaturday() || 1 == 1)
 			{
 				compDetailList = await GetAllCompaniesAsync();
 				return compDetailList;
@@ -137,7 +128,6 @@ namespace MongoReadWrite.BusLogic
 		}
 
 		#endregion Public Methods
-
 
 		#region Private Methods
 

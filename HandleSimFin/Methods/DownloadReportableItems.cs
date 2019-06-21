@@ -12,7 +12,6 @@ namespace HandleSimFin.Methods
 {
 	public class DownloadReportableItems
 	{
-
 		#region Private Fields
 
 		private const string UrlTemplate = @"https://simfin.com/api/v1/companies/id/{companyId}/statements/standardised?api-key={API-KEY}&stype={statementType}&ptype={periodType}&fyear={financialYear}";
@@ -20,7 +19,6 @@ namespace HandleSimFin.Methods
 		private readonly ILogger<DownloadReportableItems> _logger;
 
 		#endregion Private Fields
-
 
 		#region Public Constructors
 
@@ -30,7 +28,6 @@ namespace HandleSimFin.Methods
 		}
 
 		#endregion Public Constructors
-
 
 		#region Public Methods
 
@@ -59,7 +56,7 @@ namespace HandleSimFin.Methods
 					cfl.Add(bsToAdd);
 				}
 			}
-			
+
 			// get profit and loss
 			statementType = "pl";
 			lastStatmentYear = statementList.Pl.Max(sl => sl.Fyear);
@@ -72,9 +69,9 @@ namespace HandleSimFin.Methods
 				{
 					AddAdditionalDetailstoFinancials(companyId, pl, plToAdd, StatementType.ProfitLoss);
 					cfl.Add(plToAdd);
-				}				
+				}
 			}
-			
+
 			//get cash flow
 			statementType = "cf";
 			reportingList = statementList.Cf.OrderByDescending(b => b.Fyear).Take(ReportableItemsCount);
@@ -87,27 +84,25 @@ namespace HandleSimFin.Methods
 					AddAdditionalDetailstoFinancials(companyId, cf, cfToAdd, StatementType.CashFlow);
 					cfl.Add(cfToAdd);
 				}
-				
 			}
 			return cfl;
 		}
 
 		#endregion Public Methods
 
-
 		#region Private Methods
 
-		private  void AddAdditionalDetailstoFinancials(string companyId, StatementDetails bs, CompanyFinancials cfToAdd, StatementType st)
+		private void AddAdditionalDetailstoFinancials(string companyId, StatementDetails bs, CompanyFinancials cfToAdd, StatementType st)
 		{
 			cfToAdd.Statement = st;
 			cfToAdd.FYear = bs.Fyear;
 			cfToAdd.SimId = companyId;
 		}
 
-		private  async Task<CompanyFinancials> ObtainReportedNumbers(string companyId, string apiKey, string statementType, StatementDetails sd)
+		private async Task<CompanyFinancials> ObtainReportedNumbers(string companyId, string apiKey, string statementType, StatementDetails sd)
 		{
 			CompanyFinancials cfToAdd;
-			
+
 			try
 			{
 				using (var wc = new WebClient())
@@ -134,7 +129,6 @@ namespace HandleSimFin.Methods
 					_logger.LogCritical(ex.InnerException.Message);
 				}
 				return null;
-				
 			}
 		}
 

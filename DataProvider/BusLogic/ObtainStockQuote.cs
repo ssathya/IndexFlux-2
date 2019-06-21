@@ -1,7 +1,6 @@
 ﻿using DataProvider.Extensions;
 using Google.Apis.Dialogflow.v2.Data;
 using Google.Cloud.Dialogflow.V2;
-using HandleSimFin.Methods;
 using Microsoft.Extensions.Logging;
 using Models;
 using System;
@@ -13,17 +12,14 @@ namespace DataProvider.BusLogic
 {
 	public class ObtainStockQuote
 	{
-
 		#region Private Fields
 
-		
 		private readonly ObtainCompanyDetails _obtainCompanyDetails;
 		private readonly EnvHandler _envHandler;
 		private readonly ILogger<ObtainStockQuote> _log;
 		private readonly string companyName = "CompanyName";
 
 		#endregion Private Fields
-
 
 		#region Public Constructors
 
@@ -35,7 +31,6 @@ namespace DataProvider.BusLogic
 		}
 
 		#endregion Public Constructors
-
 
 		#region Public Methods
 
@@ -61,7 +56,6 @@ namespace DataProvider.BusLogic
 		}
 
 		#endregion Public Methods
-
 
 		#region Private Methods
 

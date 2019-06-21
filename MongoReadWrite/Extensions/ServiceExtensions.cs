@@ -18,8 +18,9 @@ namespace MongoReadWrite.Extensions
 {
 	public static class ServiceExtensions
 	{
-		public static  string BucketName = @"talk2control-1";
+		public static string BucketName = @"talk2control-1";
 		public static RegionEndpoint Region = RegionEndpoint.USEast1;
+
 		#region Internal Methods
 
 		internal static void AddKeysToEnvironment(this IServiceCollection services)

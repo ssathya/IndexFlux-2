@@ -11,14 +11,12 @@ namespace ServeData.Controllers
 	[ApiController]
 	public class TryOutController : Controller
 	{
-
 		#region Private Fields
 
 		private readonly ILogger<TryOutController> _log;
 		private readonly ProcessMessages _processMessages;
 
 		#endregion Private Fields
-
 
 		#region Public Constructors
 

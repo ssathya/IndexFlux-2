@@ -5,13 +5,11 @@ namespace MongoHandler.Extensions
 {
 	public static class ListExtensions
 	{
-
 		#region Private Fields
 
 		private static readonly Random rng = new Random();
 
 		#endregion Private Fields
-
 
 		#region Public Methods
 

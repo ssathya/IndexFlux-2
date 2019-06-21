@@ -34,7 +34,7 @@ namespace MongoHandler.Utils
 
 			_connectionString = _config["MongoUri"];
 			_dbName = _config["DbName"];
-			
+
 			if (_connectionString.IsNullOrWhiteSpace() || _dbName.IsNullOrWhiteSpace())
 			{
 				_connectionString = Environment.GetEnvironmentVariable("MongoUri");

@@ -1,5 +1,5 @@
-﻿using System.Threading.Tasks;
-using Models;
+﻿using Models;
+using System.Threading.Tasks;
 
 namespace HandleSimFin.Methods
 {

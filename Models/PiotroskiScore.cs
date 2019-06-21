@@ -5,7 +5,6 @@ namespace Models
 {
 	public class PiotroskiScore
 	{
-
 		#region Public Properties
 
 		public long EBITDA { get; set; }
@@ -22,13 +21,11 @@ namespace Models
 
 	public class PiotroskiScoreMd : PiotroskiScore, IBaseModel
 	{
-
 		#region Public Properties
 
 		public string Id { get; set; }
 
 		#endregion Public Properties
-
 
 		#region Public Constructors
 

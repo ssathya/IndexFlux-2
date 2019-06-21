@@ -6,7 +6,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace DataProvider.BusLogic
@@ -27,6 +26,7 @@ namespace DataProvider.BusLogic
 			_log = log;
 			_envHandler = envHandler;
 		}
+
 		public async Task<string> ResolveCompanyNameOrTicker(string companyName)
 		{
 			symbols = await ObtainSymbolsFromIeXAsync();
@@ -36,11 +36,11 @@ namespace DataProvider.BusLogic
 				return "";
 			}
 			var tick = new List<string>();
-			
-			var localCompanyName = companyName.ToLower();			
+
+			var localCompanyName = companyName.ToLower();
 			var tickerSearch = (from s in symbols
-							where s.Symbol.ToLower().Equals(localCompanyName)
-							select s.Symbol).FirstOrDefault();
+								where s.Symbol.ToLower().Equals(localCompanyName)
+								select s.Symbol).FirstOrDefault();
 			if (!string.IsNullOrWhiteSpace(tickerSearch))
 			{
 				tick.Add(tickerSearch);
@@ -54,7 +54,7 @@ namespace DataProvider.BusLogic
 				if (!tick.Any())
 				{
 					tick.AddRange((from s in symbols
-								   where s.Name.ToLower().Contains(companyName.ToLower())								   
+								   where s.Name.ToLower().Contains(companyName.ToLower())
 								   select s.Symbol).ToList());
 				}
 				tick = tick.Distinct().Take(5).ToList();
@@ -63,6 +63,7 @@ namespace DataProvider.BusLogic
 			_log.LogTrace($"Company name {companyName} was resolved as {returnString}");
 			return returnString;
 		}
+
 		private async Task<List<SecuritySymbol>> ObtainSymbolsFromIeXAsync()
 		{
 			if (symbols != null && symbols.Count >= 5 && (DateTime.Now - lastSymbolUpdate).TotalDays < 1)
@@ -88,6 +89,7 @@ namespace DataProvider.BusLogic
 				return new List<SecuritySymbol>();
 			}
 		}
+
 		public async Task<CompanyOverview> ObtainCompanyOverview(string ticker)
 		{
 			var urlToUse = iexCompanyDetailsURL.Replace("{ticker}", ticker)
@@ -114,6 +116,4 @@ namespace DataProvider.BusLogic
 			}
 		}
 	}
-
 }
-

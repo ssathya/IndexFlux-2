@@ -13,7 +13,6 @@ namespace DataProvider.BusLogic
 {
 	public class ObtainNews
 	{
-
 		#region Private Fields
 
 		private const string newsParameter = "newsSource";
@@ -22,7 +21,6 @@ namespace DataProvider.BusLogic
 		private readonly EnvHandler _envHandler;
 
 		#endregion Private Fields
-
 
 		#region Public Constructors
 
@@ -33,7 +31,6 @@ namespace DataProvider.BusLogic
 		}
 
 		#endregion Public Constructors
-
 
 		#region Public Methods
 
@@ -63,7 +60,6 @@ namespace DataProvider.BusLogic
 		}
 
 		#endregion Public Methods
-
 
 		#region Private Methods
 
@@ -113,8 +109,6 @@ namespace DataProvider.BusLogic
 			}
 			return returnMsg.ToString();
 		}
-
-		
 
 		private async Task<NewsExtract> ObtainNewAPIDta(string urlToUse)
 		{

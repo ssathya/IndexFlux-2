@@ -5,8 +5,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using RestSharp;
 using ServeData.MessageProcessors;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 
 namespace ServeData.Controllers
 {
@@ -14,20 +12,17 @@ namespace ServeData.Controllers
 	[ApiController]
 	public class IntendsHandlerController : ControllerBase
 	{
-
 		#region Private Fields
 
 		private readonly ILogger<IntendsHandlerController> _log;
 
 		#endregion Private Fields
 
-
 		#region Private Properties
 
 		private ProcessMessages _processMessages { get; }
 
 		#endregion Private Properties
-
 
 		#region Public Constructors
 
@@ -41,7 +36,6 @@ namespace ServeData.Controllers
 
 		#region Public Methods
 
-		
 		// POST: api/IntendsHandler
 		[HttpPost]
 		public IActionResult Post([FromBody] GoogleCloudDialogflowV2WebhookRequest value)
@@ -49,10 +43,7 @@ namespace ServeData.Controllers
 			return ExecuteKnownValues(value);
 		}
 
-		
-
 		#endregion Public Methods
-
 
 		#region Private Methods
 
@@ -80,12 +71,15 @@ namespace ServeData.Controllers
 				case "marketSummary":
 					returnString = "/api/MarketSummary";
 					break;
+
 				case "newsFetch":
 					returnString = "/api/NewsFetch";
 					break;
+
 				case "stockQuote":
 					returnString = "/api/StockQuote";
 					break;
+
 				default:
 					break;
 			}

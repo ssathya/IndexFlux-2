@@ -1,21 +1,17 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using DataProvider.BusLogic;
+﻿using DataProvider.BusLogic;
 using DataProvider.Extensions;
 using Google.Apis.Dialogflow.v2.Data;
 using Google.Cloud.Dialogflow.V2;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using System.Threading.Tasks;
 
 namespace ServeData.Controllers
 {
-    [Route("api/[controller]")]
-    [ApiController]
-    public class NewsFetchController : ControllerBase
-    {
+	[Route("api/[controller]")]
+	[ApiController]
+	public class NewsFetchController : ControllerBase
+	{
 		private readonly ObtainNews _obtainNews;
 		private readonly ILogger<NewsFetchController> _log;
 
@@ -24,8 +20,9 @@ namespace ServeData.Controllers
 			this._obtainNews = obtainNews;
 			this._log = log;
 		}
-        // POST: api/NewsFetch
-        [HttpPost]
+
+		// POST: api/NewsFetch
+		[HttpPost]
 		public async Task<IActionResult> Post([FromBody] GoogleCloudDialogflowV2WebhookRequest intent)
 		{
 			WebhookResponse returnValue = await _obtainNews.GetExternalNews(intent);

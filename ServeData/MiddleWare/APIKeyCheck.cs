@@ -1,25 +1,23 @@
 ﻿using Microsoft.AspNetCore.Http;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace ServeData.MiddleWare
 {
 	public class APIKeyCheck
-    {
-		private readonly RequestDelegate _next;		
+	{
+		private readonly RequestDelegate _next;
 		private const string KeyName = "key";
 
 		public APIKeyCheck(RequestDelegate next)
 		{
 			_next = next;
 		}
+
 		public async Task Invoke(HttpContext context)
 		{
-			var apiKey = Environment.GetEnvironmentVariable("AppMaster");			
+			var apiKey = Environment.GetEnvironmentVariable("AppMaster");
 			bool validKey = false;
 			var checkApiKeyExists = context.Request.Headers.ContainsKey(KeyName);
 			if (checkApiKeyExists && !string.IsNullOrWhiteSpace(apiKey))
@@ -36,6 +34,5 @@ namespace ServeData.MiddleWare
 			}
 			await _next.Invoke(context);
 		}
-		
 	}
 }

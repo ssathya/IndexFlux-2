@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Models
+﻿namespace Models
 {
 	public class BankCashFlow
 	{
@@ -77,6 +71,5 @@ namespace Models
 		public long? NetCashBeforeFX_70 { get; set; }
 		public long? EffectofForeignExchangeRates_60 { get; set; }
 		public long? NetChangesinCash_62 { get; set; }
-
 	}
 }

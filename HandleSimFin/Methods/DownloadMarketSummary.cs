@@ -2,10 +2,7 @@
 using Models;
 using Newtonsoft.Json;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace HandleSimFin.Methods
@@ -14,6 +11,7 @@ namespace HandleSimFin.Methods
 	{
 		private readonly ILogger<DownloadMarketSummary> _logger;
 		private const string urlStr = @"https://www.worldtradingdata.com/api/v1/stock?symbol={tickersToUse}&api_token={apiKey}";
+
 		public DownloadMarketSummary(ILogger<DownloadMarketSummary> logger)
 		{
 			_logger = logger;
@@ -41,7 +39,6 @@ namespace HandleSimFin.Methods
 				_logger.LogInformation("Completed downloading data from World Trading");
 				var indexData = JsonConvert.DeserializeObject<QuotesFromWorldTrading>(data);
 				return indexData;
-
 			}
 			catch (Exception ex)
 			{

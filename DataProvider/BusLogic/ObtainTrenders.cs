@@ -14,7 +14,6 @@ namespace DataProvider.BusLogic
 {
 	public class ObtainTrenders
 	{
-
 		#region Private Fields
 
 		private const string baseUrl = @"https://api.iextrading.com/1.0/stock/market/list/";
@@ -22,7 +21,6 @@ namespace DataProvider.BusLogic
 		private readonly ILogger<ObtainTrenders> _log;
 
 		#endregion Private Fields
-
 
 		#region Public Constructors
 
@@ -32,7 +30,6 @@ namespace DataProvider.BusLogic
 		}
 
 		#endregion Public Constructors
-
 
 		#region Public Methods
 
@@ -55,7 +52,6 @@ namespace DataProvider.BusLogic
 		}
 
 		#endregion Public Methods
-
 
 		#region Private Methods
 

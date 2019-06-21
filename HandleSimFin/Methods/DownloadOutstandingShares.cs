@@ -6,7 +6,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace HandleSimFin.Methods
@@ -20,6 +19,7 @@ namespace HandleSimFin.Methods
 		{
 			_logger = logger;
 		}
+
 		public async Task<OutstandingShares> ObtainAggregatedList(string simId)
 		{
 			var outstandingShares = new OutstandingShares
@@ -61,11 +61,8 @@ namespace HandleSimFin.Methods
 						Value = al.Value
 					});
 
-								  
-								 
-
 					outstandingShares.OutstandingValues = fullOutstandingList
-						.Where(os => (os.Period == "FY" || os.Period=="TTM" ) && os.Figure.Equals("common-outstanding-diluted"))
+						.Where(os => (os.Period == "FY" || os.Period == "TTM") && os.Figure.Equals("common-outstanding-diluted"))
 						.OrderByDescending(os => os.Fyear)
 						.Take(10)
 						.ToList();
