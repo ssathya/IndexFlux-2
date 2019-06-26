@@ -48,9 +48,16 @@ namespace DataProvider.BusLogic
 			else
 			{
 				tick.AddRange((from s in symbols
-							   where s.Name.ToLower().Contains(companyName.ToLower())
+							   where s.Name.ToLower().StartsWith(companyName.ToLower())
 							   && (s.Type.ToLower() == "cs" || s.Type.ToLower().Contains("et"))
 							   select s.Symbol).ToList());
+				if (!tick.Any())
+				{
+					tick.AddRange((from s in symbols
+								   where s.Name.ToLower().Contains(companyName.ToLower())
+								   && (s.Type.ToLower() == "cs" || s.Type.ToLower().Contains("et"))
+								   select s.Symbol).ToList());
+				}
 				if (!tick.Any())
 				{
 					tick.AddRange((from s in symbols
@@ -58,6 +65,10 @@ namespace DataProvider.BusLogic
 								   select s.Symbol).ToList());
 				}
 				tick = tick.Distinct().Take(5).ToList();
+			}
+			if (!tick.Any())
+			{
+				return "";
 			}
 			string returnString = tick.Aggregate((i, j) => i + "," + j);
 			_log.LogTrace($"Company name {companyName} was resolved as {returnString}");

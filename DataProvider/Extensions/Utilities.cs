@@ -35,7 +35,7 @@ namespace DataProvider.Extensions
 
 		public static string ErrorReturnMsg()
 		{
-			return "\nWe are experiencing public issues; be assured we'll resolve as soon as possible\n" +
+			return "\nWe are experiencing issues obtaining data; be assured we'll resolve as soon as possible\n" +
 				EndOfCurrentRequest();
 		}
 	}
