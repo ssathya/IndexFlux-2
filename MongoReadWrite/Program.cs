@@ -44,9 +44,10 @@ namespace MongoReadWrite
 			{
 				compDetailsLst = handleCompList.GetAllCompaniesAsync().Result;
 			}
+			_ = handleCompList.GetAllCompaniesAsync().Result;
 			Console.WriteLine("Obtained list of companies");
 
-			UpdateDataFromExternalFeed(compDetailsLst);
+			//UpdateDataFromExternalFeed(compDetailsLst);
 
 			try
 			{
