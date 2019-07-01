@@ -127,12 +127,9 @@ If `22/tcp` is __allow__: good you are not going to lose your machine!
 The syntax for UFW is
 
     sudo ufw allow from <target> to <destination> port <port number>
-Ideally you would do the following to allow access to your mongoDB instance:
-
-`sudo ufw allow from` *My first slected IP address* `to any port 27017`
-
-`sudo ufw allow from` *My next IP address* `to any port 27017`
-
+Ideally you would do the following to allow access to your mongoDB instance:  
+`sudo ufw allow from` *My first slected IP address* `to any port 27017`  
+`sudo ufw allow from` *My next IP address* `to any port 27017`  
 `sudo ufw allow from` *My next IP address* `to any port 27017`
 
 Well I'm lazy so I'm going to open up 27017 for world access(I'm going to protect my MongoDB using Security Group firewall):
@@ -143,15 +140,15 @@ Just one more change:
 MongoDB listens to localhost by default, to make the database accessible from outside, we  
 have to reconfigure it to listen on the server IP address too.  
 Open the mongod.conf file in nano editor:  
-
-    sudo nano /etc/mongod.conf  
-
+```
+sudo nano /etc/mongod.conf  
+```
 and add the IP address of the server in the bind_ip line like this:  
-
+```
     net:  
     port: 27017  
     bindIp: 127.0.0.1,192,168.1.100  
-
+```
 Replace 192.168.1.100 with the IP of your server, then restart MongoDB to apply the  
 changes.
 
