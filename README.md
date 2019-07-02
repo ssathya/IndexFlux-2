@@ -14,4 +14,5 @@ procedure, though simple, has many steps and is easy to miss. I'm documenting th
 and also touch upon how the actual application functions.
 
 [Hardware selection](/docs/BuildVM.md)  
-[Install MongoDB](/docs/InstallMongoDb.md)
+[Install MongoDB](/docs/InstallMongoDb.md)  
+[Install Application](docs/InstallApplication.md)
