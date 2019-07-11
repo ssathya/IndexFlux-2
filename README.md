@@ -15,4 +15,5 @@ and also touch upon how the actual application functions.
 
 [Hardware selection](/docs/BuildVM.md)  
 [Install MongoDB](/docs/InstallMongoDb.md)  
-[Install Application](docs/InstallApplication.md)
+[Install Application](docs/InstallApplication.md)  
+[Install Web Server](docs/InstallWebServer.md)
