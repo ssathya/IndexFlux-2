@@ -1,12 +1,5 @@
-﻿# Markdown File
+﻿# Application flow
+We have installed all the necessary software on to a server that will be used with our application. This will be a good time to talk about our application.
 
-```mermaid
-sequenceDiagram
-User ->> Dialog Flow: How is Oracle doing today?
-Dialog Flow -->> Web API: Get me the quote for Oracle?
-Web API -->> External Service: Details of Oracle's last trade
-External Service --x Web API: Latest trade details
-Web API --x Dialog Flow: Oracle's latest price
-Note left of Web API: Return value or<br/> error message
-Dialog Flow -x User: Text to speach
-```
+Let us take a simple flow; user requests the quote for a company, say Oracle.
+![enter image description here](https://ssathya.github.io/IndexFlux-2/docs/QuoteRequest.png)
