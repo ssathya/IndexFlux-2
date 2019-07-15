@@ -23,6 +23,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MongoHandler", "MongoHandle
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{A02FDC92-D02A-4D13-9CB5-B0C130E822E4}"
 	ProjectSection(SolutionItems) = preProject
+		docs\ApplicationFlow.md = docs\ApplicationFlow.md
 		docs\BuildVM.md = docs\BuildVM.md
 		docs\InstallApplication.md = docs\InstallApplication.md
 		docs\InstallMongoDb.md = docs\InstallMongoDb.md
