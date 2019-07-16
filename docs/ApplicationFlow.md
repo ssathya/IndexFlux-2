@@ -1,4 +1,5 @@
 ﻿
+
 # Application flow
 We have installed all the necessary software on to a server that will be used with our application. This will be a good time to talk about our application.
 
@@ -7,11 +8,11 @@ Let us take a simple flow; user requests the quote for a company, say Oracle.
 
 The above is a simple request that shows how a request is sent to WEB API application (Server application) when a request is made.
 
-A user starts his session with Index Flux by saying the keyword "Hey Google! Talk to Index Flux" and the session starts with the welcome message. Say the user is interested in Oracle's quote and requests for its quote by saying "How is Oracle doing today?" Dialogflow, the tool that is used to develop the conversation with user, parses the user query and invokes the appropriate intent. For this application an intent called "stockQuote" is invoked that understands phrases like "How is Microsoft doing?", "Get me the stock quote for Google", "What is the latest price for Citigroup", etc.  A handful of phrases have been programmed to identify your query and pickes proper noun in your phrase and marks them as the requested parameter. 
+A user starts his session with Index Flux by saying the keyword "Hey Google! Talk to Index Flux" and the session starts with the welcome message. Say the user is interested in Oracle's quote and requests for its quote by saying "How is Oracle doing today?" Dialogflow, the tool that is used to develop the conversation with user, parses the user query and invokes the appropriate intent. For this application an intent called "stockQuote" is invoked that understands phrases like "How is Microsoft doing?", "Get me the stock quote for Google", "What is the latest price for Citigroup", etc.  A handful of phrases have been programmed to identify your query and picks a proper noun in your phrase and marks them as the requested parameter. 
 
-All intents, that fetch external data, in this application will invoke a Webhook request - our Server application. The fulfilment request sent by Dialogflow has many values packed into a JSON document and we'll use the values in this JSON document to fulfill the request.
+All intents, that fetch external data, will invoke a Webhook request - our Server application. The fulfilment request sent by Dialogflow has many values packed into a JSON document and we'll use the values in this JSON document to fulfill the request.
 
-The application serves mutiple intents namely Get Fundamentals for a firm, Get Market summary, Stock quote, get News, and randomly select firms with good fundamentals. By design DialogFlow routes all requests to a single API call to our application. To maintain modularity the Server application on getting a POST webhook request identifies the intent and calls another API within the application, as if the request is coming from an external service, which actuall processes the message and returns the requested value.
+The application serves multiple intents namely Get Fundamentals for a firm, Get Market summary, Stock quote, get News, and randomly select firms with good fundamentals. By design DialogFlow routes all requests to a single API call to our application. To maintain modularity the Server application on getting a POST webhook request identifies the intent and calls another API within the application, as if the request is coming from an external service, which actuall processes the message and returns the requested value.
 ![Call Sequence](https://ssathya.github.io/IndexFlux-2/docs/CallSequence.png)
 
 As mentioned above we'll go over only the Quotes and other sequences are processed similarly.
@@ -63,7 +64,7 @@ private IActionResult ExecuteKnownValues(GoogleCloudDialogflowV2WebhookRequest v
 			};
 		}
 ```
-I'll not go into nuts and bolts of the above code but in essence the following happens:
+I'll not go into the nuts and bolts of the above code but in essence the following happens:
 
  1. Obtain Intent name
  2. Determine which API to be called based on Intent name
@@ -72,7 +73,7 @@ I'll not go into nuts and bolts of the above code but in essence the following h
 
 For this specific case, Quotes, the API method */api/StockQuote* will be called and let us see how it is handled.
 
-When the user requests the stock quote for Oracle the user might request "Get me the stock quote for Oracle" or "Get me the stock quote for ORCL"; or "Get me the quote for MSFT" or "Get me the quote for Microsoft". The application first tries to do a unique match on ticker and if it fails a wildcard match on name is made.  We get the quotes from [World Trading](https://www.worldtradingdata.com/) parse the JSON values returned and convert to a string using the code below that can be sent back to user.
+When the user requests the stock quote for Oracle the user might request "Get me the stock quote for Oracle" or "Get me the stock quote for ORCL"; or "Get me the quote for MSFT" or "Get me the quote for Microsoft". The application first tries to do a unique match on ticker and if it fails a wildcard match on name is made.  We get the quotes from [World Trading](https://www.worldtradingdata.com/) parse the JSON values returned and convert to a string using the code below that can be sent back to the user.
 ```cs
 private string BuildOutputMsg(QuotesFromWorldTrading quotes)
 		{
@@ -101,5 +102,28 @@ Note: Instead of reporting the delta in percent, as the native stock quote does,
 
 The message built is packeted as a *WebhookResponse* and returned to the calling API call and back to the user.
 
+## # Fundamental Analysis
+The application does fundamental analysis using Piotroski F-Score principle that uses historic and current filing values to weigh the fundamental strength of a firm. The calculations are done based on the following nine ratios
 
+ - Return on assets *should be a positive value*
+	 - Income/loss vs Total Assets
+  - Cash Flow from Operations *should be a positive value*
+	  - Directly from filing values
+  - Increase in Return on Assets *should be a positive value*
+	  - Income/Loss vs Total Assets (TTM) compared to Income/Loss vs Total Assets (TTM - 1)
+- Cash flow versus return on assets *>1*
+	- Cash from Operating Activities vs Total Assets (TTM) compared to Cash from Operating Activities vs Total Assets (TTM - 1)
+-  Long-term debt to assets *debts should be less than assets*
+	- Long Term Debt vs Assets (TTM) compared to Long Term Debt vs Assets (TTM - 1)
+ - Change in liquidity *should be a positive value*
+	 - Total Assets vs Liabilities (TTM) compared to Total Assets vs Liabilities (TTM -1)
+ - Stock Issuance *buy-back is a good sign*
+	 - Total weighted shares outstanding (TTM) compared to Total weighted shares outstanding (TTM -1)
+ - Gross Margin *Should be a positive value*
+	 - Gross Profit vs Revenue (TTM)  compared to Gross Profit vs Revenue (TTM -1)
+-  Asset turnover *should be a positive value*
+	- Revenue (TTM) vs Revenue (TTM - 1)
+
+In addition the application also reports Revenue, EBITDA, Gross Margin, Operating Margin, Net Profit Margin, Return on Equity and Return on Assets.
+ 
 
